@@ -2,32 +2,54 @@ from scapy.all import *
 import psutil
 import IPy
 import re
+# 导入OUI信息
 with open("/home/lxw/oui.txt", "r", encoding='utf8') as f:
     oui_list = f.readlines()
-net_devices = {}
-scan_range = {}
+net_devices = {} # 字典存储网卡信息
+scan_range = {} # 记录网段信息
+scan_list = []
+# 遍历出IPV4地址，存到net_devices
 for if_name in psutil.net_if_addrs():
     for i in range(len(psutil.net_if_addrs()[if_name])):
         if psutil.net_if_addrs()[if_name][i].family == 2:
             net_devices[if_name] = {
-				"address": psutil.net_if_addrs()[if_name][i].address,
-				"netmask": psutil.net_if_addrs()[if_name][i].netmask
-			}
+		    "address": psutil.net_if_addrs()[if_name][i].address,
+		    "netmask": psutil.net_if_addrs()[if_name][i].netmask
+	    }
+# 通过IP地址和掩码计算出所处网段
 for net_device in net_devices:
     ipAddress = IPy.IP(net_devices[net_device]["address"])
     net_mask = net_devices[net_device]["netmask"]
     ips = IPy.IP(ipAddress).make_net(net_mask)
     scan_range[net_device] = ips
+# 打印整理好的网络信息
 print(f"共有{len(scan_range)}张网卡:")
 for index, scan_device in enumerate(scan_range):
+    scan_list.append(scan_device)
     print("\t", index+1, scan_device)
-scan_device_name = input(f"输入需要查询的网卡名称: ")
-scan_ip_range = str(scan_range[scan_device_name])
+# 通过异常保证统一输入的key的是网卡名称
+scan_nic = input(f"\n输入需要查询的网卡名称或序号: ")
+try:
+    scan_device_name = scan_list[int(scan_nic)-1]
+except ValueError:
+    scan_device_name = scan_nic
+except IndexError:
+    scan_device_name = scan_nic
+try:
+    scan_ip_range = str(scan_range[scan_device_name])
+except KeyError:
+    print("请输入正确的网卡名称 ")
+    exit()
+print("\n正在扫描网段: ", scan_range[scan_device_name])
+# arping
 ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=scan_ip_range), timeout=2)
-print("正在扫描网段: ", scan_range[scan_device_name])
+print("\n扫描完成, 等待分析结果………………")
 for ans in ans.res:
+    # 将mac的符号替换为能匹配到的格式
     macAddr = str(ans.answer.src)[:8:].replace(":", "-", )
+    # 用mac匹配oui
     for oui in oui_list:
         if re.search(macAddr.upper(), oui):
             mac_oui = oui.split('\t', -1)[2].rstrip()
             print(f"\t{ans.answer.psrc}\t{ans.answer.src}\t{mac_oui}")
+flag = input("输入任意键退出: ")
