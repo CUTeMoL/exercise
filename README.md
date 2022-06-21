@@ -1,7 +1,7 @@
 # exercise
 # 个人练习
 
-arpingScan.py - arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
+arpScan.py - arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
 
 windowsMachineInfo.py - 计算机信息
 
