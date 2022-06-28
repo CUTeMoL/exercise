@@ -1,5 +1,9 @@
 # Redis
 
+整理自👇
+
+https://blog.csdn.net/miss1181248983/article/details/90056960
+
 ## 一、安装
 
 ```shell
