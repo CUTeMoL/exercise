@@ -82,8 +82,6 @@ unset variable_name
 ${variable_name}
 ```
 
-
-
 ## 二、数组
 
 普通数组：只能使用整数作为数组索引(元素的下标)
@@ -143,10 +141,11 @@ let 表达式
     let n+=1  == let n=n+1
     let n=i++   先赋值再运算
     let n=++j   先运算再赋值
-
 ```
 
 ## 五、条件判断
+
+正确 return 0
 
 用法
 
@@ -183,7 +182,7 @@ test -e file
 ```shell
 [ file1 -nt file2 ]  比较是否更新
 [ file1 -ot file2 ]  比较是否更旧
-[ file1 -ef file2 ]   是否为同一个文件（硬链接相同inode）
+[ file1 -ef file2 ]  是否为同一个文件（硬链接相同inode）
 ```
 
 整数之间比较：
@@ -204,15 +203,15 @@ test -e file
 -n   字符串非空成立
 [ $A = $B ]    判断两个字符串是否相等
 [ $A != $B ]    判断两个字符串是否不相等
-[ "$A" != "$B" ] 
+[ "A" != "B" ] 
 ```
 
 多重条件逻辑判断：
 
 ```shell
-[ 1 -eq 1 -a 1 -ne 0 ]		true
-[ 1 -eq 1 ] && [ 1 -ne 0 ]	true
-[ 1 -eq 0 ] || [ 1 -ne 0 ]	true
+[ 1 -eq 1 -a 1 -ne 0 ]        true
+[ 1 -eq 1 ] && [ 1 -ne 0 ]    true
+[ 1 -eq 0 ] || [ 1 -ne 0 ]    true
 ```
 
 类C风格:
@@ -299,10 +298,10 @@ done
 ```shell
 for (( i=1;i<=5;i++ ))
 do
-	echo $i
-	continue
-	break
-	exit
+    echo $i
+    continue
+    break
+    exit
 done
 ```
 
@@ -485,7 +484,6 @@ g   在行内进行全局替换(没有g则是匹配到的行的第一个)
 例如
 sed -n 's/root/#&/gp' /etc/passwd
 把root替换为#root
-
 ```
 
 ​    awk
@@ -569,9 +567,8 @@ c
 d
 e
 
-awk '{ names = names $1 " "}END { print names }' 221
+awk '{ names = names $1 " "}END { print names }' 1.txt
 a b c d e
-
 ```
 
 ​    cut
@@ -632,6 +629,7 @@ wc
 -c   字符
 -w   单词数
 ```
+
 ​    paste
 
 ```shell
@@ -687,19 +685,17 @@ X   格式化为16进制数（大写字母）
 %  普通
 
 一些示例：
-380	"%d"	380
-380	"%#x"	0x17c
-380	"%05d"	00380
-380	"%05.5f"	380.00000
-380	"%010.5f"	0380.00000
-380	"%+d"	+380
-380	"%-d"	             380
-abcdefg	"%5s"	abcdefg
-abcdefg	"%.5s"	abcde
-3.1415926	"%15.3f"	3.142
+380    "%d"    380
+380    "%#x"    0x17c
+380    "%05d"    00380
+380    "%05.5f"    380.00000
+380    "%010.5f"    0380.00000
+380    "%+d"    +380
+380    "%-d"                 380
+abcdefg    "%5s"    abcdefg
+abcdefg    "%.5s"    abcde
+3.1415926    "%15.3f"    3.142
 ```
-
-
 
 ### 文件处理类
 
@@ -771,8 +767,6 @@ scp [option] root@$IP:/root/1.txt ./
 -P   端口
 ```
 
-
-
 ### 监控类
 
 ​    uptime
@@ -822,8 +816,8 @@ q    #获取操作信息
 #示例：
 inotifywait -mrq -e modify,delete,create,attrib,move /mysqld/data | while read events
 do
-	rsync -av --delete /mysqld/data/ root@10.1.1.100:/mysqld_bak/data
-	echo "`date +%F\ %T`出现事件$events" >> /var/log/rsync.log 2>&1
+    rsync -av --delete /mysqld/data/ root@10.1.1.100:/mysqld_bak/data
+    echo "`date +%F\ %T`出现事件$events" >> /var/log/rsync.log 2>&1
 done
 ```
 
@@ -835,8 +829,6 @@ history
 history详细模式
 echo 'export HISTTIMEFORMAT="%F %T `whoami`" ' >> /etc/bashrc
 ```
-
-
 
 ### 网络管理
 
@@ -915,8 +907,6 @@ network:
 EOF
 ```
 
-
-
 ### 进程类
 
 ​    nohup
@@ -958,8 +948,6 @@ crontab
 -e   编辑计划
 # 分 时 日 月 周 执行的命令（要求使用完整路径,which命令）
 ```
-
-
 
 ### 安全类
 
@@ -1005,7 +993,6 @@ groupadd [option] $user
 groupmod
 -g   指定组的gid
 -n    修改名字
-
 ```
 
 ​    passwd
@@ -1090,13 +1077,13 @@ iptables-save > /etc/sysconfig/iptables
 
 载入规则
 
-```
+```shell
 iptables-restore < /etc/sysconfig/iptables
 ```
 
 删除规则
 
-```
+```shell
 iptables -F
 ```
 
@@ -1109,36 +1096,36 @@ mangle 数据包重新封装，设置标记
 raw 确定是否对数据包进行跟踪
 security 是否定义强制访问控制规则；后加上的
 
-| 表       | 功能                               |
-| -------- | ---------------------------------- |
-| filter   | 过滤                               |
-| nat      | 地址转换                           |
-| mangle   | 数据包重新封装，设置标记           |
-| raw      | 确定是否对数据包进行跟踪           |
+| 表        | 功能                |
+| -------- | ----------------- |
+| filter   | 过滤                |
+| nat      | 地址转换              |
+| mangle   | 数据包重新封装，设置标记      |
+| raw      | 确定是否对数据包进行跟踪      |
 | security | 是否定义强制访问控制规则；后加上的 |
 
 链
 
-| 链          | 意义           |
-| ----------- | -------------- |
-| input       | 数据包接受     |
-| prerouting  | 路由转发前     |
-| forward     | 路由转发       |
-| postrouting | 路由转发后     |
+| 链           | 意义      |
+| ----------- | ------- |
+| input       | 数据包接受   |
+| prerouting  | 路由转发前   |
+| forward     | 路由转发    |
+| postrouting | 路由转发后   |
 | output      | 数据包输出输出 |
 
 优先级raw->mangle->nat->filter
 
 基本条件
 
-| 基本匹配选项 | 功能                 |
-| ------------ | -------------------- |
-| -p           | 指定规则协议tcp      |
-| -s           | 指定数据包的源地址ip |
-| -d           | 指定目的地址         |
-| -i           | 输入接口             |
-| -o           | 输出接口             |
-| !            | 取反                 |
+| 基本匹配选项 | 功能          |
+| ------ | ----------- |
+| -p     | 指定规则协议tcp   |
+| -s     | 指定数据包的源地址ip |
+| -d     | 指定目的地址      |
+| -i     | 输入接口        |
+| -o     | 输出接口        |
+| !      | 取反          |
 
 ​    无需扩展模块就可以生效
 
@@ -1146,23 +1133,25 @@ security 是否定义强制访问控制规则；后加上的
 
 -p tcp
 
-| 隐式匹配选项 | 功能                 |
-| ------------ | -------------------- |
-|--sport |匹配报文源端口；可以给出多个端口，但只能是连续的端口范围|
-|--dport|匹配报文目标端口；可以给出多个端口，但只能是连续的端口范围|
-|--tcp-flags |mask comp 匹配报文中的tcp协议的标志位|
+| 隐式匹配选项      | 功能                            |
+| ----------- | ----------------------------- |
+| --sport     | 匹配报文源端口；可以给出多个端口，但只能是连续的端口范围  |
+| --dport     | 匹配报文目标端口；可以给出多个端口，但只能是连续的端口范围 |
+| --tcp-flags | mask comp 匹配报文中的tcp协议的标志位     |
 
 -p udp
-| 隐式匹配选项 | 功能                 |
-| ------------ | -------------------- |
-|--sport |匹配报文源端口；可以给出多个端口，但只能是连续的端口范围|
-|--dport |匹配报文目标端口；可以给出多个端口，但只能是连续的端口范围|
+
+| 隐式匹配选项  | 功能                            |
+| ------- | ----------------------------- |
+| --sport | 匹配报文源端口；可以给出多个端口，但只能是连续的端口范围  |
+| --dport | 匹配报文目标端口；可以给出多个端口，但只能是连续的端口范围 |
 
 --icmp-type
-| 隐式匹配选项 | 功能                 |
-| ------------ | -------------------- |
-|0/0|echo reply 允许其他主机ping|
-|8/0|echo request 允许ping其他主机|
+
+| 隐式匹配选项 | 功能                      |
+| ------ | ----------------------- |
+| 0/0    | echo reply 允许其他主机ping   |
+| 8/0    | echo request 允许ping其他主机 |
 
 ```shell
 显式匹配使用选项及功能↓
@@ -1202,20 +1191,20 @@ ESTABLISHED 已建立的连接
 INVALID 无法识别的连接
 RELATED 相关联的连接，当前连接是一个新请求，但附属于某个已存在的连接
 UNTRACKED 未追踪的连接
-
 ```
 
 iptables动作target
-| target          | 意义           |
-| ----------- | -------------- |
-|ACCEPT|允许|
-|DROP|丢弃，不回应|
-|REJECT|拒绝，发送回应信息|
-|SNAT|源地址转换|
-|MASQUERADE|伪装，动态的（发送数据的网卡上的IP）替换IP地址|
-|DNAT|目标地址转换|
-|REDIRECT|在本机做端口映射|
-|LOG|在/var/log/message文件中记录日志信息，然后将数据包传递给下一条规则|
+
+| target     | 意义                                        |
+| ---------- | ----------------------------------------- |
+| ACCEPT     | 允许                                        |
+| DROP       | 丢弃，不回应                                    |
+| REJECT     | 拒绝，发送回应信息                                 |
+| SNAT       | 源地址转换                                     |
+| MASQUERADE | 伪装，动态的（发送数据的网卡上的IP）替换IP地址                 |
+| DNAT       | 目标地址转换                                    |
+| REDIRECT   | 在本机做端口映射                                  |
+| LOG        | 在/var/log/message文件中记录日志信息，然后将数据包传递给下一条规则 |
 
 ```shell
 iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o eth1 -j SNAT --to-source 202.12.10.100
@@ -1230,50 +1219,50 @@ iptables -t table_name command1 manage_chain chain_name condition1 condition2 mo
 ```
 
 ```shell
--t	选择表 table_name=filter|nat|mangle|raw
+-t    选择表 table_name=filter|nat|mangle|raw
 
 command1
-	-A --append chain rule-specification：追加新规则于指定链的尾部；
-	-D --delete chain rulenum：根据规则编号删除规则；
-	-D --delete chain rule-specification：根据规则本身删除规则；
-	-L --list [chain]：列出规则；
-	-F 清空规则
-	-P 设置链的默认规则
-	-I  --insert chain [rulenum] rule-specification：插入新规则于指定链的指定位置，默认为首部；
-	-R--replace chain rulenum rule-specification：替换指定的规则为新的规则；
-	-n --numeric：数字格式显示主机地址和端口号；
-	-x --exact：显示计数器的精确值，而非圆整后的数据；
-	--line-numbers：列出规则时，显示其在链上的相应的编号；
-	-S, --list-rules [chain]：显示指定链的所有规则；
+    -A --append chain rule-specification：追加新规则于指定链的尾部；
+    -D --delete chain rulenum：根据规则编号删除规则；
+    -D --delete chain rule-specification：根据规则本身删除规则；
+    -L --list [chain]：列出规则；
+    -F 清空规则
+    -P 设置链的默认规则
+    -I  --insert chain [rulenum] rule-specification：插入新规则于指定链的指定位置，默认为首部；
+    -R--replace chain rulenum rule-specification：替换指定的规则为新的规则；
+    -n --numeric：数字格式显示主机地址和端口号；
+    -x --exact：显示计数器的精确值，而非圆整后的数据；
+    --line-numbers：列出规则时，显示其在链上的相应的编号；
+    -S, --list-rules [chain]：显示指定链的所有规则；
 
 manage_chain # 用不上
-	-N, --new-chain chain：新建一个自定义的规则链；
-	-X, --delete-chain [chain]：删除用户自定义的引用计数为0的空链；
-	-F, --flush [chain]：清空指定的规则链上的规则；
-	-E, --rename-chain old-chain new-chain：重命名链；
-	-Z, --zero [chain [rulenum]]：置零计数器；
-		注意：每个规则都有两个计数器
-		packets：被本规则所匹配到的所有报文的个数；
-		bytes：被本规则所匹配到的所有报文的大小之和；
-	-P, --policy chain target 制定链表的策略(ACCEPT|DROP|REJECT)
+    -N, --new-chain chain：新建一个自定义的规则链；
+    -X, --delete-chain [chain]：删除用户自定义的引用计数为0的空链；
+    -F, --flush [chain]：清空指定的规则链上的规则；
+    -E, --rename-chain old-chain new-chain：重命名链；
+    -Z, --zero [chain [rulenum]]：置零计数器；
+        注意：每个规则都有两个计数器
+        packets：被本规则所匹配到的所有报文的个数；
+        bytes：被本规则所匹配到的所有报文的大小之和；
+    -P, --policy chain target 制定链表的策略(ACCEPT|DROP|REJECT)
 
-chain_name	INPUT|FORWARD|OUTPUT|PREROUTING|POSROUTING # 选择在链的位置启用规则
+chain_name    INPUT|FORWARD|OUTPUT|PREROUTING|POSROUTING # 选择在链的位置启用规则
 
 condition # 指定条件，可以写多个条件
-	-p	指定协议tcp|udp
-		-s	源地址
-		-d	目标地址
-		--sport	源端口
-		--dport	目标端口
-		--dports	multiport
-	-i	--in-interface指定的设备名
-	-o	--out-interface指定的设备名
+    -p    指定协议tcp|udp
+        -s    源地址
+        -d    目标地址
+        --sport    源端口
+        --dport    目标端口
+        --dports    multiport
+    -i    --in-interface指定的设备名
+    -o    --out-interface指定的设备名
 
 modules # 指定模块
-	-m modules_name	启用modules tcp|state|multiport
+    -m modules_name    启用modules tcp|state|multiport
 
 target #指定对数据包进行的操作
-	-j	ACCEPT|DROP|REJECT|DNAT|SNAT
+    -j    ACCEPT|DROP|REJECT|DNAT|SNAT
 ```
 
 案例
@@ -1388,9 +1377,9 @@ kern.* /var/log/kernel.log
 [root@localhost ~]# iptables -t filter -A INPUT -m mark --mark 2 -j REJECT
 
 案例14:
-client		firewall			web
-ip:192.168.1.2	ens33:192.168.1.1		ip:192.168.3.2
-		ens37:192.168.3.1
+client        firewall            web
+ip:192.168.1.2    ens33:192.168.1.1        ip:192.168.3.2
+        ens37:192.168.3.1
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o ens37 -j SNAT --to-source 192.168.3.1
 或
@@ -1399,8 +1388,6 @@ vim /etc/sysconfig/iptables
 #-A FORWARD -j REJECT --reject-with icmp-host-prohibited
 # 要注释
 ```
-
-
 
 ### 硬盘操作类
 
@@ -1455,8 +1442,6 @@ echo \
  >> /etc/fstab
 ```
 
-
-
 ### 用户权限类
 
 ​    su
@@ -1469,14 +1454,14 @@ su - user   切换用户环境变量和目录改变
 ​    visudo
 
 ```visudo
-#user	MACHINE=(RUN_AS_USER) COMMANDS
-lxw	ALL=(ALL) ALL
-#用户	主机=(身份) 命令
+#user    MACHINE=(RUN_AS_USER) COMMANDS
+lxw    ALL=(ALL) ALL
+#用户    主机=(身份) 命令
 
 #组 %
-%wheel	ALL=(ALL) ALL
+%wheel    ALL=(ALL) ALL
 
-lxw	ALL=/usr/sbin/ip, /usr/sbin/fdisk, !/usr/bin/less /etc/shadow
+lxw    ALL=/usr/sbin/ip, /usr/sbin/fdisk, !/usr/bin/less /etc/shadow
 #不能用less看shadow
 lxw     ALL=(ALL)       NOPASSWD: SOFTWARE
 lxw     ALL=(ALL)       SERVICES, STORAGE
@@ -1500,6 +1485,8 @@ lsattr   #查看文件属性
 
 ### 其他类:
 
+mysql-cli
+
 ```shell
 mysql
 -s   去除边框
@@ -1510,6 +1497,8 @@ mysql
 -X   XML输出
 ```
 
+curl
+
 ```shell
 curl
 # 用于查看web页面，可以用来判断web见面是否正常工作
@@ -1519,6 +1508,8 @@ curl
 -s   静默访问
 --connect-timeout  定义超时时间
 ```
+
+date
 
 ```shell
 date +[option]
@@ -1537,8 +1528,6 @@ date +[option]
 
 -s  设定时间  "yyyy-mm-dd  hh:mm:ss"
 ```
-
-
 
 ## 十、运行级别
 
@@ -1866,23 +1855,22 @@ kill -USR1 $(cat /usr/local/nginx/logs/nginx.pid)
 # 从文件中获取hostIP port user password
 cat SSHList.txt|while read SERVER_IP SSHD_PORT LOGIN_NAME SSH_PASSWD
 do
-	ping -c1 $SERVER_IP
-	if [ $? -eq 0 ];then
-		touch /root/ssh_up.txt
-		/usr/bin/expect <<-END
-		spawn ssh-copy-id -p $SSHD_PORT $LOGIN_NAME@$SERVER_IP
-		expect { 
-			"yes/no" { send "yes\r";exp_continue }
-			"password:" { send "$SSH_PASSWD\r" }
-		}
-		expect eof
-		END
-		echo "$(date +%F) 完成向 $SERVER_IP 发送公钥" >> /root/ssh_up.txt
-	else
-		touch /root/ssh_down.txt
-		echo "$(date +%F) $SERVER_IP 无法连接" >> /root/ssh_down.txt
-	fi
+    ping -c1 $SERVER_IP
+    if [ $? -eq 0 ];then
+        touch /root/ssh_up.txt
+        /usr/bin/expect <<-END
+        spawn ssh-copy-id -p $SSHD_PORT $LOGIN_NAME@$SERVER_IP
+        expect { 
+            "yes/no" { send "yes\r";exp_continue }
+            "password:" { send "$SSH_PASSWD\r" }
+        }
+        expect eof
+        END
+        echo "$(date +%F) 完成向 $SERVER_IP 发送公钥" >> /root/ssh_up.txt
+    else
+        touch /root/ssh_down.txt
+        echo "$(date +%F) $SERVER_IP 无法连接" >> /root/ssh_down.txt
+    fi
 done
 cat /root/ssh_up.txt /root/ssh_down.txt
 ```
-
