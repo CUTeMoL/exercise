@@ -4,8 +4,7 @@ import os
 import geoip2.database
 # 需要 Graphviz 和 ImageMagick
 domain = input("追踪的域名: ")
-# 读取GeoLite2-City.mmdb
-dbreader = geoip2.database.Reader('/home/lxw/GeoLite2-City.mmdb')
+dbreader = geoip2.database.Reader('/home/lxw/GeoLite2-City.mmdb') # 读取GeoLite2-City.mmdb
 if len(domain) >= 1 and domain[0] != "":
     a,u = traceroute(domain)
     ip_addrs = set("") # 创造空集合存放IP地址
@@ -26,10 +25,9 @@ if len(domain) >= 1 and domain[0] != "":
             )
         except:
             print(ip, "None", "None", "None")
-    # 绘制成路由图
-    a.graph(target="> test.svg")
+    a.graph(target="> test.svg") # 绘制成路由图
     time.sleep(3)
-    # 转化为png图片
-    os.popen("/usr/bin/convert ./test.svg ./test.png")
+    # os.popen("/usr/bin/convert ./test.svg ./test.png") 
+    # 转化为png图片(可省略)
 else:
     print("域名有误")
