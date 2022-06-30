@@ -216,7 +216,7 @@ innodb_buffer_pool_size
 
 通过space（表空间ID和page_no叶的编号定位）
 
-```mysql
+```sql
 # 查看space的ID
 SELECT name,space FROM INNODB_SYS_TABLESPACES;
 # 查看page_no
@@ -266,7 +266,7 @@ innodb_buffer_pool_load_now      #现在载入buffer_pool持久化，备份的�
 
 **查询方式**
 
-```mysql
+```sql
 use performance_schema
 select * from threads where  name like 'thread/innodb%' ；  #可以查看thread的os ID
 ```
@@ -281,7 +281,7 @@ innodb_write_io_threads=16
 
 thread/innodb/page_cleaner_thread  #刷新进磁盘的线程默认为4
 
-```mysql
+```sql
 show variables like 'innodb_io_%'
 # innodb_io_capacity:每秒钟刷新脏页数量
 ```
@@ -324,7 +324,7 @@ innodb_purge_threads=4   # 设置回收线程数
 
 查询:
 
-```mysql
+```sql
 show variables like 'innodb%row%';
 ```
 
@@ -412,7 +412,7 @@ innodb_max_dirty_pages_pct参数控制
 
 **查看checkpoint**
 
-```mysql
+```sql
 show engine innodb status\G
 ```
 
@@ -495,7 +495,7 @@ DURABILITY|持久性
 
 ​    所有改动都必须在成功结束前保存至某个物理设备
 
-```mysql
+```sql
 begin;  #开启事务
 rollback;  #回滚事务到begin
 savepoint  s1;   #设置回滚保存点
@@ -519,13 +519,13 @@ commit分为3步
 
 MySQL是自动提交，不输入BEGIN的话，执行完语句自动提交
 
-```mysql
+```sql
 SHOW VARIABLES LIKE 'AUTOCOMMIT'  #查看自动提交
 ```
 
 查看事务的隔离级别|isolation
 
-```mysql
+```sql
 SHOW VARIABLES LIKE 'tx_isolation';
 select * from performance_schema.variables_by_thread where variable_name='tx_isolation';
 ```
@@ -540,7 +540,7 @@ serializable
 
 RR强于RC怎么测试
 
-```mysql
+```sql
 BEGIN;
 SELECT * FROM T1;  重复10次
 COMMIT;
@@ -572,7 +572,7 @@ ReadView 会根据这 4 个属性，再结合 undo log 版本链，来实现 MVC
 
 ### 查看有问题的进程
 
-```mysql
+```sql
 SHOW PROCESSLIST;
 ```
 
@@ -589,7 +589,7 @@ binlog_group_commit_sync_no_delay_count  #等待多少条提交一次
 
 ### 分布式事务
 
-```mysql
+```sql
 set @id:=floor(rand()*1000000+1)
 xa start 'name';
 update sbtest.sbtest1 set k=k+1 where id = @id;
@@ -633,7 +633,7 @@ enforce-gtid-consistency=1   #强制GTID一致性检查
 
 ### mysqlbinlog|查看二进制日志
 
-```mysql
+```sql
 show binary logs;
 show binlog events in 'binlog_logfile';
 ```
@@ -662,14 +662,14 @@ mysqlbinlog  --start-datetime='2022-04-11 00:00:00' --stop-datetime='2022-04-11 
 
 怎么查看从机SQL线程执行数量
 
-```mysql
+```sql
 show processlist;
 select * from information_schema.processlist where user='system user' and 'System lock';
 ```
 
 刷新二进制日志
 
-```mysql
+```sql
 flush logs;
 ```
 
@@ -692,7 +692,7 @@ flush logs;
 
 ### 删除binglog
 
-```mysql
+```sql
 purge binary logs to 'mysql-bin.000017';
 ```
 
@@ -860,7 +860,7 @@ innodb_print_all_deadlocks=1 # 开启死锁检测信息
 innodb_deadlock_detect=0  #不开启死锁检测机制
 ```
 
-```mysql
+```sql
 PAPER LESS
 show engine innodb status\G   #找到TRANSACTIONS可以查询死锁信息
 ```
@@ -873,7 +873,7 @@ INNODB_LOCKS
 
 INNODB_LOCK_WAITS(5.7以上推荐)
 
-```mysql
+```sql
 SELECT
     r.trx_id waiting_trx_id,
     r.trx_mysql_thread_id waiting_thread,
@@ -894,7 +894,7 @@ ON r.trx_id=w.requesting_trx_id;
 innodb_lock_wait_timeout=3  #单位为秒，锁等待超时时间
 ```
 
-```mysql
+```sql
 set global innodb_status_output_locks=1;  #输出锁的信息
 ```
 
@@ -932,7 +932,7 @@ MYSQL默认存储引擎是基于行（记录）存储
 
 叶到buffer pool只需要一次解压，更新操作时会解压数据写一份，压缩数据写日志，压缩日志写不下时，解压数据才进行压缩，写回磁盘
 
-```mysql
+```sql
 show variables like 'innodb_file_per_table'
 set global innodb_file_per_table
 alter table table_name row_format=compressed,key_block_size=8;  #默认16K压缩到8K
@@ -942,7 +942,7 @@ alter table table_name row_format=compressed,key_block_size=8;  #默认16K压缩
 
 ​    性能强于普通压缩，也强于不压缩利用了空洞特性
 
-```mysql
+```sql
 CREATE TABLE table_name ( a int primary key ) compression='lz4';   #算法更快
 CREATE TABLE table_name ( a int primary key ) compression='zlib';   #比率更高
 ```
@@ -967,7 +967,7 @@ CREATE TABLE table_name ( a int primary key ) compression='zlib';   #比率更�
 
 例如：
 
-```mysql
+```sql
 CREATE TABLE orders (
     orderid bigint,
     orderdate datetime,
@@ -993,7 +993,7 @@ commit;
 
 例1：
 
-```mysql
+```sql
 CREATE TABLE T(
     id INT PRIMARY KEY
 ) ENGINE=INNODB
@@ -1009,7 +1009,7 @@ PARTITION p1 VALUES LESS THAN (20)
 
 例2：
 
-```mysql
+```sql
 CREATE TABLE T(
 a INT,
 b INT
@@ -1022,7 +1022,7 @@ PARTITION p0 VALUES IN (0,2,4,6,8)
 
 例3：
 
-```mysql
+```sql
 CREATE TABLE T(
 a INT,
 b DATETIME
@@ -1035,7 +1035,7 @@ PARTITIONS 4;
 
 例4：
 
-```mysql
+```sql
 CREATE TABLE T(
 a INT,
 b DATETIME
@@ -1081,7 +1081,7 @@ PARTITIONS 4;
 
 查找没有主键的表
 
-```mysql
+```sql
 SELECT * FROM information_schema.TABLES t LEFT JOIN information_schema.STATISTICS s ON t.table_schema=s.table_schema AND t.table_name=s.table_name AND s.index_name='PRIMARY' WHERE t.table_schema NOT IN ('mysql','performance_schema','information_shema','sys') AND table_type='BASE TABLE' AND s.index_name IS NULL;
 ```
 
@@ -1091,7 +1091,7 @@ SELECT * FROM information_schema.TABLES t LEFT JOIN information_schema.STATISTIC
 
 推荐使用工具进行创建
 
-```mysql
+```sql
 create table table_name ( col_name1 int unsigned，col_name2 tinyint signed );  
 ```
 
@@ -1109,7 +1109,7 @@ RESTYICT = NO ACTION
 
 示例：
 
-```mysql
+```sql
 CREATE TABLE product(
     category INT NOT NULL, id INT NOT NULL,
     price DECIMAL,
@@ -1141,13 +1141,13 @@ insert into customer values (1);
 insert into product_order values (null,30,2,1);
 ```
 
-```mysql
+```sql
 update product set category=3 where id=2;
 ```
 
 当product的category改变，product_order中的product_category也会改变，因为设置了外键
 
-```mysql
+```sql
 update customer set id=20 where id=1;
 ```
 
@@ -1155,7 +1155,7 @@ update customer set id=20 where id=1;
 
 修改表结构
 
-```mysql
+```sql
 ALTER ONLINE TABLE table_name add col_name1 col_type first|after col_name;
 ```
 
@@ -1165,13 +1165,13 @@ first|after:表示字段放置的位置
 
 #修改字段
 
-```mysql
+```sql
 ALTER ONLINE TABLE table_name change old_col_name1 new_col_name1 col_type； 
 ```
 
 修改字段的名称及类型
 
-```mysql
+```sql
 ALTER ONLINE TABLE table_name modify col_name1 col_type； 
 ```
 
@@ -1179,13 +1179,13 @@ ALTER ONLINE TABLE table_name modify col_name1 col_type；
 
 ​    设置变量
 
-```mysql
+```sql
 show variables like 'sort_buffer_size'; #显示排序用到的内存
 ```
 
 ​    设置时区
 
-```mysql
+```sql
 set time_zone='+8:00';
 ```
 
@@ -1193,7 +1193,7 @@ set time_zone='+8:00';
 
 ​    转换字段字符convert
 
-```mysql
+```sql
 alter table table_name convert charset UTF-8;
 ```
 
@@ -1201,13 +1201,13 @@ alter table table_name convert charset UTF-8;
 
 ​    修改默认字符，但已经定义字符的字段不修改
 
-```mysql
+```sql
 alter table table_name charset=UTF8;
 ```
 
 创建的表字符区分大小写
 
-```mysql
+```sql
 create table table_name ( col_name varchar(10) collate utf8mb4_bin, unique key (col_name)); 
 ```
 
@@ -1217,13 +1217,13 @@ unique key：代表唯一性
 
 ##显示是当前支持字符集
 
-```mysql
+```sql
 show charset;
 ```
 
 my.cnf中设置默认字符集
 
-```mysql
+```sql
 [mysqld]
 character_set_server=utf8mb4
 ```
@@ -1244,7 +1244,7 @@ INT    类型
 | -------- | ------ | ------------------ | -------------------- |
 | 无符号      | 有符号    | 显示真实属性/值不做任何修改/填充0 | 自增/每张表只能一个/必须是索引的一部分 |
 
-```mysql
+```sql
 select last_insert_id();  显示上次自增的数值
 ```
 
@@ -1299,7 +1299,7 @@ JSON查询性能高：查询不需要遍历所有字符串才能找到数据
 
 JSON插入示例：
 
-```mysql
+```sql
 create table table_name (
     col_name1 int,
     col_name2 json
@@ -1331,7 +1331,7 @@ insert into table_name (
 
 虚拟的表相当于快捷方式
 
-```mysql
+```sql
 CREATE view V_SALARY as 
   select emp_no,max(salary) from emp.salaries group by emp_no;
 ```
@@ -1340,14 +1340,14 @@ CREATE view V_SALARY as
 
 定时器
 
-```mysql
+```sql
 SHOW VARIABLES like   'event_scheduler' ;
 set 'event_scheduler'=on;
 ```
 
 一次：
 
-```mysql
+```sql
 CREATE DEFINER=`root`@`localhost`
 EVENT `test2`
 ON SCHEDULE AT '2017-11-17 00:00:00.000000' // 只执行一次
@@ -1357,7 +1357,7 @@ DO insert into events_list values('event_now', now());
 
 循环：
 
-```mysql
+```sql
 CREATE DEFINER=`root`@`localhost` //用户
 EVENT `test` //事件的名称
 ON SCHEDULE EVERY 60 MINUTE_SECOND //60秒循环一次   SCHEDULE EVERY '0:0:1' HOUR_SECOND    SCHEDULE EVERY '0:1' HOUR_MINUTE  (不同的计时方式)
@@ -1372,7 +1372,7 @@ END
 
 ## 十二、触发器|trigger
 
-```mysql
+```sql
 CREATE TRIGGER 触发器名 BEFORE|AFTER 触发事件
 ON 表名 FOR EACH ROW
 BEGIN
@@ -1400,7 +1400,7 @@ B+TREE的查询方式是通过ROOT PAGE(的PK和key)查找数据放在那个块
 
 创建索引
 
-```mysql
+```sql
 创建索引会锁表
 alter table table_name add [unique] index index_name (col_name);   #unique 表示唯一索引
 或者
@@ -1411,13 +1411,13 @@ INDEX [indexName] (username(length))
 
 删除:
 
-```mysql
+```sql
 alter table table_name drop index index_name (col_name); 
 ```
 
 或者
 
-```mysql
+```sql
 DROP INDEX [indexName] ON mytable; 
 ```
 
@@ -1431,7 +1431,7 @@ DROP INDEX [indexName] ON mytable;
 
 ### 在线创建索引
 
-```mysql
+```sql
 SHOW VARIABLES LIKE 'INNODB_ONLINE_ALTER_LOG_MAX_SIZE';  #默认128M
 ```
 
@@ -1445,7 +1445,7 @@ SHOW VARIABLES LIKE 'INNODB_ONLINE_ALTER_LOG_MAX_SIZE';  #默认128M
 
 例如：a,b复合索引是对a排序，（a，b）排序，因此可用于
 
-```mysql
+```sql
 SELECT * FROM TABLE_NAME WHERE a=?;
 SELECT * FROM TABLE_NAME WHERE a=? AND b=?;
 SELECT * FROM TABLE_NAME WHERE a=? ORDER BY b;   #最常用的调优手段
@@ -1453,7 +1453,7 @@ SELECT * FROM TABLE_NAME WHERE a=? ORDER BY b;   #最常用的调优手段
 
 不能用于
 
-```mysql
+```sql
 SELECT * FROM TABLE_NAME WHERE b=?;
 ```
 
@@ -1467,7 +1467,7 @@ information_schema.STATISTICS.SEQ_IN_INDEX
 
 例如：INDEX（PK1,PK2,KEY1,KEY2）
 
-```mysql
+```sql
 SELECT PK1,KEY2 FROM TABLE WHERE KEY1=?;
 ```
 
@@ -1493,13 +1493,13 @@ ALTER TABLE table_name alter index index_name invisible/visible;
 
 1.创建虚拟列
 
-```mysql
+```sql
 ALTER TABLE order ADD column o_orderdate2 INT (DATEDIFF('2099-01-01',o_orderdate)) VIRTUAL;
 ```
 
 2.添加索引
 
-```mysql
+```sql
 ALTER TABLE order add index idx_descdate (col_name1,o_orderdate2,col_name3 );
 ```
 
@@ -1515,7 +1515,7 @@ ALTER TABLE order add index idx_descdate (col_name1,o_orderdate2,col_name3 );
 
 全文索引语法：
 
-```mysql
+```sql
 SELECT * FROM articles WHERE MATCH (title，body) AGAINST ('database' IN NATURAL LANGUAGE MODE); #只要database
 SELECT * FROM articles WHERE MATCH (title，body) AGAINST ('+MYSQL -YOURSQL' IN BOOLEAN MODE); #要mysql不要yoursql
 SELECT * FROM articles WHERE MATCH (title，body) AGAINST ('database' WITH QUERY EXPANSION); #模糊
@@ -1523,7 +1523,7 @@ SELECT * FROM articles WHERE MATCH (title，body) AGAINST ('database' WITH QUERY
 
 ### 索引倾斜|force index
 
-```mysql
+```sql
  SELECT * FROM lineitem force index(i_l_orderkey) where l_orderkey=1\G
 ```
 
@@ -1541,14 +1541,14 @@ r  ： 除了第一次，后面显示的都是减去前一次后的数据
 
 ### 设置连接数
 
-```mysql
+```sql
 SHOW VARIABLES LIKE  'max_connections';
 set global max_connections=2048;
 ```
 
 ### 查看连接数
 
-```mysql
+```sql
 show global status like 'thread%'  # 连接数
 select * from variables_by_thread;
 show processlist;    #当前线程ID（所有）or 它在做什么
@@ -1558,7 +1558,7 @@ select * from threads limit 1\G  #关联threadid和processid的表
 
 ### DQL|查询语句
 
-```mysql
+```sql
 SELECT *|col_name1,col_name2 from table_name WHERE [条件1] AND [条件2] GROUP BY [条件3] HAVING [条件4] ORDER BY [条件5] LIMIT [条件6]
 ```
 
@@ -1568,7 +1568,7 @@ GROUP BY：先分组在显示分组后要显示的字段，如果要显示的字
 
 例如：
 
-```mysql
+```sql
 select date_format(o_orderDATE,'%YY%m'),ROUND(sum(o_totalprice),2) from orders group by date_format(o_orderDATE,'%YY%m');
 ```
 
@@ -1598,7 +1598,7 @@ LIMIT的分页还是会读取前面记录（不会减少资源的占用）
 
 ANY：对于子查询中返回的列中的任一数值，如果比较结果为TRUE的话，则返回TRUE
 
-```mysql
+```sql
 SELECT s1 FROM t1 WHERE S1 > ANY (SELECT s1 FROM t2);
 ```
 
@@ -1606,7 +1606,7 @@ SOME=ANY
 
 IN equals=ANY
 
-```mysql
+```sql
 SELECT s1 FROM t1 WHERE s1 = ANY (SELECT s1 FROM t2);
 SELECT s1 FROM t1 WHERE s1 IN  (SELECT s1 FROM t2);
 ```
@@ -1623,7 +1623,7 @@ ALL:对于子查询返回列中的所有值，如果比较结果为TRUE,则返�
 
 NOT IN equals <> ALL
 
-```mysql
+```sql
 SELECT s1 FROM t1 WHERE s1 > (SELECT s1 FROM t2);
 ```
 
@@ -1639,13 +1639,13 @@ EXISTS谓词：仅返回TRUE\FALSE;UNKNOWN返回为FALSE
 
 in的写法
 
-```mysql
+```sql
 SELECT * FROM employees WHERE emp_no IN (SELECT emp_no FROM dept_emp WHERE dept_no='d005') LIMIT 10;
 ```
 
 EXISTS的写法
 
-```mysql
+```sql
 SELECT * FROM employees WHERE EXISTS ( SELECT * FROM dept_emp WHERE dept_no='d005' AND employees.emp_no =dept_emp.emp_no ) LIMIT 10;
 ```
 
@@ -1653,19 +1653,19 @@ SELECT * FROM employees WHERE EXISTS ( SELECT * FROM dept_emp WHERE dept_no='d00
 
 in的写法
 
-```mysql
+```sql
 SELECT orderid,customerid,employeeid,orderdate FROM orders WHERE orderdate IN (SELECT MAX(orderdate) FROM orders GROUP BY (DATE_FORMAT(orderdate,'%Y%M')));
 ```
 
 EXISTS的写法
 
-```mysql
+```sql
 SELECT orderid,customerid,employeeid,orderdate FROM orders a WHERE EXISTS (SELECT MAX(orderdate) FROM orders b GROUP BY (DATE_FORMAT(orderdate,'%Y%M')) HAVING MAX(orderdate)=a.orderdate);
 ```
 
 求不是UTF8mb4的表
 
-```mysql
+```sql
 SELECT 
     CONCAT(TABLE_SCHEMA,'.',TABLE_NAME) AS NAME,
     character_set_name,
@@ -1680,7 +1680,7 @@ GROUP BY NAME,character_set_name;
 
 求每行共占用的多少字节
 
-```mysql
+```sql
 SELECT ROUND (AVG(ROW),2) FROM (
     SELECT (LENGTH(COL_NAME1)+LENGTH(COL_NAME2)+LENGTH(COL_NAME3)) AS row FROM
     table_name
@@ -1706,7 +1706,7 @@ SELECT * FROM statement_analysis \G
 
 ### 查找没有建立索引的表
 
-```mysql
+```sql
 SELECT * FROM TABLES t LEFT JOIN STATISTICS s ON t.TABLE_NAME=s.TABLE_NAME WHERE INDEX_NAME IS NULL AND t.TABLE_SCHEMA<>'information_schema' AND t.TABLE_SCHEMA<> 'sys' AND t.TABLE_SCHEMA<>'performance_schema' AND t.TABLE_SCHEMA<>'mysql'\G
 ```
 
@@ -1722,7 +1722,7 @@ SELECT * FROM TABLES t LEFT JOIN STATISTICS s ON t.TABLE_NAME=s.TABLE_NAME WHERE
 
 例如： 
 
-```mysql
+```sql
 EXPLAIN format=json select * from table_name ;
 ```
 
@@ -1773,13 +1773,13 @@ The count of none unique record(唯一记录数)，越高索引越有价值  CAR
 
 我的：
 
-```mysql
+```sql
 select S.TABLE_SCHEMA,S.TABLE_NAME,S.INDEX_NAME,S.CARDINALITY,S.CARDINALITY/T.TABLE_ROWS from STATISTICS S LEFT JOIN TABLES T ON S.TABLE_NAME=T.TABLE_NAME WHERE INDEX_NAME <> 'PRIMARY'  AND S.CARDINALITY/T.TABLE_ROWS <0.1;
 ```
 
 标准答案：
 
-```mysql
+```sql
 SELECT 
     CONCAT(t.TABLE_SCHEMA,'.',t.TABLE_NAME) table_name,INDEX_NAME, CARDINALITY, 
     TABLE_ROWS, CARDINALITY/TABLE_ROWS AS SELECTIVITY
@@ -1857,25 +1857,25 @@ IO=S/(16k/x)
 
 对key值检索获取到的PRIMARYKEY存放到内存空间，然后排序，再统一查表
 
-```mysql
+```sql
 SELECT /* + MRR(table_name) */ * FROM table_name where col_name > ?;
 ```
 
 BKA  join优化（基于MRR）原理查询batched key access join
 
-```mysql
+```sql
 SELECT /* + NO_BKA(t1,t2) */ * FROM t1 INNER JOIN t2 INNER JOIN t3;
 ```
 
 ### 查找排序次数最多的语句
 
-```mysql
+```sql
 SELECT * FROM statements_with_sorting \G
 ```
 
 ### 修改临时表存储大小及排序表大小
 
-```mysql
+```sql
 show variables like '%tmp%';
 show variables like 'tmp_table_size';
 set tmp_table_size=1024*1024*1024;
@@ -1884,7 +1884,7 @@ set sort_buffer_size=1024*1024*1024;
 
 ### QPS && TPS
 
-```mysql
+```sql
 SHOW GLOBAL STATUS LIKE '%question%'；
 SHOW GLOBAL STATUS LIKE '%uptime%'；
 ```
@@ -1895,7 +1895,7 @@ SHOW GLOBAL STATUS LIKE '%uptime%'；
 
 找出非InnoDB的表
 
-```mysql
+```sql
 USE INFORMATION_SCHEMA
 SELECT * FROM TABLES\G  #可以显示出所有表的元数据
 
@@ -1919,7 +1919,7 @@ NULL是未定义数据
 
 ## 十五、函数
 
-```mysql
+```sql
 count:计数
 count(col_name):返回不为NULL的记录数量
 count(1):无论是否为NULL的数量（）里的数值是否1都无所谓
@@ -2283,7 +2283,7 @@ secure_file_priv=NULL;  #不可导入导出，可以定义一个文件夹，或�
 
 仅表数据
 
-```mysql
+```sql
 select * into outfile '/tmp/sqlbak/tb_student.txt' from db.table;  #可以加where等限制条件
 ```
 
@@ -2291,7 +2291,7 @@ select * into outfile '/tmp/sqlbak/tb_student.txt' from db.table;  #可以加whe
 
 1.
 
-```mysql
+```sql
 load data local infile '/tmp/sqlbak/tb_student.txt' into table tb_student;
 ```
 
@@ -2340,13 +2340,13 @@ log_timestamps=system #写入时区信息，需要改system时间，仅在5.7中
 
 1.
 
-```mysql
+```sql
 mv slow.log slow.log`date`  
 ```
 
 2.
 
-```mysql
+```sql
 flush slow logs;
 ```
 
@@ -2514,19 +2514,19 @@ skip-grant-tables
 
 3.
 
-```mysql
+```sql
 use mysql
 ```
 
 4.
 
-```mysql
+```sql
 select user,host,authentication_string from user;
 ```
 
 5.
 
-```mysql
+```sql
 update user set authentication_string = password('passwd') where user = 'root' and host = 'localhost';
 ```
 
@@ -2571,7 +2571,7 @@ mysql -p < name.sql
 (3)查看备份文件中二进制位置
 如果是用mysqldump，则会有一行
 
-```mysql
+```sql
 CHANGE MASTER TO MASTER_LOG_FILE='BIN.000001',MASTER_LOG_POS=154;
 ```
 
@@ -2638,26 +2638,26 @@ grant replication slave on *.* to 'replication_name'@'IP' ;
 
 2.刷新表并锁表
 
-```mysql
+```sql
 flush tables with read lock; # 其实不需要锁表
 ```
 
 3.记录position
 
-```mysql
+```sql
 show master status;
 ```
 
 4.slave指定master
 
-```mysql
+```sql
 change master to
 master_host='IP',master_user='replication_name',master_password='passwd',master_port=3306,master_log_file='binlog.000003',master_log_pos=154;
 ```
 
 5.
 
-```mysql
+```sql
 start slave; #开始同步
 stop slave; #停止同步
 reset slave; #重设同步配置信息
@@ -2665,13 +2665,13 @@ reset slave; #重设同步配置信息
 
 6.master 
 
-```mysql
+```sql
 unlock tables; # 锁了才需要解
 ```
 
 6.
 
-```mysql
+```sql
 show slave status\G   # 查看slave的情况
 ```
 
@@ -2689,14 +2689,14 @@ show slave status\G   # 查看slave的情况
 
 7.slave上设置只读
 
-```mysql
+```sql
 set global read_only=1;
 set global super_read_only=1;
 ```
 
 8.数据不同步的处理方式？
 
-```mysql
+```sql
 set global  sql_slave_skip_counter=1;
 ```
 
@@ -2769,13 +2769,13 @@ enforce-gtid-consistency=1
 
 3.设置只读模式 (可省略)
 
-```mysql
+```sql
 set @@global.read_only=ON;
 ```
 
 5.SLAVE上配置
 
-```mysql
+```sql
 stop slave;
 reset slave;
 change master to 
@@ -2787,7 +2787,7 @@ start slave;
 
 7.
 
-```mysql
+```sql
 show slave status\G   # 查看slave的情况
 ```
 
@@ -2927,21 +2927,21 @@ rpl_semi_sync_master_wait_for_slave_count=1;    #至少等待几台从机的ACK�
 
 1.master：
 
-```mysql
+```sql
 install plugin rpl_semi_sync_master soname 'semisync_master.so';
 set global rpl_semi_sync_master_enabled=on;
 ```
 
 2.slave：
 
-```mysql
+```sql
 install plugin rpl_semi_sync_slave soname 'semisync_slave.so';
 set global rpl_semi_sync_slave_enabled=on;
 ```
 
 3.
 
-```mysql
+```sql
 stop slave; 
 start slave; 
 ```
@@ -2951,7 +2951,7 @@ Q1.AFTER_SYNC为什么会比AFTER_COMMIT性能好？
 
 ## 二十三、安装插件
 
-```mysql
+```sql
 show plugins;
 #安装
 install plugin validate_password soname 'validate_password.so';
@@ -2959,7 +2959,7 @@ install plugin validate_password soname 'validate_password.so';
 
 ## 二十四、免密登录
 
-```mysql
+```sql
 mysql_config_editor set --login-path=my3306 --user=root --socket=/tmp/mysql3306.sock --password
 mysql_config_editor print --all
 mysql --login-path=my3306
