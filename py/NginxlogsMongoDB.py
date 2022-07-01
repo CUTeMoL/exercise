@@ -20,7 +20,7 @@ with open("/var/log/nginx/access.log.1", "r", encoding='utf8') as access_logs:
             data["remote_addr_Province"] = geo_data.subdivisions.most_specific.name
             data["remote_addr_City"] = geo_data.city.name
         except geoip2.errors.AddressNotFoundError:
-            data["remote_address"] = "notfind"
+            data["remote_address"] = "PRIVATE NETWORK"
         x = mongodbcol.insert_one(data)
         # print(x.inserted_id)
 # 删库
