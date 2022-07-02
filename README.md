@@ -41,3 +41,5 @@ logrotate_acceslog.sh - 日志切割
 
 send_ssh_key.sh - 发送ssh公钥
 
+## note
+note - 整理中的学习笔记
