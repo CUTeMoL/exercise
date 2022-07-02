@@ -19,6 +19,8 @@ mongoDBNginxLogs.py - 存储日志到MongoDB中
 
 traceRouteAndIpGeo.py - 路由追踪
 
+myterminal.py - paramiko模块使用
+
 ## shell
 
 inotifywait.sh - 监控目录并同步
