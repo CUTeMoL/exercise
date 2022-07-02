@@ -3,7 +3,7 @@ import psutil
 import IPy
 import re
 # 导入OUI信息
-with open("./oui.txt", "r", encoding='utf8') as f:
+with open("./oui_s.txt", "r", encoding='utf8') as f:
     oui_list = f.readlines()
 net_devices = {} # 字典存储网卡信息
 scan_range = {} # 记录网段信息
