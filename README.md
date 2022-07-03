@@ -1,5 +1,5 @@
 # exercise
-# 个人练习
+# 个人练习以及实践的脚本
 
 ## python
 
@@ -44,6 +44,8 @@ accesslog_analyze.sh - IP访问次数排名
 logrotate_acceslog.sh - 日志切割
 
 send_ssh_key.sh - 发送ssh公钥
+
+# 经验笔记（整理中）
 
 ## note
 note - 整理中的学习笔记
