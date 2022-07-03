@@ -74,6 +74,7 @@ http {
             '"upstream_response_time": "$upstream_response_time", '
             '"http_user_agent": "$http_user_agent"'
         '}';
+	# 在处理中文时，默认使用16进制编码处理 escape=json 可以取消这个设定
 	access_log /var/log/nginx/access.log json;
 	error_log /var/log/nginx/error.log;
     # charset settings
