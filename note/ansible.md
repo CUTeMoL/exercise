@@ -158,7 +158,7 @@ ansible group_name -m file -a "path=/etc/yum.repos.d/ state=absent"
 ansible group_name -m copy -a "src=/etc/yum.repos.d dest=/etc/"
 ~~~
 
-**使用hostname模块修改过主机名后.在master上修改/etc/hosts文件，并拷贝到group_name的远程机器上**
+使用hostname模块修改过主机名后.在master上修改/etc/hosts文件，并拷贝到group_name的远程机器上
 
 ~~~shell
 #先在master上修改好/etc/hosts文件，然后使用下面命令拷贝过去覆盖
@@ -335,7 +335,7 @@ ansible group_name -m service -a 'name=vsftpd state=stopped enabled=false'
 
 ### script模块
 
-script模块用于在远程机器上执行**本地**脚本。
+script模块用于在远程机器上执行本地脚本。
 
 ```shell
 ansible group_name -m script -a '/tmp/1.sh'
