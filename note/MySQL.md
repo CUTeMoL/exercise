@@ -2015,41 +2015,61 @@ replace：替换
 
 group_concat:把分组后无法完全显示，但又想显示的数据通过逗号（默认）合并起来形成一条数据
 group_concat(col_name order by col_name separator ':')  #separator可以替换分隔符
+
+left（name,4）截取左边的4个字符
+right（name,2）截取右边的2个字符
+SUBSTRING(字符,定位,个数) 
+SUBSTRING(name,5,3) 截取name这个字段 从第五个字符开始 只截取之后的3个字符
+SUBSTRING(name, -4) 截取name这个字段的第 4 个字符位置（倒数）开始取，直到结束
 ```
 
 ## 十六、范式|NORMAL FORM
 
 定义：数据库结构定义的规范
+
 组成：第一范式、第二范式、第三范式
 
 目的：
+
 1.消除数据冗余（因此使用更多的空间）。
+
 2.使对数据的修改更容易，而且能避免这样做的时候出现异常。更容易执行一致性的约束。
+
 3产生一个与数据表示的情况更相似的更容易理解的结构。
 
 ### 1NF
 
 没有重复的组
+
 全部的键属性都定义了
+
 全部的属性都依赖主键
+
 一定要有主键
 
 ### 2NF
 
 是1NF
+
 不包含部分依赖（属性只依赖主键的一部分）
 
 ### 3NF
 
 是2NF
+
 不包含传递依赖（非主属性通过另一个非键值依赖于主键）
 
 优点：
-    更新操作通常比较快
-    没有或者只有很少重复的数据
-    表相对比较小、容易被缓存
+
+​    更新操作通常比较快
+
+​    没有或者只有很少重复的数据
+
+​    表相对比较小、容易被缓存
+
 缺点：
-    查询数据需要多次关联
+
+​    查询数据需要多次关联
 
 ## 十七、备份恢复
 
@@ -2539,11 +2559,15 @@ update user set authentication_string = password('passwd') where user = 'root' a
 主机的数据修改写入二进制文件>从机的IO线程从二进制文件中获取主机的操作>写入从机的中继日志>从机SQL线程读取中继日志写入自己的数据库
 
 Q1.为什么MySQL的复制要开启BINLOG，而不是像Oracle Data Gurad和SQL Server Mirroring通过REDO日志来复制？
+
 因为MYSQL的引擎不止只有INNODB，还有MYisam等不支持事务的引擎，所以官方使用BINLOG来复制数据
 
 Q2.为什么不推荐双主架构
+
 1.因为如果有唯一索引存在，就会出错
+
 2.会存在更新丢失的状况
+
 如果要设置的话
 
 ```my.cnf
@@ -2556,6 +2580,7 @@ auto_increment_offset=2；    #其一，每一台都要设置不同的偏移量
 master
 
 0.复制前的准备
+
 (1)主机上备份数据库  
 
 ```shell
@@ -2569,6 +2594,7 @@ mysql -p < name.sql
 ```
 
 (3)查看备份文件中二进制位置
+
 如果是用mysqldump，则会有一行
 
 ```sql
@@ -2578,6 +2604,7 @@ CHANGE MASTER TO MASTER_LOG_FILE='BIN.000001',MASTER_LOG_POS=154;
 需要记下MASTER_LOG_POS
 
 1.复制前的配置
+
 master:
 
 ```
