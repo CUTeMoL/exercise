@@ -21,7 +21,7 @@ traceRouteAndIpGeo.py - 路由追踪
 
 myterminal.py - paramiko模块使用
 
-fileDiff.py - 文本内容对比，生成HTML文件更直观的查看的地方
+fileDiff.py - 文本内容对比，生成HTML文件更直观的查看文本不同的地方
 
 ## shell
 
