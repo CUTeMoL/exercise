@@ -468,11 +468,13 @@ status（状态）:
 ​		7.角色绑定: 
 ​			RoleBinding: 将角色绑定到主体（即subject）
 ​			ClusterRoleBinding: 将集群角色绑定到主体
+
 ↓
 
 ### Admission Cintrol(准入控制)
 
 ​	Adminssion Control实际上是一个准入控制器插件列表，发送到API Server的请求都需要经过这个列表中的每个准入控制器插件的检查，检查不通过，则拒绝请求
+
 ↓
 
 ### pod svc controllers storage …
@@ -481,7 +483,7 @@ status（状态）:
 
 ### ETCD CLUSTER
 
-十、网络策略|Network Policy
+## 十、网络策略|Network Policy
 
 网络策略（Network Policy），用于限制Pod出入流量，提供Pod级别和Namespace级别网络访问控制。
 
@@ -618,7 +620,7 @@ service访问不通，排查顺序
 ​		kube-proxy正常工作吗
 
 ```shell
-			kubectl edit configmap kube-proxy -n kube-system
+kubectl edit configmap kube-proxy -n kube-system
 ```
 
 ​		kube-proxy正常写iptables规则吗
@@ -638,7 +640,7 @@ service访问不通，排查顺序
 ​    关闭swap
 
 ```shell
-      swapoff -a
+swapoff -a
 ```
 
 /etc/fstab
@@ -650,8 +652,8 @@ service访问不通，排查顺序
 检查br_netfilter、overlay是否启用
 
 ```shell
-      lsmod | grep br_netfilter # 检查
-      modprobe br_netfilter # 启用模块
+lsmod | grep br_netfilter # 检查
+modprobe br_netfilter # 启用模块
 ```
 
 ```shell
@@ -766,8 +768,8 @@ kubeadm join 192.168.1.120:6443 --token egqnfa.7brw1qtgkhtu07dc --discovery-toke
 7.确认worker节点加入
 
 ```shell
-    kubectl get nodes   #查看当前节点
-    kubectl get cs    #检查健康度
+kubectl get nodes   #查看当前节点
+kubectl get cs    #检查健康度
 ```
 
 8.部署网络插件
