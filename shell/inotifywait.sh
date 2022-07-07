@@ -1,4 +1,3 @@
-rsync -av --delete /app/java_project/ root@10.1.1.100:/backup/app1_java
 #!/bin/bash
 # 文件目录位置
 MON_DIR=/opt
