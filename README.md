@@ -23,7 +23,7 @@ myterminal.py - paramiko模块使用
 
 fileDiff.py - 文本内容对比，生成HTML文件更直观的查看文本不同的地方
 
-WarningMail.py - 监控内存，分区空间，超过后发送警告邮件
+warningMail.py - 监控内存，分区空间，超过后发送警告邮件
 
 ## shell
 
