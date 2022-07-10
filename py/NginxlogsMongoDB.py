@@ -1,6 +1,25 @@
 import pymongo
 import datetime
 import geoip2.database
+'''
+NGINX-accesslog格式
+        log_format json '{"@timestamp": "$time_iso8601", '
+                         '"remote_addr": "$remote_addr", '
+                         '"remote_user": "$remote_user", '
+                         '"body_bytes_sent": "$body_bytes_sent", '
+                         '"status": "$status", '
+                         '"request_time": "$request_time", '
+                         '"request": "$request", '
+                         '"request_uri": "$request_uri", '
+                         '"request_method": "$request_method", '
+                         '"http_referer": "$http_referer", '
+                         '"http_x_forwarded_for": "$http_x_forwarded_for", '
+                         '"upstream_status": "$upstream_status", '
+                         '"upstream_response_time": "$upstream_response_time", '
+                         '"http_user_agent": "$http_user_agent"}';
+
+        access_log /var/log/nginx/access.log json;
+'''
 # 连接数据库
 mongodbclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongodb = mongodbclient["nginxAccessLog"]
