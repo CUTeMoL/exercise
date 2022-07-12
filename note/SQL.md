@@ -1,22 +1,79 @@
 # SQL
 
+数据来自`sqlzoo`的`world`和`nobel`表
+
+sqlzoo:  https://sqlzoo.net
+
 ## 一、DQL(数据查询语句)
 
 ### 语法顺序
 
 ```sql
-SELECT sum(col) FROM t WHERE col=v GROUP BY col HAVING col ORDER BY col limit begin_num count_num;
+SELECT sum(col) FROM t WHERE col=v GROUP BY col HAVING col ORDER BY col desc limit begin_num count_num;
 ```
 
-| 关键词   | 作用         |
-| -------- | ------------ |
-| SELECT   | 定义查询字段 |
-| FROM     | 来自哪张表   |
-| WHERE    | 筛选条件     |
-| GROUP BY | 分组         |
-| HAVING   | 过滤         |
-| ORDER BY | 排序         |
-| LIMIT    | 行分割       |
+| 关键词       | 作用                                                   |
+| ------------ | ------------------------------------------------------ |
+| `SELECT`     | 定义查询字段                                           |
+| `FROM`       | 来自哪张表                                             |
+| `WHERE`      | 筛选条件                                               |
+| `GROUP BY`   | 分组,去重                                              |
+| `HAVING`     | 过滤                                                   |
+| `ORDER BY`   | 排序 `asc`升序 `desc`降序                              |
+| `LIMIT x, n` | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数 |
+
+### 示例
+
+#### `WHERE`
+
+国家名包含`aeiou`这5个字符, 但是不能出现空格
+
+```sql
+SELECT name
+FROM world
+WHERE name like '%a%'
+and name like '%e%'
+and name like '%i%'
+and name like '%o%'
+and name like '%u%'
+and name not like '% %';
+```
+
+#### `GROUP BY`
+
+统计`Medicine`的`winner`人数
+
+```sql
+SELECT subject, count(winner)
+FROM nobel
+WHERE subject='Medicine'
+GROUP BY subject;
+```
+
+
+
+#### `ORDER BY`
+
+筛选1984年`subject`中的`Medicine`和`Physics`要排在最前，然后其他根据`subject`排序，最后根据`winner`排序
+
+```sql
+SELECT yr, winner, subject
+FROM nobel
+WHERE yr=1984
+ORDER BY subject in ('Medicine', 'Physics') desc, subject, winner;
+```
+
+#### `LIMIT`
+
+查询第100到120行数据
+
+```sql
+SELECT * 
+FROM nobel
+LIMIT 99, 21;
+```
+
+
 
 ## 二、DML(数据操作语句)
 
@@ -61,25 +118,25 @@ SELECT sum(col) FROM t WHERE col=v GROUP BY col HAVING col ORDER BY col limit be
 
 ## 八、函数
 
-|     |     |
-| --- | --- |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
-|     |     |
+| 函数    | 作用                 |
+| ------- | -------------------- |
+| sum()   | 总和，忽略`null`     |
+| avg()   | 平均，忽略`null`     |
+| max()   | 最大，忽略`null`     |
+| min()   | 最小，忽略`null`     |
+| count() | 统计次数，忽略`null` |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
+|         |                      |
 
