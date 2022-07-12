@@ -50,6 +50,16 @@ WHERE subject='Medicine'
 GROUP BY subject;
 ```
 
+统计2013到2015年每年每个科目的获奖人数，按年数从大到小，按人数从大到小
+
+```sql
+SELECT yr, subject, count(subject)
+FROM nobel
+WHERE yr in (2013, 2014, 2015)
+GROUP BY yr, subject
+ORDER BY yr desc, count(subject) desc;
+```
+
 
 
 #### `ORDER BY`
