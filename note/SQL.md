@@ -9,7 +9,13 @@ sqlzoo:  https://sqlzoo.net
 ### 语法顺序
 
 ```sql
-SELECT sum(col) FROM t WHERE col=v GROUP BY col HAVING col ORDER BY col desc limit begin_num count_num;
+SELECT sum(col) 
+FROM t 
+WHERE col=v 
+GROUP BY col 
+HAVING col 
+ORDER BY col desc 
+limit begin_num count_num;
 ```
 
 | 关键词       | 作用                                                   |
@@ -53,14 +59,27 @@ GROUP BY subject;
 统计2013到2015年每年每个科目的获奖人数，按年数从大到小，按人数从大到小
 
 ```sql
-SELECT yr, subject, count(subject)
+SELECT yr, subject, count(winner)
 FROM nobel
 WHERE yr in (2013, 2014, 2015)
 GROUP BY yr, subject
-ORDER BY yr desc, count(subject) desc;
+ORDER BY yr desc, count(winner) desc;
 ```
 
+#### `HAVING`
 
+查询人口数为3亿以上的大洲和其平均gdp，其中只有gdp高于200亿且人口数大于6000万或者gdp低于80亿且首都中含有三个a的国家计入计算，最后按国家数从大到小排序，只显示第一行
+
+```sql
+SELECT continent, avg(gdp), sum(population)
+FROM world
+WHERE (gdp>20000000000 and population>60000000)
+or gdp<8000000000 and name like '%a%a%a%'
+GROUP BY continent
+HAVING sum(population)>300000000
+ORDER BY count(continent) desc
+LIMIT 1;
+```
 
 #### `ORDER BY`
 
@@ -82,8 +101,6 @@ SELECT *
 FROM nobel
 LIMIT 99, 21;
 ```
-
-
 
 ## 二、DML(数据操作语句)
 
