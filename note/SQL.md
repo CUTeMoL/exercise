@@ -320,4 +320,4 @@ ge表结构
 | --- | --------- | -------- | ------------ | ----- | ----- |
 | 年   | 姓         | 名        | 选区           | 政党    | 票数    |
 
-[Window functions - SQLZOO](https://sqlzoo.net/wiki/Window_functions)
+https://sqlzoo.net/wiki/Window_functions
