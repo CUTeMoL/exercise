@@ -74,7 +74,7 @@ ORDER BY yr desc, count(winner) desc;
 SELECT continent, avg(gdp), sum(population)
 FROM world
 WHERE (gdp>20000000000 and population>60000000)
-or gdp<8000000000 and name like '%a%a%a%'
+or (gdp<8000000000 and capital like '%a%a%a%')
 GROUP BY continent
 HAVING sum(population)>300000000
 ORDER BY count(continent) desc
@@ -145,25 +145,143 @@ LIMIT 99, 21;
 
 ## 八、函数
 
-| 函数    | 作用                 |
-| ------- | -------------------- |
-| sum()   | 总和，忽略`null`     |
-| avg()   | 平均，忽略`null`     |
-| max()   | 最大，忽略`null`     |
-| min()   | 最小，忽略`null`     |
-| count() | 统计次数，忽略`null` |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
-|         |                      |
+| 类型         | 函数                                 | 作用                                                         |
+| ------------ | ------------------------------------ | ------------------------------------------------------------ |
+| 计算         | `sum()`                              | 总和，忽略`null`                                             |
+|              | `avg()`                              | 平均，忽略`null`                                             |
+|              | `max()`                              | 最大，忽略`null`                                             |
+|              | `min()`                              | 最小，忽略`null`                                             |
+|              | `count()`                            | 统计次数，忽略`null`                                         |
+|              | `round(x, y)`                        | 对`x`四舍五入, 保留小数点`y`位（y可以是负数）                |
+|              |                                      |                                                              |
+| 字符串       | `concat('str1', 'str2')`             | 连接字符串                                                   |
+|              | `replace('str', 'old', 'new')`       | 替换                                                         |
+|              | `left('str', n)`                     | 截取左边的`n`个字符                                          |
+|              | `right('str', n)`                    | 截取右边的`n`个字符                                          |
+|              | `substring('str', n, len)`           | 从左边的`n`个字符开始，截取`len`个字符                       |
+|              |                                      |                                                              |
+| 数据类型转换 | `cast(x as type)`                    | 将`x`转换成新类型`type`                                      |
+| 日期时间函数 | `year(date)`                         | 获取年份                                                     |
+|              | `month(date)`                        | 获取月份                                                     |
+|              | `day(date)`                          | 获取日                                                       |
+|              | `date_add(date, INTERVAL expr type)` | 时间加操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR` |
+|              | `date_sub(date, INTERVAL expr type)` | 时间减操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR` |
+|              | `datediff(date1, date2)`             | 对比两个日期之间的间隔天数                                   |
+|              | `date_format(date,format)`           | 将日期和时间格式化`format`可以是`%Y/%M/%d %H:%i:S`           |
 
+## 九、数据类型
+
+### INT(整型)
+
+| Type      | range                  | unsigned_Max |
+| --------- | ---------------------- | ------------ |
+| tinyint   | -128~127               | 255          |
+| smallint  | -32768~32767           | 65535        |
+| mediumint | -8388608~8388607       | 16777215     |
+| int       | -2147483648~2147483647 | 4294967295   |
+| bigint    | -2^63~2^63-1           | 2^64-1       |
+
+| unsigned | signed | zerofill                          | auto_increment                         |
+| -------- | ------ | --------------------------------- | -------------------------------------- |
+| 无符号   | 有符号 | 显示真实属性/值不做任何修改/填充0 | 自增/每张表只能一个/必须是索引的一部分 |
+
+### 浮点数
+
+| type    | 占用空间 | 精度   | 精确度 |
+| ------- | -------- | ------ | ------ |
+| FLOAT   | 4        | 单精度 | 低     |
+| DOUBLE  | 8        | 双精度 | 中     |
+| DECIMAL | 变长     | 高精度 | 高     |
+
+FLOAT(M,D)/DOUBLE(M,D)/DECIMAL(M,D)    表示显示M位整数D位小数
+
+### 字符串类型
+
+| type         | 说明           | N的含义 | 是否有字符集 | 最大长度 |
+| ------------ | -------------- | ------- | ------------ | -------- |
+| CHAR(N)      | 定长字符       | 字符    | 是           | 255      |
+| VARCHAR(N)   | 变长字符       | 字符    | 是           | 16384    |
+| BINARY(N)    | 定长二进制字节 | 字节    | 否           | 255      |
+| VARBINARY(N) | 变长二进制字节 | 字节    | 否           | 16384    |
+| TINYBLOB     | 二进制大对象   | 字节    | 否           | 256      |
+| BLOB         | 二进制大对象   | 字节    | 否           | 16K      |
+| MEDIUMBLOB   | 二进制大对象   | 字节    | 否           | 16M      |
+| LONGBLOB     | 二进制大对象   | 字节    | 否           | 4G       |
+| TINYTEXT     | 大对象         | 字节    | 是           | 256      |
+| TEXT         | 大对象         | 字节    | 是           | 16K      |
+| MEDIUMTEXT   | 大对象         | 字节    | 是           | 16M      |
+| LONGTEXT     | 大对象         | 字节    | 是           | 4G       |
+
+*BINARY/BLOB主要用于存2进制数据
+
+*VARCHAR会检查字符是否存在，但BINARY不会，BINARY存放的是2进制字节，碰到不同的字符集显示不同的字符
+
+*TEXT相当于VARCHAR但是长度计算方式不同
+
+### ENUM枚举类型（多选一）
+
+最多允许65536个值
+
+### SET集合类型（多选多）
+
+最多允许64个值
+
+### JSON类型
+
+由一系列的key:value组成的数据字符串（类似Mongodb，不需要定义列）
+
+BLOB可以不符合key:value，不能做约束性检查，JSON数据类型会约束一定符合key:value者一格式
+
+JSON查询性能高：查询不需要遍历所有字符串才能找到数据
+
+支持部分属性索引：通过虚拟列的功能可以对JSON中的部分数据进行索引
+
+另外json_extract、json_unquote
+
+JSON插入示例：
+
+```sql
+create table table_name (
+    col_name1 int,
+    col_name2 json
+);
+
+insert into table_name (
+    value1,
+    '{"colname_json1":"value_json1","colname_json2":"value_json2"}'
+)
+```
+
+### 日期类型
+
+| type      | 占用字节 | 表示范围                                        |
+| --------- | -------- | ----------------------------------------------- |
+| DATETIME  | 8        | 1000-01-01 00:00:00~9999-12-31 23:59:59         |
+| DATE      | 3        | 1000-01-01~9999-12-31                           |
+| TIMESTAMP | 4        | 1970-01-01 00:00:00 UTC~2038-01-19 03:14:17 UTC |
+| YEAR      | 1        | YEAR(2):1970~2070     YEAR(4):1901~2155         |
+| TIME      | 3        | -838:59:59~838:59:59                            |
+
+*有时区的话推荐TIMESTAMP
+
+### 地理空间类型|geometry
+
+地理空间类型，可存经纬度
+
+## 附录
+
+### world表结构
+
+| name | continent | area | population | gdp  | capital | tld  | flag |
+| ---- | --------- | ---- | ---------- | ---- | ------- | ---- | ---- |
+|      |           |      |            |      |         |      |      |
+
+https://sqlzoo.net/wiki/SELECT_from_WORLD_Tutorial
+
+### nobel表结构
+
+| yr   | subject | winner |
+| ---- | ------- | ------ |
+|      |         |        |
+
+https://sqlzoo.net/wiki/SELECT_from_Nobel_Tutorial
