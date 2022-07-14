@@ -1874,3 +1874,15 @@ do
 done
 cat /root/ssh_up.txt /root/ssh_down.txt
 ```
+
+## 十五、遇到的问题
+
+### 1. apt 一直waiting for headers
+
+因为是虚拟机，有另外的数据包再分装，所以MTU不能设置太大
+
+解决办法
+
+```shell
+sudo ip link set mtu 1480 eth0
+```
