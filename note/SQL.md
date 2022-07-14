@@ -1,6 +1,6 @@
 # SQL
 
-数据来自`sqlzoo`的`world`、`ge`和`nobel`表
+数据来自`sqlzoo`
 
 sqlzoo:  https://sqlzoo.net
 
@@ -18,17 +18,55 @@ ORDER BY col desc
 limit begin_num count_num;
 ```
 
-| 关键词          | 作用                              |
-| ------------ | ------------------------------- |
-| `SELECT`     | 定义查询字段                          |
-| `FROM`       | 来自哪张表                           |
-| `WHERE`      | 筛选条件                            |
-| `GROUP BY`   | 分组,去重                           |
-| `HAVING`     | 过滤                              |
-| `ORDER BY`   | 排序 `asc`升序 `desc`降序             |
-| `LIMIT x, n` | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数 |
+| 关键词             | 作用                                    |
+| --------------- | ------------------------------------- |
+| `SELECT`        | 定义查询字段                                |
+| `FROM`          | 来自哪张表                                 |
+| `INNER JOIN ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null` |
+| `LEFT JOIN ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`    |
+| `RIGHT JOIN ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`    |
+| `WHERE`         | 筛选条件                                  |
+| `GROUP BY`      | 分组,去重                                 |
+| `HAVING`        | 过滤                                    |
+| `ORDER BY`      | 排序 `asc`升序 `desc`降序                   |
+| `LIMIT x, n`    | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数       |
 
 ### 示例
+
+`INNER JOIN`
+
+```sql
+SELECT * 
+FROM T1
+INNER JOIN T2
+ON T1.col=T2.col;
+```
+
+`LEFT JOIN`
+
+查询`game.team1`的教练是`Fernando Santos`的`eteam.teamname`、`game.mdate`和`game.id`
+
+```sql
+SELECT game.mdate, eteam.teamname, game.id
+FROM game
+LEFT JOIN eteam
+ON game.team1=eteam.id
+WHERE eteam.coach='Fernando Santos';
+```
+
+查询作为主角超过30次的演员，根据次数从大到小排序
+
+```sql
+SELECT actor.name, over30.times
+FROM (SELECT actorid, count(*) times
+FROM casting
+WHERE casting.ord=1
+GROUP BY actorid
+HAVING count(ord)>30) over30
+LEFT JOIN actor
+ON over30.actorid=actor.id
+ORDER BY over30.times DESC;
+```
 
 #### `WHERE`
 
@@ -105,10 +143,32 @@ ORDER BY subject in ('Medicine', 'Physics') desc, subject, winner;
 
 ```sql
 SELECT yr, lastName, party, votes,
-    RANK() OVER (PARTITION BY yr ORDER BY votes DESC) as posn
+    RANK() OVER (PARTITION BY yr ORDER BY votes DESC) as posn
 FROM ge
 WHERE constituency = 'S14000021' 
-ORDER BY party DESC
+ORDER BY party DESC;
+```
+
+从`covid`表中提取`France`和`Germany`的每年1月的每确诊人数和每日新增人数，按照日期排序
+
+```sql
+SELECT name, date_format(whn, '%Y-%m-%d') date, confirmed,
+    lag(confirmed, 1)over(partition by name order by whn) yesterday,
+    confirmed-lag(confirmed, 1)over(partition by name order by whn) new
+FROM covid
+WHERE name in ('France', 'Germany') and month(whn)=1
+ORDER BY whn;
+```
+
+从`covid`表中提取`Italy`的每周新增人数
+
+```sql
+SELECT name, date_format(whn, '%Y-%m-%d') date, confirmed,
+    lag(confirmed, 1)over(partition by name order by whn) weekbefore,
+    confirmed-lag(confirmed, 1)over(partition by name order by whn) new
+FROM covid
+WHERE name='Italy' and weekday(whn)=0
+ORDER BY whn;
 ```
 
 #### `LIMIT`
@@ -195,7 +255,8 @@ LIMIT 99, 21;
 | 窗口函数赋值序号的方式 | `rank()`                                                    | 跳跃排序, 如`1,1,3,4`                                                                             |
 |             | `dense_rank()`                                              | 并列连续, 如`1,1,2,3`                                                                             |
 |             | `row_number()`                                              | 连续累加, 如`1,2,3,4`                                                                             |
-| 窗口函数偏移分析函数  |                                                             |                                                                                              |
+| 窗口函数偏移分析函数  | `lag(col1, n) over(partition by col2 order by col3)`        | `lag()`根据字段`col1`，向上偏移`n`位                                                                   |
+|             | `lead(col1, n)`                                             | 向下偏移                                                                                         |
 
 ## 九、数据类型
 
@@ -262,7 +323,7 @@ FLOAT(M,D)/DOUBLE(M,D)/DECIMAL(M,D)    表示显示M位整数D位小数
 
 `JSON`查询性能高：查询不需要遍历所有字符串才能找到数据
 
-支持部分属性索引：通过虚拟列的功能可以对JSON中的部分数据进行索引
+支持部分属性索引：通过虚拟列的功能可以对`JSON`中的部分数据进行索引
 
 另外`json_extract`、`json_unquote`
 
@@ -277,7 +338,7 @@ create table table_name (
 insert into table_name (
     value1,
     '{"colname_json1":"value_json1","colname_json2":"value_json2"}'
-)
+);
 ```
 
 ### 日期类型
@@ -298,26 +359,62 @@ insert into table_name (
 
 ## 附录
 
-### world表结构
+### world表
 
 | name | continent | area | population | gdp | capital |
 | ---- | --------- | ---- | ---------- | --- | ------- |
 | 国家名  | 大洲        | 面积   | 人口         | GDP | 首都      |
 
-https://sqlzoo.net/wiki/SELECT_from_WORLD_Tutorial
-
-### nobel表结构
+### nobel表
 
 | yr  | subject | winner |
 | --- | ------- | ------ |
 | 年   | 学科      | 获奖者    |
 
-https://sqlzoo.net/wiki/SELECT_from_Nobel_Tutorial
-
-ge表结构
+### ge表
 
 | yr  | firstName | lastName | constituency | party | votes |
 | --- | --------- | -------- | ------------ | ----- | ----- |
 | 年   | 姓         | 名        | 选区           | 政党    | 票数    |
 
-https://sqlzoo.net/wiki/Window_functions
+### covid表
+
+| name | whn | confirmed | deaths | recovered |
+| ---- | --- | --------- | ------ | --------- |
+| 名    | 日期  | 确诊        | 死亡     | 治愈        |
+
+### game表
+
+| id   | mdate | stadium | team1 | team2 |
+| ---- | ----- | ------- | ----- | ----- |
+| 比赛id | 日期    | 场地      | 队伍1id | 队伍2id |
+
+### goal表
+
+| matchid | teamid | player | gtime |
+| ------- | ------ | ------ | ----- |
+| 比赛id    | 队伍id   | 运动员    | 进球次数  |
+
+### eteam表
+
+| id   | teamname | coach |
+| ---- | -------- | ----- |
+| 队伍id | 队名       | 教练    |
+
+### movie表
+
+| id   | title | yr  | director | budget | gross |
+| ---- | ----- | --- | -------- | ------ | ----- |
+| 电影id | 标题    | 年份  | 导演名      | 预算     | 收入    |
+
+### actor表
+
+| id   | name |
+| ---- | ---- |
+| 演员id | 演员名  |
+
+### casting表
+
+| movieid | actorid | ord  |
+| ------- | ------- | ---- |
+| 电影id    | 演员id    | 主角顺位 |
