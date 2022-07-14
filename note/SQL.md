@@ -68,6 +68,18 @@ ON over30.actorid=actor.id
 ORDER BY over30.times DESC;
 ```
 
+查询每场比赛的`game.id`和`game.mdate`，每个球队的进球情况
+
+```sql
+SELECT goal.matchid, game.mdate,
+    game.team1, sum(case when game.team1=goal.teamid then 1 else 0 end) score1,
+    game.team2, sum(case when game.team2=goal.teamid then 1 else 0 end) score2
+FROM goal
+LEFT JOIN game
+ON game.id=goal.matchid
+GROUP BY goal.matchid, game.mdate, game.team1, game.team2
+```
+
 #### `WHERE`
 
 国家名包含`aeiou`这5个字符, 但是不能出现空格
@@ -121,7 +133,7 @@ ORDER BY yr desc, count(winner) desc;
 SELECT continent, avg(gdp), sum(population)
 FROM world
 WHERE (gdp>20000000000 and population>60000000)
-or (gdp<8000000000 and capital like '%a%a%a%')
+    or (gdp<8000000000 and capital like '%a%a%a%')
 GROUP BY continent
 HAVING sum(population)>300000000
 ORDER BY count(continent) desc
@@ -391,9 +403,9 @@ insert into table_name (
 
 ### goal表
 
-| matchid | teamid | player | gtime |
-| ------- | ------ | ------ | ----- |
-| 比赛id    | 队伍id   | 运动员    | 进球次数  |
+| matchid | teamid | player | gtime     |
+| ------- | ------ | ------ | --------- |
+| 比赛id    | 队伍id   | 运动员    | 球员每次进球的分数 |
 
 ### eteam表
 
