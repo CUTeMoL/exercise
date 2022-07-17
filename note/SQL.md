@@ -15,13 +15,19 @@ WHERE col=v
 GROUP BY col 
 HAVING col 
 ORDER BY col desc 
-limit begin_num count_num;
+LIMIT begin_num count_num;
+```
+
+### 运行顺序
+
+```sql
+FROM > WHERE > GROUP BY > HAVING > SELECT创建的新字段 > ORDER BY > LIMIT > SELECT
 ```
 
 | 关键词             | 作用                                    |
 | --------------- | ------------------------------------- |
 | `SELECT`        | 定义查询字段                                |
-| `FROM`          | 来自哪张表                                 |
+| `FROM`          | 来自哪张表(如果来自子查询则要添加临时表名)                |
 | `INNER JOIN ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null` |
 | `LEFT JOIN ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`    |
 | `RIGHT JOIN ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`    |
@@ -33,7 +39,7 @@ limit begin_num count_num;
 
 ### 示例
 
-`INNER JOIN`
+#### `INNER JOIN`
 
 ```sql
 SELECT * 
@@ -42,7 +48,7 @@ INNER JOIN T2
 ON T1.col=T2.col;
 ```
 
-`LEFT JOIN`
+#### `LEFT JOIN`和`RIGHT JOIN`
 
 查询`game.team1`的教练是`Fernando Santos`的`eteam.teamname`、`game.mdate`和`game.id`
 
@@ -191,6 +197,71 @@ ORDER BY whn;
 SELECT * 
 FROM nobel
 LIMIT 99, 21;
+```
+
+#### `子查询`
+
+查询`gdp`大于欧洲所有国家的国家
+
+```sql
+SELECT name
+FROM world
+WHERE gdp > (
+    SELECT max(gdp)
+    FROM world
+    where continent='Europe'
+);
+```
+
+查询和`Argentina`或`Australia`在同一个大洲的国家名,根据名称排序
+
+```sql
+SELECT name, continent
+FROM world
+WHERE continent in (
+    SELECT continent
+    FROM world
+    WHERE name in ('Argentina', 'Australia')
+)
+ORDER BY name;
+```
+
+查询`2017年`所有在`S14000021`到`S14000026`选区投票数最高的议员
+
+```sql
+SELECT constituency, party, votes
+FROM (
+    SELECT constituency, votes, party,
+    rank() over(partition by constituency order by votes desc ) rank
+    FROM ge
+    WHERE yr=2017
+    and constituency>='S14000021'
+    and constituency<='S14000026') a
+WHERE rank=1;
+```
+
+查询所有国家人口大于`25000000`的大洲，及其国家名和人口
+
+```sql
+SELECT name, continent, population, gdp
+FROM world
+WHERE continent not in (
+    SELECT continent
+    FROM world
+    WHERE population>25000000
+);
+```
+
+查询每个`continent`中`area`最大的`name`, 显示`continent`,`name`.`area`
+
+```sql
+SELECT continent, name, area
+FROM world
+where area in (
+    SELECT max(area)
+    FROM world
+    GROUP BY continent
+);
 ```
 
 ## 二、DML(数据操作语句)
