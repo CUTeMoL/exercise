@@ -266,11 +266,31 @@ where area in (
 
 ## 二、DML(数据操作语句)
 
+`INSERT`
+
+`UPDATE`
+
+`DELETE`
+
 ## 三、TCL(事务控制语句)
 
 ## 四、DCL(数据控制语句)
 
+`GRANT`
+
+`DENY`
+
+`REVOKE`
+
 ## 五、DDL(数据定义语句)
+
+`CREATE`
+
+`ALTER`
+
+`DROP`
+
+`TRUNCATE`
 
 ## 六、CCL(指针控制语句)
 
