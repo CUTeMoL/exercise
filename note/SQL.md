@@ -284,13 +284,75 @@ where area in (
 
 ## 五、DDL(数据定义语句)
 
-`CREATE`
+| 关键词        | 作用         |
+| ---------- | ---------- |
+| `CREATE`   | 创建         |
+| `ALTER`    | 修改         |
+| `DROP`     | 删除(包括表结构)  |
+| `TRUNCATE` | 删除(不包括表结构) |
 
-`ALTER`
+### 示例
 
-`DROP`
+#### `CREATE`
 
-`TRUNCATE`
+创建数据库
+
+```sql
+CREATE DATABASE dbname
+```
+
+`SQL Server`创建数据库`test1`,文件`d:/filename.mdf`,初始大小`8mb`,最大大小`16mb`,自动增长`16mb`
+
+```sql
+CREATE DATABASE test1
+on (
+    name='test1',
+    filename='d:/filename.mdf',
+    size=8mb,
+    maxsize=16mb,
+    filegrowth=5%
+)
+```
+
+#### `ALTER`
+
+修改数据库名称
+
+```sql
+ALTER DATABASE dbname 
+MODIFY name=new_dbname
+```
+
+添加数据文件
+
+```sql
+ALTER DATABASE dbname
+ADD FILE(name=dbfilename,
+    filename='d:\dbfilename.ndf')
+```
+
+为`SQL Server`数据库`test1`添加日志`testlog`,文件`d:/testlog`,初始容量`2mb`,最大容量`50mb`,文件增长的数量为`10%`
+
+```sql
+ALTER DATABASE test1
+ADD log FILE(
+    name=testlog,
+    filename='d:\testlog.ldf',
+    size=2mb,
+    maxsize=50mb,
+    filegrowth=10%
+)
+```
+
+#### `DROP`
+
+删除数据库
+
+```sql
+DROP DATABASE dbname
+```
+
+#### `TRUNCATE`
 
 ## 六、CCL(指针控制语句)
 
