@@ -284,12 +284,13 @@ where area in (
 
 ## 五、DDL(数据定义语句)
 
-| 关键词        | 作用         |
-| ---------- | ---------- |
-| `CREATE`   | 创建         |
-| `ALTER`    | 修改         |
-| `DROP`     | 删除(包括表结构)  |
-| `TRUNCATE` | 删除(不包括表结构) |
+| 关键词        | 作用                         |
+| ---------- | -------------------------- |
+| `CREATE`   | 创建                         |
+| `ALTER`    | 修改                         |
+| `ADD`      | `ALTER`时添加`FILE`、`COLUMN`等 |
+| `DROP`     | 删除(包括表结构)                  |
+| `TRUNCATE` | 删除(不包括表结构)                 |
 
 ### 示例
 
@@ -298,7 +299,7 @@ where area in (
 创建数据库
 
 ```sql
-CREATE DATABASE dbname
+CREATE DATABASE dbname;
 ```
 
 `SQL Server`创建数据库`test1`,文件`d:/filename.mdf`,初始大小`8mb`,最大大小`16mb`,自动增长`16mb`
@@ -311,18 +312,18 @@ on (
     size=8mb,
     maxsize=16mb,
     filegrowth=5%
-)
+);
 ```
 
 创建数据表
 
 ```sql
-CREATE TABLE table_name
-(
-    column_name1 int() UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+CREATE TABLE table_name(
+    column_name1 int UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
     column_name2 datatype,
     column_name3 datatype
-)
+);
+-- 在SQLServer中不能用UNSIGNED和AUTO_INCREMENT
 ```
 
 #### `ALTER`
@@ -331,7 +332,8 @@ CREATE TABLE table_name
 
 ```sql
 ALTER DATABASE dbname 
-MODIFY name=new_dbname
+MODIFY name=new_dbname;
+-- 仅SQLServer使用
 ```
 
 添加数据文件
@@ -339,7 +341,7 @@ MODIFY name=new_dbname
 ```sql
 ALTER DATABASE dbname
 ADD FILE(name=dbfilename,
-    filename='d:\dbfilename.ndf')
+    filename='d:\dbfilename.ndf');
 ```
 
 为`SQL Server`数据库`test1`添加日志`testlog`,文件`d:/testlog`,初始容量`2mb`,最大容量`50mb`,文件增长的数量为`10%`
@@ -352,7 +354,44 @@ ADD log FILE(
     size=2mb,
     maxsize=50mb,
     filegrowth=10%
-)
+);
+```
+
+修改表名
+
+```sql
+EXECUTE sp_rename 't1','t2';
+-- 仅SQLServer使用
+RENAME TABLE db01.t1 TO db02.t11;
+-- 可以移动表到另一个库
+```
+
+添加表的字段
+
+```sql
+ALTER TABLE t1
+ADD column_name1 datatype;
+```
+
+表的字段改名
+
+```sql
+ALTER TABLE emp 
+RENAME COLUMN old_col_name TO new_col_name;
+-- 仅MySQL使用
+EXECUTE sp_rename 'table_name.column_name','column_name';
+-- 仅SQLServer使用
+```
+
+修改字段的类型
+
+```sql
+ALTER TABLE t1
+ALTER COLUMN column_name1 datatype;
+-- 仅SQLServer使用
+ALTER TABLE emp 
+MODIFY COLUMN col_tmp varchar(10);
+-- 仅MySQL使用
 ```
 
 #### `DROP`
@@ -360,10 +399,29 @@ ADD log FILE(
 删除数据库
 
 ```sql
-DROP DATABASE dbname
+DROP DATABASE dbname;
+```
+
+删除表
+
+```sql
+DROP TABLE t1;
+```
+
+删除字段
+
+```sql
+ALTER TABLE t1 
+DROP COLUMN column_name;
 ```
 
 #### `TRUNCATE`
+
+删除表数据，但保留表结构
+
+```sql
+TRUNCATE TABLE t1;
+```
 
 ## 六、CCL(指针控制语句)
 
@@ -555,8 +613,6 @@ SQL Server
 | `SMALLDATETIME`  | 4    | `YYYY-MM-DD hh:mm:ss`                       | `1900-01-01 ~ 2079-06-06`                                               | ❌     |
 | `TIME`           | 3-5  | `hh:mm:ss[.nnnnnnn]`                        | `00:00:00.0000000 ~ 23:59:59.9999999`                                   | ❌     |
 | `DATETIMEOFFSET` | 8-10 | `YYYY-MM-DD hh:mm:ss[.nnnnnnn] [+\|-]hh:mm` | `0001-01-01 00:00:00.0000000 到 9999-12-31 23:59:59.9999999（以 UTC 时间表示）` | ✔     |
-
-
 
 ### `geometry`
 
