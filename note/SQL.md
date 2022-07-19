@@ -326,6 +326,19 @@ CREATE TABLE table_name(
 -- 在SQLServer中不能用UNSIGNED和AUTO_INCREMENT
 ```
 
+创建表时创建联合主键
+
+```sql
+CREATE TABLE table_name(
+    col_name1 int NOT NULL,
+    col_name2 int NOT NULL,
+    CONSTRAINT pk_name PRIMARY KEY(
+        col_name1, col_name2
+    )
+)
+-- 创建单字段主键，（）要保留
+```
+
 #### `ALTER`
 
 修改数据库名称
@@ -392,6 +405,15 @@ ALTER COLUMN column_name1 datatype;
 ALTER TABLE emp 
 MODIFY COLUMN col_tmp varchar(10);
 -- 仅MySQL使用
+```
+
+为已存在的表创建联合主键
+
+```sql
+ALTER TABLE t1
+ADD CONSTRAINT pk_name PRIMARY KEY(
+    column_name1, column_name2
+)
 ```
 
 #### `DROP`
