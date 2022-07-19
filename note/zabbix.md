@@ -128,9 +128,7 @@ snmpwalk  -s 192.168.51.53 -c Michaelxia -v 2c .1
 
 5.web添加主机
 
-选择SNMP类型
-
-> SNMP community>MichaelXia
+选择SNMP类型>SNMP community>MichaelXia
 
 6.添加监控项时
 
@@ -185,12 +183,12 @@ zabbix_get
 名称：
 严重性：等级
 表达式：具体的条件，满足时报警
-	条件
-	监控项：选择监控项
-	功能：选择函数
-	最后一个：至少连续取值N次满足条件才会报警
-	间隔时间：
-	结果：满足的条件
+    条件
+    监控项：选择监控项
+    功能：选择函数
+    最后一个：至少连续取值N次满足条件才会报警
+    间隔时间：
+    结果：满足的条件
 恢复表达式：
 ```
 
@@ -251,10 +249,10 @@ Message templates也要添加
 默认操作步骤持续时间：
 暂停操作以制止问题： 1
 操作：
-	发送消息
-	send to user 
-	仅发送到：定义好的报警媒介类型
-	条件：可以不填
+    发送消息
+    send to user 
+    仅发送到：定义好的报警媒介类型
+    条件：可以不填
 ```
 
 ## 七、动作(微信)
@@ -270,9 +268,9 @@ Message templates也要添加
 IP范围：
 更新间隔：
 检查：
-	检查类型：zabbix客户端
-	端口范围：10050
-	键值：system.uname	(随意)
+    检查类型：zabbix客户端
+    端口范围：10050
+    键值：system.uname    (随意)
 ```
 
 配置>动作>创建动作
@@ -280,10 +278,10 @@ IP范围：
 ```
 名称：
 条件：
-	类型：自动发现
-	自动发现检查：选择刚创建的
+    类型：自动发现
+    自动发现检查：选择刚创建的
 操作：
-	操作类型：添加主机+模板关联
+    操作类型：添加主机+模板关联
 ```
 
 ## 九、自动注册
@@ -294,8 +292,8 @@ IP范围：
 Server=192.168.51.50
 ServerActive=192.168.51.50
 Hostname=当前客户端主机名 #自动注册|发现时记录的主机名称
-HostMetadata=LINUX	#相当于自定义分组，定义自动注册时根据分组采用的动作
-#HostMetadataItem=system.uname	#HostMetadata没生效时使用
+HostMetadata=LINUX    #相当于自定义分组，定义自动注册时根据分组采用的动作
+#HostMetadataItem=system.uname    #HostMetadata没生效时使用
 ```
 
 2.
@@ -305,9 +303,9 @@ HostMetadata=LINUX	#相当于自定义分组，定义自动注册时根据分组
 ```
 名称：
 条件：
-	类型：主机元数据
-	匹配：LINUX
-	操作：添加主机，链接模板
+    类型：主机元数据
+    匹配：LINUX
+    操作：添加主机，链接模板
 ```
 
 ## 十、中文乱码解决
@@ -445,9 +443,9 @@ yum install java-1.8.0-openjdk-devel tomcat-admin-webapps tomcat-docs-webapp
 2.zabbix-server设置/etc/zabbix/zabbix_server.conf
 
 ```shell
-JavaGateway=192.168.51.50	# zabbix-java-gateway ip 地址
+JavaGateway=192.168.51.50    # zabbix-java-gateway ip 地址
 JavaGatewayPort=10052
-StartJavaPollers=5		# StartJavaPollers 应小于等于zabbix_java_gateway.conf 中START_POLLERS的值。
+StartJavaPollers=5        # StartJavaPollers 应小于等于zabbix_java_gateway.conf 中START_POLLERS的值。
 ```
 
 3./etc/zabbix/zabbix_java_gateway.conf
@@ -461,7 +459,6 @@ START_POLLERS=5
 # uncomment to enable remote monitoring of the standard JMX objects on the Zabbix Java Gateway itself
 #JAVA_OPTIONS="$JAVA_OPTIONS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=12345
 #       -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
-
 ```
 
 4.tomcat主机设置
@@ -531,7 +528,7 @@ java -jar /usr/local/tomcat/cmdline-jmxclient-0.10.3.jar - 127.0.0.1:12345 java.
 
 找到JMX接口，配置如下，然后点击添加按钮
 
-192.168.51.50	12345
+192.168.51.50    12345
 
 10.添加模板Template App Apache Tomcat JMX
 
