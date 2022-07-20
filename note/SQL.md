@@ -88,6 +88,14 @@ GROUP BY goal.matchid, game.mdate, game.team1, game.team2
 
 #### `WHERE`
 
+正则匹配以`H`或`C`开头的国家名
+
+```sql
+SELECT * 
+FROM world
+WHERE name REGEXP '^[H|O].*'
+```
+
 国家名包含`aeiou`这5个字符, 但是不能出现空格
 
 ```sql
@@ -274,6 +282,28 @@ where area in (
 
 ## 三、TCL(事务控制语句)
 
+### SQLServer
+
+| 关键词                            | 功能          |
+| ------------------------------ | ----------- |
+| `BEGIN TRANSACTION`            | 开启事务,可以加事务名 |
+| `BEGIN DISTRIBUTE TRANSACTION` | 开启分布式事务     |
+| `COMMIT TRANSACTION`           | 提交事务        |
+| `ROLLBACK TRANSACTION`         | 回滚          |
+| `SAVE TRANSACTION`             | 保存检查点       |
+
+### MySQL
+
+| 关键词                                 | 功能      |
+| ----------------------------------- | ------- |
+| `BEGIN` or `START TRANSACTION`      | 开启事务    |
+| `BEGIN DISTRIBUTE TRANSACTION`      | 开启分布式事务 |
+| `COMMIT` or `COMMIT WORK`           | 提交事务    |
+| `ROLLBACK` or `ROLLBACK WORK`       | 回滚      |
+| `SAVEPOINT checkpoint_name`         | 保存检查点   |
+| `ROLLBACK TO checkpoint_name`       | 回滚至检查点  |
+| `RELEASE SAVEPOINT checkpoint_name` | 删除检查点   |
+
 ## 四、DCL(数据控制语句)
 
 `GRANT`
@@ -320,10 +350,12 @@ on (
 ```sql
 CREATE TABLE table_name(
     column_name1 int UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    column_name2 datatype,
-    column_name3 datatype
+    column_name2 datetime DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP() NOT NULL
+    column_name3 datatype,
+    column_name4 datatype
 );
 -- 在SQLServer中不能用UNSIGNED和AUTO_INCREMENT
+-- 在sqlserver中可以使用datetime2(7)
 ```
 
 创建表时创建联合主键
@@ -335,7 +367,7 @@ CREATE TABLE table_name(
     CONSTRAINT pk_name PRIMARY KEY(
         col_name1, col_name2
     )
-)
+);
 -- 创建单字段主键，（）要保留
 ```
 
@@ -413,7 +445,7 @@ MODIFY COLUMN col_tmp varchar(10);
 ALTER TABLE t1
 ADD CONSTRAINT pk_name PRIMARY KEY(
     column_name1, column_name2
-)
+);
 ```
 
 为已存在的表`test01`的字段`column1`创建参照`test01`的字段`column2_fk`外键约束
@@ -421,7 +453,14 @@ ADD CONSTRAINT pk_name PRIMARY KEY(
 ```sql
 ALTER TABLE test01
 ADD CONSTRAINT fk_name foreign key(column1)
-REFERENCES test02(column2_fk)
+REFERENCES test02(column2_fk);
+```
+
+为已存在的表创建检查约束
+
+```sql
+ALTER TABLE test01
+ADD CONSTRAINT ck_name CHECK(column>=1);
 ```
 
 #### `DROP`
@@ -482,6 +521,7 @@ TRUNCATE TABLE t1;
 |       | `or`                | 或                                                       |
 |       | `not`               | 非                                                       |
 |       | `like`              | 模糊查询                                                    |
+|       | `REGEXP`            | 正则匹配，忽视大小写                                              |
 | 其他    | `as`                | 对表或字段起别名                                                |
 |       | `distinct`          | 去除重复（放在`SELECT`后面）                                      |
 |       | `()`                | 括号可以是列表`(v1, v2, v3)`，提供给in使用，也可以是调整运算的优先级`(col1+col2)` |
