@@ -209,6 +209,13 @@ SET IMPLLICT_TRANSCATION ON;
 
 ### 事务隔离级别
 
+| 事务隔离级别             | 解释                                           | 优点                   | 缺点                    |
+| ------------------ | -------------------------------------------- | -------------------- | --------------------- |
+| `read uncommitted` | 事务中的修改，即使没有提交，其他事务也可以看得到                     | 性能好                  | 会导致“脏读”、“幻读”和“不可重复读取” |
+| `read committed`   | 大多数主流数据库的默认事务等级，保证了一个事务不会读到另一个并行事务已修改但未提交的数据 | 避免了“脏读取”，该级别适用于大多数系统 | 不能避免“幻读”和“不可重复读取”。    |
+| `repeatable read`  | 保证了一个事务不会修改已经由另一个事务读取但未提交（回滚）的数据             | 避免了“脏读取”和“不可重复读取”的情况 | 但不能避免“幻读”，带来了更多的性能损失  |
+| `serializable`     | 保证事务之间完全的隔离                                  | 最高隔离级别               | 性能损失最大，影响使用           |
+
 基于数据库的锁来实现
 
 避免“脏读”、“幻读”和“不可重复读取”的发生
@@ -221,10 +228,230 @@ SET IMPLLICT_TRANSCATION ON;
 
 为了解决这些情况，可以调整事务的隔离级别
 
+```sql
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+```
 
+### 查询当前活跃事务
+
+```sql
+DBCC OPENTRAN(db_name);
+```
 
 ## 七、锁
 
 对共享资源进行并发访问
 
 提供数据的完整性和一致性
+
+### 事务的阻塞
+
+如果一个事物在数据操作中锁住了某个数据库资源，而此时，另一个事务想要访问该资源，则必须等待该资源解锁，这样就会发生阻塞
+
+### 死锁
+
+多用户或多进程资源争夺，所有阻塞的事务都在等待其他事务提交来释放锁
+
+#### 确定持有锁的查询
+
+```sql
+-- Perform cleanup.   
+IF EXISTS(SELECT * FROM sys.server_event_sessions WHERE name='FindBlockers')  
+    DROP EVENT SESSION FindBlockers ON SERVER  
+GO  
+-- Use dynamic SQL to create the event session and allow creating a -- predicate on the AdventureWorks database id.  
+--  
+DECLARE @dbid int  
+
+SELECT @dbid = db_id('AdventureWorks')  
+
+IF @dbid IS NULL  
+BEGIN  
+    RAISERROR('AdventureWorks is not installed. Install AdventureWorks before proceeding', 17, 1)  
+    RETURN  
+END  
+
+DECLARE @sql nvarchar(1024)  
+SET @sql = '  
+CREATE EVENT SESSION FindBlockers ON SERVER  
+ADD EVENT sqlserver.lock_acquired   
+    (action   
+        ( sqlserver.sql_text, sqlserver.database_id, sqlserver.tsql_stack,  
+         sqlserver.plan_handle, sqlserver.session_id)  
+    WHERE ( database_id=' + cast(@dbid as nvarchar) + ' AND resource_0!=0)   
+    ),  
+ADD EVENT sqlserver.lock_released   
+    (WHERE ( database_id=' + cast(@dbid as nvarchar) + ' AND resource_0!=0 ))  
+ADD TARGET package0.pair_matching   
+    ( SET begin_event=''sqlserver.lock_acquired'',   
+            begin_matching_columns=''database_id, resource_0, resource_1, resource_2, transaction_id, mode'',   
+            end_event=''sqlserver.lock_released'',   
+            end_matching_columns=''database_id, resource_0, resource_1, resource_2, transaction_id, mode'',  
+    respond_to_memory_pressure=1)  
+WITH (max_dispatch_latency = 1 seconds)'  
+
+EXEC (@sql)  
+--   
+-- Create the metadata for the event session  
+-- Start the event session  
+--  
+ALTER EVENT SESSION FindBlockers ON SERVER
+STATE = START
+--  
+-- The pair matching targets report current unpaired events using   
+-- the sys.dm_xe_session_targets dynamic management view (DMV)  
+-- in XML format.  
+-- The following query retrieves the data from the DMV and stores  
+-- key data in a temporary table to speed subsequent access and  
+-- retrieval.  
+--  
+SELECT   
+objlocks.value('(action[@name="session_id"]/value)[1]', 'int')  
+        AS session_id,  
+    objlocks.value('(data[@name="database_id"]/value)[1]', 'int')   
+        AS database_id,  
+    objlocks.value('(data[@name="resource_type"]/text)[1]', 'nvarchar(50)' )   
+        AS resource_type,  
+    objlocks.value('(data[@name="resource_0"]/value)[1]', 'bigint')   
+        AS resource_0,  
+    objlocks.value('(data[@name="resource_1"]/value)[1]', 'bigint')   
+        AS resource_1,  
+    objlocks.value('(data[@name="resource_2"]/value)[1]', 'bigint')   
+        AS resource_2,  
+    objlocks.value('(data[@name="mode"]/text)[1]', 'nvarchar(50)')   
+        AS mode,  
+    objlocks.value('(action[@name="sql_text"]/value)[1]', 'varchar(MAX)')   
+        AS sql_text,  
+    CAST(objlocks.value('(action[@name="plan_handle"]/value)[1]', 'varchar(MAX)') AS xml)   
+        AS plan_handle,      
+    CAST(objlocks.value('(action[@name="tsql_stack"]/value)[1]', 'varchar(MAX)') AS xml)   
+        AS tsql_stack  
+INTO #unmatched_locks  
+FROM (  
+    SELECT CAST(xest.target_data as xml)   
+        lockinfo  
+    FROM sys.dm_xe_session_targets xest  
+    JOIN sys.dm_xe_sessions xes ON xes.address = xest.event_session_address  
+    WHERE xest.target_name = 'pair_matching' AND xes.name = 'FindBlockers'  
+) heldlocks  
+CROSS APPLY lockinfo.nodes('//event[@name="lock_acquired"]') AS T(objlocks)  
+
+--  
+-- Join the data acquired from the pairing target with other   
+-- DMVs to return provide additional information about blockers  
+--  
+SELECT ul.*  
+    FROM #unmatched_locks ul  
+    INNER JOIN sys.dm_tran_locks tl ON ul.database_id = tl.resource_database_id AND ul.resource_type = tl.resource_type  
+    WHERE resource_0 IS NOT NULL  
+    AND session_id IN   
+        (SELECT blocking_session_id FROM sys.dm_exec_requests WHERE blocking_session_id != 0)  
+    AND tl.request_status='wait'  
+    AND REPLACE(ul.mode, 'LCK_M_', '' ) = tl.request_mode
+DROP TABLE #unmatched_locks  
+DROP EVENT SESSION FindBlockers ON SERVER
+```
+
+确定问题后，执行
+
+```sql
+DROP TABLE #unmatched_locks  
+DROP EVENT SESSION FindBlockers ON SERVER
+```
+
+#### 查找具有最多锁定的对象
+
+```sql
+-- Find objects in a particular database that have the most
+-- lock acquired. This sample uses AdventureWorksDW2012.
+-- Create the session and add an event and target.
+
+IF EXISTS(SELECT * FROM sys.server_event_sessions WHERE name='LockCounts')
+    DROP EVENT session LockCounts ON SERVER;
+GO
+DECLARE @dbid int;
+
+SELECT @dbid = db_id('AdventureWorksDW2012');
+
+DECLARE @sql nvarchar(1024);
+SET @sql = '
+    CREATE event session LockCounts ON SERVER
+        ADD EVENT sqlserver.lock_acquired (WHERE database_id ='
+            + CAST(@dbid AS nvarchar) +')
+        ADD TARGET package0.histogram(
+            SET filtering_event_name=''sqlserver.lock_acquired'',
+                source_type=0, source=''resource_0'')';
+
+EXEC (@sql);
+GO
+ALTER EVENT session LockCounts ON SERVER
+    STATE=start;
+GO
+-- Create a simple workload that takes locks.
+
+USE AdventureWorksDW2012;
+GO
+SELECT TOP 1 * FROM dbo.vAssocSeqLineItems;
+GO
+-- The histogram target output is available from the
+-- sys.dm_xe_session_targets dynamic management view in
+-- XML format.
+-- The following query joins the bucketizing target output with
+-- sys.objects to obtain the object names.
+
+SELECT name, object_id, lock_count
+    FROM
+    (
+    SELECT objstats.value('.','bigint') AS lobject_id,
+        objstats.value('@count', 'bigint') AS lock_count
+        FROM (
+            SELECT CAST(xest.target_data AS XML)
+                LockData
+            FROM     sys.dm_xe_session_targets xest
+                JOIN sys.dm_xe_sessions        xes  ON xes.address = xest.event_session_address
+                JOIN sys.server_event_sessions ses  ON xes.name    = ses.name
+            WHERE xest.target_name = 'histogram' AND xes.name = 'LockCounts'
+             ) Locks
+        CROSS APPLY LockData.nodes('//HistogramTarget/Slot') AS T(objstats)
+    ) LockedObjects
+    INNER JOIN sys.objects o  ON LockedObjects.lobject_id = o.object_id
+    WHERE o.type != 'S' AND o.type = 'U'
+    ORDER BY lock_count desc;
+GO
+
+-- Stop the event session.
+
+ALTER EVENT SESSION LockCounts ON SERVER
+    state=stop;
+GO
+```
+
+## 八、索引
+
+加快数据的查询速度
+
+### 按存储方式分类
+
+#### 聚集索引
+
+聚簇索引的顺序，就是数据在硬盘上的物理顺序
+
+唯一
+
+#### 非聚集索引
+
+其实可以看作是一个含有聚集索引的表，只记录索引列和主键
+
+可多个
+
+### 按表列属性分类
+
+#### 主键索引
+
+#### 唯一索引
+
+#### 普通索引
+
+#### 多列索引
+
+#### 全文索引
