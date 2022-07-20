@@ -84,6 +84,21 @@ SQL Server 服务 > SQL Server (MSSQLSERVER) > 重启
 192.168.51.23,1433\MSSQLSERVER
 ```
 
+### docker安装
+
+```shell
+docker pull mcr.microsoft.com/mssql/server:2019-latest
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=passwd" \
+   --restart=always \
+   -p 1433:1433 --name sqlserver -h sqlserver.lxw.com \
+   -v sqlserver:/var/opt/mssql \
+   -d mcr.microsoft.com/mssql/server:2019-latest
+```
+
+`SA_PASSWORD`需要复杂密码
+
+持久化需要挂载逻辑卷，而不能是hostpath
+
 ## 三、性能查询
 
 查询SQL SERVER 的运行情况
