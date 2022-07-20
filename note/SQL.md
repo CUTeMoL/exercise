@@ -463,6 +463,14 @@ ALTER TABLE test01
 ADD CONSTRAINT ck_name CHECK(column>=1);
 ```
 
+为已存在的表创建索引
+
+```sql
+CREATE UNIQUE INDEX index_name 
+ON table_name(column_name);
+-- UNIQUE代表唯一索引，没有的话就是普通索引
+```
+
 #### `DROP`
 
 删除数据库
