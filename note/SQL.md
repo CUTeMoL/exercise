@@ -416,6 +416,14 @@ ADD CONSTRAINT pk_name PRIMARY KEY(
 )
 ```
 
+为已存在的表`test01`的字段`column1`创建参照`test01`的字段`column2_fk`外键约束
+
+```sql
+ALTER TABLE test01
+ADD CONSTRAINT fk_name foreign key(column1)
+REFERENCES test02(column2_fk)
+```
+
 #### `DROP`
 
 删除数据库
