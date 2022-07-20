@@ -471,6 +471,16 @@ ON table_name(column_name);
 -- UNIQUE代表唯一索引，没有的话就是普通索引
 ```
 
+禁用索引
+
+```sql
+ALTER INDEX index_name
+ON table_name
+DISABLE;
+-- 仅SQLServer使用
+-- REBUILD恢复使用
+```
+
 #### `DROP`
 
 删除数据库
@@ -490,6 +500,13 @@ DROP TABLE t1;
 ```sql
 ALTER TABLE t1 
 DROP COLUMN column_name;
+```
+
+删除索引
+
+```sql
+DROP INDEX index_name
+ON table_name;
 ```
 
 #### `TRUNCATE`
