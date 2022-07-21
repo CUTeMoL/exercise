@@ -306,11 +306,47 @@ where area in (
 
 ## 四、DCL(数据控制语句)
 
+### 示例
+
 `GRANT`
+
+授予创建表的权限
+
+```sql
+GRANT CREATE TABLE TO role_name;
+-- 仅sqlserver使用
+```
+
+授予增删查改的权限
+
+```sql
+GRANT SELECT,INSERT,UPDATE,DELETE
+ON table_name TO role_name;
+-- 仅sqlserver使用
+GRANT  SELECT,INSERT,UPDATE,DELETE
+ON db_name.table_name
+TO user_name@localhost 
+WITH GRANT OPTION;
+-- 仅MySQL使用
+```
 
 `DENY`
 
+拒绝权限
+
+```sql
+DENY SELECT,INSERT,UPDATE,DELETE
+ON table_name TO role_name;
+-- SQLServer使用
+```
+
 `REVOKE`
+
+撤销权限
+
+```sql
+REVOKE CREATE TABLE TO role_name;
+```
 
 ## 五、DDL(数据定义语句)
 

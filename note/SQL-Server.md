@@ -462,6 +462,43 @@ GO
 sp_helpindex table_name
 ```
 
-```sql
+## 九、权限
 
+### 登录名
+
+登录名是登录数据库服务器的用户
+
+登录名可以映射多个数据库用户
+
+#### 创建登录用户
+
+```sql
+CREATE LOGIN "login_name" FROM windows;
+-- SQLServer创建windows身份验证的用户
+CREATE LOGIN "LXW" WITH password="passwd";
+-- SQLServer创建SQLServer身份验证的用户
 ```
+
+### 数据库用户
+
+数据库用户是登录数据库的用户
+
+数据库用户只能对应一个登录名 
+
+#### 创建数据库用户
+
+```sql
+CREATE USER LXW FOR LOGIN LXW WITH DEFAULT_SCHEMA=dbo
+```
+
+### 角色
+
+一个用户可以对应多个角色
+
+#### 服务器级别角色
+
+不可变更
+
+#### 数据库级别角色
+
+自己定义权限`SELECT`之类的
