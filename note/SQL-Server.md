@@ -28,6 +28,10 @@
 
 达成某一条件后，执行的操作
 
+### 6.架构
+
+包含数据库的表、视图、触发器、存储过程等对象的集合，可以视为对象的容器
+
 ## 二、安装
 
 ### Windows安装
@@ -502,3 +506,43 @@ CREATE USER LXW FOR LOGIN LXW WITH DEFAULT_SCHEMA=dbo
 #### 数据库级别角色
 
 自己定义权限`SELECT`之类的
+
+## 十、架构(SCHEMA)
+
+独立于数据库用户的非重复命名空间，使用者可以将架构视为对象的容器。
+
+它包含了数据库的表、视图、触发器、存储过程等对象，这些个对象的集合便组成了一个架构
+
+架构不能同名，而它的所有者可以是角色或数据库用户。
+
+默认架构`dbo`=`DATABASE OWNER`
+
+### 数据库结构
+
+```sql
+SERVER.DATABASE.SCHEMA.DATABASE_OBJECT
+```
+
+### 创建架构
+
+```sql
+CREATE SCHEMA schema_name 
+AUTHORIZATION dbuser_name
+CREATE TABLE table_name(
+    id int
+);
+```
+
+修改架构所属数据库用户
+
+```sql
+ALTER AUTHORIZATION
+ON schema_name
+TO dbuser_name;
+```
+
+删除架构
+
+```sql
+DROP SCHEMA schema_name;
+```
