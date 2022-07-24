@@ -272,13 +272,99 @@ where area in (
 );
 ```
 
+### 通过SELECT来进行表复制
+
+```sql
+SELECT *
+INTO new_table_name
+FROM old_table_name;
+-- 仅sqlserver
+CREATE TABLE new_table_name (
+    SELECT * FROM old_table_name
+);
+-- 仅sqlserver
+```
+
 ## 二、DML(数据操作语句)
+
+| 关键词      | 功能  |
+| -------- | --- |
+| `INSERT` | 插入  |
+| `UPDATE` | 更新  |
+| `DELETE` | 删除  |
+
+### 示例
 
 `INSERT`
 
+插入指定字段，指定值
+
+```sql
+INSERT INTO table_name (
+    column1, column2, column3
+)
+VALUES(
+    value1, value2, value3
+);
+```
+
+插入查询结果
+
+```sql
+INSERT INTO table_name1
+SELECT * FROM table_name2;
+-- 指定字段
+INSERT INTO table_name1(
+    column1, column2
+)
+SELECT column1, column2
+FROM table_name2;
+```
+
 `UPDATE`
 
+更新单条记录
+
+```sql
+UPDATE table_name 
+SET column_name1=value1, column_name2=value2
+WHERE column_name3=value3;
+```
+
+表连接更新
+
+```sql
+UPDATE table_name1
+SET table_name1.column_name1=table_name2.column_name1
+FROM table_name1 t1, table_name2 t2
+WHERE t1.column_name2=t2.column_name2;
+```
+
+通过更新来删除字段的值
+
+```sql
+UPDATE table_name1
+SET column_name1=NULL
+WHERE column_name2=value2;
+```
+
 `DELETE`
+
+删除数据
+
+```sql
+DELETE FROM table_name
+WHERE column_name1=value1;
+```
+
+通过表连接条件筛选数据
+
+```sql
+DELETE table_name1
+FROM table_name1 t1, table_name2 t2
+WHERE t1.column1=t2.column1
+AND t1.column1=value1;
+```
 
 ## 三、TCL(事务控制语句)
 
