@@ -533,7 +533,7 @@ CREATE TABLE table_name(
 );
 ```
 
-修改架构所属数据库用户
+### 修改架构所属数据库用户
 
 ```sql
 ALTER AUTHORIZATION
@@ -541,8 +541,28 @@ ON schema_name
 TO dbuser_name;
 ```
 
-删除架构
+### 删除架构
 
 ```sql
 DROP SCHEMA schema_name;
 ```
+
+## 十一、SQL Server代理
+
+自动化操作
+
+需要选择启动
+
+### 作业
+
+由代理来完成的任务
+
+可定时，可一次性
+
+### 警报
+
+达到某条件发出通知、执行作业、发送邮件
+
+### 操作源
+
+操作数据库的人
