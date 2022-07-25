@@ -285,6 +285,12 @@ CREATE TABLE new_table_name (
 -- 仅sqlserver
 ```
 
+### 查询存在的视图
+
+```sql
+SELECT * FROM INFORMATION_SCHEMA.VIEWS;
+```
+
 ## 二、DML(数据操作语句)
 
 | 关键词      | 功能  |
@@ -499,12 +505,15 @@ CREATE TABLE table_name(
 CREATE VIEW view_name(
     column_name1, column_name2
 )
+WITH ENCRYPTION
 AS (
     SELECT * FROM table_name
 )
 WITH CHECK OPTION;
 -- 视图的字段可以修改查询结果的字段别名，可以不指定
+-- WITH ENCRYPTION 仅SQLServer使用
 -- WITH CHECK OPTION可以实现防用户修改,但是仅基于查询条件，即修改后的结果依然满足视图的查询，则修改依然成功
+-- 修改视图改为ALTER即可
 ```
 
 #### `ALTER`
@@ -614,7 +623,7 @@ ALTER INDEX index_name
 ON table_name
 DISABLE;
 -- 仅SQLServer使用
--- REBUILD恢复使用
+-- 改为REBUILD恢复使用
 ```
 
 #### `DROP`
@@ -643,6 +652,12 @@ DROP COLUMN column_name;
 ```sql
 DROP INDEX index_name
 ON table_name;
+```
+
+删除视图
+
+```sql
+DROP VIEW view_name;
 ```
 
 #### `TRUNCATE`

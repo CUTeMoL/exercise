@@ -576,3 +576,9 @@ DROP SCHEMA schema_name;
 数据来源于真实存在的表
 
 不能包括：`COMPUTE`,`COMPUTE BY`,`ORDER BY`(除非使用`TOP`关键词),`OPTION`,`INTO`,临时表,表变量
+
+### 查询存在的视图
+
+```sql
+SELECT * FROM INFORMATION_SCHEMA.VIEWS;
+```
