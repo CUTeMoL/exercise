@@ -493,6 +493,20 @@ CREATE TABLE table_name(
 -- 创建单字段主键，（）要保留
 ```
 
+创建视图
+
+```sql
+CREATE VIEW view_name(
+    column_name1, column_name2
+)
+AS (
+    SELECT * FROM table_name
+)
+WITH CHECK OPTION;
+-- 视图的字段可以修改查询结果的字段别名，可以不指定
+-- WITH CHECK OPTION可以实现防用户修改,但是仅基于查询条件，即修改后的结果依然满足视图的查询，则修改依然成功
+```
+
 #### `ALTER`
 
 修改数据库名称
