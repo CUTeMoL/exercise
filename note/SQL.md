@@ -24,18 +24,20 @@ LIMIT begin_num count_num;
 FROM > WHERE > GROUP BY > HAVING > SELECT创建的新字段 > ORDER BY > LIMIT > SELECT
 ```
 
-| 关键词             | 作用                                    |
-| --------------- | ------------------------------------- |
-| `SELECT`        | 定义查询字段                                |
-| `FROM`          | 来自哪张表(如果来自子查询则要添加临时表名)                |
-| `INNER JOIN ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null` |
-| `LEFT JOIN ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`    |
-| `RIGHT JOIN ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`    |
-| `WHERE`         | 筛选条件                                  |
-| `GROUP BY`      | 分组,去重                                 |
-| `HAVING`        | 过滤                                    |
-| `ORDER BY`      | 排序 `asc`升序 `desc`降序                   |
-| `LIMIT x, n`    | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数       |
+| 关键词             | 作用                                      |
+| --------------- | --------------------------------------- |
+| `SELECT`        | 定义查询字段                                  |
+| `TOP`           | 限制显示前`n`行，或前`n percent`的数据，仅SQLServer使用 |
+| `INTO`          | 查询结果插入到新表，MySQL中`OUTFILE`可以导出到文件        |
+| `FROM`          | 来自哪张表(如果来自子查询则要添加临时表名)                  |
+| `INNER JOIN ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null`   |
+| `LEFT JOIN ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`      |
+| `RIGHT JOIN ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`      |
+| `WHERE`         | 筛选条件                                    |
+| `GROUP BY`      | 分组,去重                                   |
+| `HAVING`        | 过滤                                      |
+| `ORDER BY`      | 排序 `asc`升序 `desc`降序                     |
+| `LIMIT x, n`    | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数,仅MySQL  |
 
 ### 示例
 
@@ -94,6 +96,7 @@ GROUP BY goal.matchid, game.mdate, game.team1, game.team2
 SELECT * 
 FROM world
 WHERE name REGEXP '^[H|O].*'
+-- 仅MySQL
 ```
 
 国家名包含`aeiou`这5个字符, 但是不能出现空格
@@ -107,6 +110,14 @@ and name like '%i%'
 and name like '%o%'
 and name like '%u%'
 and name not like '% %';
+```
+
+查询包含`%`的字符
+
+```sql
+SELECT *
+FROM test01
+WHERE column_name='%#%' ESCAPE '#';
 ```
 
 查询首都和名称，其中首都需是国家名称的拓展(首都包含国家名)，但首都名不等于国家名
@@ -696,7 +707,7 @@ TRUNCATE TABLE t1;
 |       | `and`               | 与                                                       |
 |       | `or`                | 或                                                       |
 |       | `not`               | 非                                                       |
-|       | `like`              | 模糊查询                                                    |
+|       | `like`              | 模糊查询,`ESCAPE`自定义转义字符                                    |
 |       | `REGEXP`            | 正则匹配，忽视大小写                                              |
 | 其他    | `as`                | 对表或字段起别名                                                |
 |       | `distinct`          | 去除重复（放在`SELECT`后面）                                      |
@@ -721,13 +732,19 @@ TRUNCATE TABLE t1;
 |             | `substring('str', n, len)`                                  | 从左边的`n`个字符开始，截取`len`个字符                                                                      |
 |             |                                                             |                                                                                              |
 | 数据类型转换      | `cast(x as type)`                                           | 将`x`转换成新类型`type`                                                                             |
+|             | `convert(type(length), data_to_beconverted, style)`         | 数据类型转换，通常用于时间格式的转换，参考地址 ： https://www.w3school.com.cn/sql/func_convert.asp                   |
 | 日期时间函数      | `year(date)`                                                | 获取年份                                                                                         |
 |             | `month(date)`                                               | 获取月份                                                                                         |
 |             | `day(date)`                                                 | 获取日                                                                                          |
+|             | `week(date)`                                                | 获取一年中的第几个周,仅MySQL                                                                            |
+|             | `weekday(date)`                                             | 获取周几(0-6)                                                                                    |
+|             | `getdate()`                                                 | SQLServer获取当前日期时间                                                                            |
+|             | `current_timestamp()`                                       | MySQL获取当前日期时间                                                                                |
 |             | `date_add(date, INTERVAL expr type)`                        | 时间加操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR`   |
 |             | `date_sub(date, INTERVAL expr type)`                        | 时间减操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR`   |
 |             | `datediff(date1, date2)`                                    | 对比两个日期之间的间隔天数                                                                                |
-|             | `date_format(date,format)`                                  | 将日期和时间格式化`format`可以是`%Y/%M/%d %H:%i:S`                                                       |
+|             | `date_format(date, format)`                                 | 将日期和时间格式化`format`可以是`%Y/%M/%d %H:%i:S`                                                       |
+|             | `datename(type, date)`                                      | 获取日期和时间的一部分，格式化后返回为字符串，仅SQLServer                                                            |
 | 条件判断函数      | `if(expr, 'v1', 'v2')`                                      | 如果表达式`expr`结果为`True`返回`v1`,`False`返回`v2`                                                     |
 |             | `case expr when v1 then r1 [when v2 then r2] [else rn] end` | 如果表达式`expr`结果为`v1`返回`r1`,`v2`返回`r2`其它返回`rn`                                                  |
 |             | `case when expr then r1 [when expr then r2] [else rn] end`  | 如果表达式`expr`成立，返回`r1`，匹配一条后，就不继续匹配了                                                           |
@@ -735,7 +752,7 @@ TRUNCATE TABLE t1;
 | 窗口函数赋值序号的方式 | `rank()`                                                    | 跳跃排序, 如`1,1,3,4`                                                                             |
 |             | `dense_rank()`                                              | 并列连续, 如`1,1,2,3`                                                                             |
 |             | `row_number()`                                              | 连续累加, 如`1,2,3,4`                                                                             |
-| 窗口函数偏移分析函数  | `lag(col1, n) over(partition by col2 order by col3)`        | `lag()`根据字段`col1`，向上偏移`n`位                                                                   |
+| 窗口函数偏移分析函数  | `lag(col1, n) over(partition by col2 order by col3)`        | `lag()`根据字段`col1`, 向上偏移`n`位                                                                  |
 |             | `lead(col1, n)`                                             | 向下偏移                                                                                         |
 
 ## 九、数据类型
