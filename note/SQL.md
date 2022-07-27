@@ -881,6 +881,108 @@ SQL Server
 
 地理空间类型，可存经纬度
 
+## 十、变量
+
+```sql
+DECLARE @variable_name type; -- MySQL中不用声明变量
+SET @variable_name=value;
+SET @variable_name:=value;
+SELECT @variable_name:=value as col_name; --MySQL中用SELECT定义变量的方法
+SELECT @variable_name:=value; --SQLServer中可以用SELECT定义变量的方法
+PRINT @variable_name; --SQLServer中可以用PRINT输出变量
+```
+
+SQLServer常用内置全局变量
+
+| 变量名                 | 功能               |
+| ------------------- | ---------------- |
+| `@@CONNECTIONS`     | 自启动以来的尝试连接数，包括失败 |
+| `@@CPU_BUSY`        | 自启动以来的CPU运行时间    |
+| `@@CURSOR_ROWS`     | 返回上一次打开的游标       |
+| `@@DATEFIRST`       | 设置一周的第`n`天为一周的初始 |
+| `@@ERROR`           | 上一次执行错误返回的错误号    |
+| `@@INDENTITY`       | 上一次插入的标识值        |
+| `@@IDLE`            | 自启动以来的CPU空闲时间    |
+| `@@IO_BUSY`         | 自启动以来的输入输出执行时间   |
+| `@@LANGUAGE`        | 当前使用的语言          |
+| `@@LOCK_TIMEOUT`    | 锁定超时设置           |
+| `@@MAX_CONNECTIONS` | 最大连接数            |
+| `@@OPTIONS`         | 当前SET选项的信息       |
+| `@@VERSION`         | 版本号              |
+| `@@ROWCOUNT`        | 上一次影响的行数         |
+
+## 十一、T-SQL流程控制语句
+
+| 语句                                         | 作用       |
+| ------------------------------------------ | -------- |
+| `BEGIN END`                                | 执行语句块的范围 |
+| `IF ELSE`                                  | 条件       |
+| `WHILE`                                    | 循环       |
+| `BREAK`                                    | 跳出循环     |
+| `CONTINUE`                                 | 跳过本轮循环   |
+| `WAITFOR DELAY 'time'`                     | 等待时间     |
+| `CASE WHEN expr THEN codes ELSE codes END` | 满足条件则执行  |
+
+条件判断
+
+```sql
+IF expr
+BEGIN
+    codes
+END
+ELSE
+BEGIN
+    codes
+END
+```
+
+循环
+
+```sql
+WHILE expr1
+BEGIN
+    IF expr2
+        codes
+    ELSE
+        CONTINUE
+    codes
+END
+```
+
+## 十二、存储过程
+
+使用SQL语句编写的实现指定功能的程序
+
+存储过程中定义的变量只有在存储过程中可以使用
+
+模块式编程
+
+### SQL Server
+
+#### 创建存储过程
+
+```sql
+CREATE PROCEDURE procedure_name
+AS 
+    codes;
+```
+
+创建带参数的存储过程
+
+```sql
+CREATE PROCEDURE procedure_name
+@variable varchar(20)
+AS
+    codes;
+```
+
+#### 使用存储过程
+
+```sql
+EXECUTE procedure_name;
+EXEC procedure_name ''; --使用需要参数的存储过程
+```
+
 ## 附录
 
 ### world表
