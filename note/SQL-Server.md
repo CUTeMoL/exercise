@@ -105,6 +105,12 @@ docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=passwd" \
 
 ## 三、性能查询
 
+查询表的基本信息
+
+```sql
+sp_help table_name;
+```
+
 查询SQL SERVER 的运行情况
 
 ```sql
@@ -581,4 +587,19 @@ DROP SCHEMA schema_name;
 
 ```sql
 SELECT * FROM INFORMATION_SCHEMA.VIEWS;
+```
+
+## 十四、存储过程
+
+使用SQL语句编写的实现指定功能的程序
+
+存储过程中定义的变量只有在存储过程中可以使用
+
+模块式编程
+
+使用存储过程
+
+```sql
+EXECUTE procedure_name;
+EXEC procedure_name ''; --使用需要参数的存储过程
 ```

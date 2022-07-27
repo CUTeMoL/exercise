@@ -527,6 +527,44 @@ WITH CHECK OPTION;
 -- 修改视图改为ALTER即可
 ```
 
+创建存储过程
+
+```sql
+CREATE PROCEDURE procedure_name
+AS 
+    codes;
+-- SQLServer
+CREATE PROCEDURE procedure_name
+BEGIN
+    code
+END
+-- MySQL
+```
+
+创建带参数的存储过程
+
+```sql
+CREATE PROCEDURE procedure_name
+@variable1 varchar(20)='string',
+@variable1 int=1 output
+AS
+    codes;
+-- ='sting'是默认传参值
+-- output可以输出这个变量
+-- CREATE改ALTER为修改存储过程
+-- SQLServer
+CREATE PROCEDURE procedure_name(
+    IN variable1 int,
+    OUT variable2 varchar(20),
+    INOUT variable3 char(20)
+)
+BEGIN
+    code
+END
+-- IN|OUT|INOUT,输入|输出|输入输出
+-- MySQL
+```
+
 #### `ALTER`
 
 修改数据库名称
@@ -739,6 +777,7 @@ TRUNCATE TABLE t1;
 |             | `week(date)`                                                | 获取一年中的第几个周,仅MySQL                                                                            |
 |             | `weekday(date)`                                             | 获取周几(0-6)                                                                                    |
 |             | `getdate()`                                                 | SQLServer获取当前日期时间                                                                            |
+|             | `now()`                                                     | MySQL获取当前日期时间                                                                                |
 |             | `current_timestamp()`                                       | MySQL获取当前日期时间                                                                                |
 |             | `date_add(date, INTERVAL expr type)`                        | 时间加操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR`   |
 |             | `date_sub(date, INTERVAL expr type)`                        | 时间减操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR`   |
@@ -949,39 +988,7 @@ BEGIN
 END
 ```
 
-## 十二、存储过程
-
-使用SQL语句编写的实现指定功能的程序
-
-存储过程中定义的变量只有在存储过程中可以使用
-
-模块式编程
-
-### SQL Server
-
-#### 创建存储过程
-
-```sql
-CREATE PROCEDURE procedure_name
-AS 
-    codes;
-```
-
-创建带参数的存储过程
-
-```sql
-CREATE PROCEDURE procedure_name
-@variable varchar(20)
-AS
-    codes;
-```
-
-#### 使用存储过程
-
-```sql
-EXECUTE procedure_name;
-EXEC procedure_name ''; --使用需要参数的存储过程
-```
+# 
 
 ## 附录
 
