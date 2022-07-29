@@ -546,7 +546,7 @@ END
 ```sql
 CREATE PROCEDURE procedure_name
 @variable1 varchar(20)='string',
-@variable1 int=1 output
+@variable2 int=1 output
 AS
     codes;
 -- ='sting'是默认传参值
@@ -563,6 +563,99 @@ BEGIN
 END
 -- IN|OUT|INOUT,输入|输出|输入输出
 -- MySQL
+```
+
+SQLServer创建自定义标量值函数
+
+```sql
+CREATE FUNCTION function_name(
+    @variable1 datetime,
+    @variable2 datetime
+)
+RETURNS int
+AS
+BEGIN
+RETURN(datediff(year, @variable1, @variable2))
+END
+-- RETURNS 声明返回值的类型
+-- RETURN 返回值
+-- 自定义函数调用要加上架构名
+-- SELECT function_name()使用标量值函数
+DELIMITER //
+CREATE FUNCTION days_count (
+    firstday datetime,
+    nowday datetime
+)
+RETURNS int
+BEGIN
+RETURN(DATEDIFF(firstday,nowday));
+END//
+DELIMITER;
+-- MySQL
+-- 如果报错是因为BINLOG的缘故，set global log_bin_trust_function_creators=TRUE;可以解决
+```
+
+SQLServer自定义表值函数
+
+```sql
+CREATE FUNCTION function_name(
+    @variable1 varchar(20)
+)
+RETURNS TABLE
+AS
+RETURN(SELECT * FROM test01 WHERE name=@variable1)
+-- SQLServer
+-- 表值函数是表，所以用FROM function_name()来使用表值函数
+```
+
+通过触发器创建更新表时的记录日志表
+
+```sql
+CREATE TRIGGER modify_log
+ON test01
+AFTER UPDATE, DELETE
+AS
+DECLARE @DELNUM INT
+SELECT @DELNUM=min(col_pk) FROM deleted
+WHILE @DELNUM IS NOT NULL
+BEGIN
+SELECT @DELNUM=col_pk FROM deleted WHERE col_pk=@DELNUM
+INSERT INTO table_log(table_name, table_pk, modify_datetime)
+VALUES('test01', @DELNUM, getdate())
+SELECT @DELNUM=min(col_pk) FROM deleted
+WHERE col_pk>@DELNUM
+END
+-- SQLServer
+-- 从DELETED中查找被修改的最小的主键，写入table_log
+-- 再SELECT一次大于上一次的主键
+-- 如果满足条件则进行循环
+```
+
+增删查改事件记录
+
+```sql
+CREATE TRIGGER modify_log_tr
+ON test01
+AFTER INSERT, UPDATE, DELETE
+AS
+IF EXISTS(SELECT 1 FROM inserted) AND
+    NOT EXISTS(SELECT 1 FROM deleted)
+BEGIN
+INSERT INTO modify_logs(table_name, DML, date)
+VALUES('test01', 'insert', getdate())
+END
+IF EXISTS(SELECT 1 FROM inserted) AND 
+    EXISTS(SELECT 1 FROM deleted)
+BEGIN
+INSERT INTO modify_logs(table_name, DML, date)
+VALUES('test01', 'update', getdate())
+END
+IF NOT EXISTS(SELECT 1 FROM inserted) AND 
+    EXISTS(SELECT 1 FROM deleted)
+BEGIN
+INSERT INTO modify_logs(table_name, DML, date)
+VALUES('test01', 'deleted', getdate())
+END
 ```
 
 #### `ALTER`
