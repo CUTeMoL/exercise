@@ -601,5 +601,112 @@ SELECT * FROM INFORMATION_SCHEMA.VIEWS;
 
 ```sql
 EXECUTE procedure_name;
-EXEC procedure_name ''; --使用需要参数的存储过程
+EXEC procedure_name 'parameter'; --使用需要参数的存储过程
+```
+
+## 十五、游标
+
+类似C语言的指针
+
+存放查询结果的缓冲区
+
+可以从所有结果中检索一行或多行的数据
+
+遍历查询的结果集
+
+创建游标
+
+```sql
+DECLARE cursor_name CURSOR
+FOR
+SELECT cloumn_name1, cloumn_name2
+FROM table_name;
+```
+
+打开游标
+
+```sql
+-- 打开游标
+OPEN cursor_name
+DECLARE @clo_name1 int, @clo_name2 varchar(20)
+print '游标结果记录'+CAST(@@CURSOR_ROWS AS varchar(20)
+-- 遍历游标
+FETCH NEXT FROM cursor_name INTO @clo_name1, @clo_name2
+WHILE @@FETCH_STATUS=0
+BEGIN
+PRINT '编号'+CAST(@clo_name1 AS VARCHAR(10))+'名称'+@clo_name2
+-- 定位下一条记录
+FETCH NEXT FROM cursor_name INTO @clo_name1, @clo_name2
+END
+-- 关闭游标
+CLOSE cursor_name
+DEALLOCATE
+```
+
+使用游标修改数据
+
+```sql
+-- 打开游标
+OPEN cursor_name
+DECLARE @clo_name1 int, @clo_name2 varchar(20)
+print '游标结果记录'+CAST(@@CURSOR_ROWS AS varchar(20)
+-- 遍历游标
+FETCH NEXT FROM cursor_name INTO @clo_name1, @clo_name2
+WHILE @@FETCH_STATUS=0
+BEGIN
+-- 修改数据
+UPDATE table_name
+SET cloumn_name1=value
+WHERE cloumn_name2=value
+-- 定位下一条记录
+FETCH NEXT FROM cursor_name INTO @clo_name1, @clo_name2
+END
+-- 关闭游标
+CLOSE cursor_name
+DEALLOCATE
+```
+
+## 十六、触发器
+
+由特定事件触发
+
+分为DML触发器、DDL触发器、CLR触发器、登录触发器
+
+### 创建基于表或视图的触发器(DML触发器)
+
+```sql
+CREATE TRIGGER trigger_name
+ON  table_name
+[WITH ]
+{FOR|AFTER|INSTEAD OF}
+{INSERT, UPDATE, DELETE}
+AS
+    codes
+```
+
+### 创建基于服务器和数据库的触发器(DDL触发器)
+
+```sql
+CREATE TRIGGER trigger_name
+ON {ALL SERVER|DATABASE}
+{FOR|AFTER} {EVENTTYPE}
+AS
+    codes
+```
+
+### 创建基于服务器登录触发器(登录触发器)
+
+```sql
+CREATE TRIGGER trigger_name
+ON ALL SERVER
+{FOR|AFTER} LOGON
+AS
+    codes
+```
+
+### 调整触发器顺序
+
+```sql
+sp_settriggerorder @triggername='trigger_name', @order='First', @stmttype='UPDATE'; 
+-- FIRST调整到第一个触发
 ```
