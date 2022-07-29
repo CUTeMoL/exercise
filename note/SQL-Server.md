@@ -710,3 +710,13 @@ AS
 sp_settriggerorder @triggername='trigger_name', @order='First', @stmttype='UPDATE'; 
 -- FIRST调整到第一个触发
 ```
+
+## 十七、事务日志
+
+存储对数据的所有更改
+
+查询当前数据库文件
+
+```sql
+
+```
