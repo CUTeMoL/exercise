@@ -2,6 +2,7 @@ from scapy.all import *
 import psutil
 import IPy
 import re
+import xlsxwriter
 # 导入OUI信息
 with open("./oui_s.txt", "r", encoding='utf8') as f:
     oui_list = f.readlines()
