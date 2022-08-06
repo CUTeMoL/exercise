@@ -729,43 +729,43 @@ for i,j in enumerate(str1):
 
 ### 列表操作函数:
 
-| 类        | 函数                        | 作用                                                         |
-| --------- | --------------------------- | ------------------------------------------------------------ |
-| 增        | list0.append("str1")        | 在列表最后增加一个元素str1                                   |
-|           | list1.insert(1,"str2")      | 插入一个元素str2，下标为1(列表的第二个)，原下标为1的往后推   |
-| 改        | list2[2] = "str3"           | 修改下标为2的元素                                            |
-|           | list3.reverse()             | 倒序输出，改变元数据                                         |
-| 删        | list4.remove("str4")        | 删除元素str4（根据元素）                                     |
-|           | del list5[2]                | 删除元素下标为2的元素,无元素下标时删除整个元素（根据下标）   |
-|           | list6.pop(2)                | 取出元素下标为2的元素，无元素下标时取出最后一个元素（不打印相当于删除） |
-|           | list7.clear()               | 清除列表所有元素，成为空列表,不是删除列表                    |
+| 类        | 函数                          | 作用                                                    |
+| -------- | --------------------------- | ----------------------------------------------------- |
+| 增        | list0.append("str1")        | 在列表最后增加一个元素str1                                       |
+|          | list1.insert(1,"str2")      | 插入一个元素str2，下标为1(列表的第二个)，原下标为1的往后推                     |
+| 改        | list2[2] = "str3"           | 修改下标为2的元素                                             |
+|          | list3.reverse()             | 倒序输出，改变元数据                                            |
+| 删        | list4.remove("str4")        | 删除元素str4（根据元素）                                        |
+|          | del list5[2]                | 删除元素下标为2的元素,无元素下标时删除整个元素（根据下标）                        |
+|          | list6.pop(2)                | 取出元素下标为2的元素，无元素下标时取出最后一个元素（不打印相当于删除）                  |
+|          | list7.clear()               | 清除列表所有元素，成为空列表,不是删除列表                                 |
 | 查print() | list8.index("str5")         | 查看str5的元素下标                                           |
-|           | list9.sort()                | 排序列表，按ASCII编码来排序，reverse=True可以倒序输出        |
-|           | list13.sorted(reverse=True) | 临时排序，reverse=True可以倒序输出                           |
-|           | list12.count("str6")        | 统计元素str6的出现次数                                       |
-| 连        | list10.extend(list11)       | list10拼接list11                                             |
-| 复制      | list14 = list15[:]          | 把list15的元素赋值给list14（采用切片把元素提取出来），如果不切片，两个列表实际会指向同一个列表 |
-|           |                             |                                                              |
+|          | list9.sort()                | 排序列表，按ASCII编码来排序，reverse=True可以倒序输出                   |
+|          | list13.sorted(reverse=True) | 临时排序，reverse=True可以倒序输出                               |
+|          | list12.count("str6")        | 统计元素str6的出现次数                                         |
+| 连        | list10.extend(list11)       | list10拼接list11                                        |
+| 复制       | list14 = list15[:]          | 把list15的元素赋值给list14（采用切片把元素提取出来），如果不切片，两个列表实际会指向同一个列表 |
+|          |                             |                                                       |
 
 ### 字典操作函数:
 
-| 功能      | 函数                               | 作用                                                         |
-| --------- | ---------------------------------- | ------------------------------------------------------------ |
-| 查print() | dict["key0"]                       | 如果key值不存在,会返回keyerror错误                           |
-|           | dict.get("key0", "message1")       | 这种取值方法如果key值不存在,会返回message1(默认为none),不会返回错误 |
-|           | dict1.keys()                       | 打印所有的keys，以dict_keys(['key0', 'key1', 'key2'])的形式输出 |
-|           | dict1.values()                     | 打印所有的values                                             |
-|           | dict1.items()                      | 字典转成列表套元组，双变量则一个是key，另一个是values        |
-|           | "key0" in dict1                    | 查询key0是否存在于dict1                                      |
-|           | list(dict1)                        | 以list的方式输出key，其实就是dict转list                      |
-| 增/改     | dict1 = {}                         | 创建空字典                                                   |
-|           | dict1["key1"] = "value2"           | key1不存在则增加，存在则修改,强制覆盖                        |
-|           | dict1.setdefault("key1", "value2") | 有这个key1，则不改变；没有这个key，则增加这个key和value ，不强制覆盖 |
-|           | dict1.update(dict2)                | 将dict2更新到dict1，dict1和dict2同时存在的keys会更新成dict2的值，dict2存在dict1不存在，dict1增加这个keys: values,dict1存在dict2不存在，保持dict1的原key: value |
-| 删        | dict1.pop("key3")                  | 取出dict1中的key3                                            |
-|           | del dict1["key4"]                  | 删除dict1中的key4                                            |
-|           | dict1.popitem()                    | 删除显示的最后一条                                           |
-|           | dict1.clear()                      | 清空字典                                                     |
+| 功能       | 函数                                 | 作用                                                                                                                       |
+| -------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 查print() | dict["key0"]                       | 如果key值不存在,会返回keyerror错误                                                                                                  |
+|          | dict.get("key0", "message1")       | 这种取值方法如果key值不存在,会返回message1(默认为none),不会返回错误                                                                              |
+|          | dict1.keys()                       | 打印所有的keys，以dict_keys(['key0', 'key1', 'key2'])的形式输出                                                                      |
+|          | dict1.values()                     | 打印所有的values                                                                                                              |
+|          | dict1.items()                      | 字典转成列表套元组，双变量则一个是key，另一个是values                                                                                          |
+|          | "key0" in dict1                    | 查询key0是否存在于dict1                                                                                                         |
+|          | list(dict1)                        | 以list的方式输出key，其实就是dict转list                                                                                              |
+| 增/改      | dict1 = {}                         | 创建空字典                                                                                                                    |
+|          | dict1["key1"] = "value2"           | key1不存在则增加，存在则修改,强制覆盖                                                                                                    |
+|          | dict1.setdefault("key1", "value2") | 有这个key1，则不改变；没有这个key，则增加这个key和value ，不强制覆盖                                                                               |
+|          | dict1.update(dict2)                | 将dict2更新到dict1，dict1和dict2同时存在的keys会更新成dict2的值，dict2存在dict1不存在，dict1增加这个keys: values,dict1存在dict2不存在，保持dict1的原key: value |
+| 删        | dict1.pop("key3")                  | 取出dict1中的key3                                                                                                            |
+|          | del dict1["key4"]                  | 删除dict1中的key4                                                                                                            |
+|          | dict1.popitem()                    | 删除显示的最后一条                                                                                                                |
+|          | dict1.clear()                      | 清空字典                                                                                                                     |
 
 ### 集合交并补函数:
 
@@ -963,8 +963,6 @@ higher_function1([1, 2, 3], [4, 5, 6], sum)
 ​    安装:`pip install module_name`
 
 `__name__`: 在被引用时是模块名，自己用时是  `__main__` 
-
-
 
 ### 包:
 
@@ -1660,7 +1658,6 @@ sftp.get("/home/lxw/access.log.1","e:/tmp/accesslog.txt") # 把对方机器的/e
 sftp.put("e:/tmp/tmp.txt","/home/lxw/tmp.txt") # 本地的上传,也一样要命令
 trans.close()
 print("---sftp传输文件完成---")
-
 ```
 
 ```python
@@ -1682,8 +1679,6 @@ print(result.decode())
 ssh.close()
 print("---远程执行命令完成---")
 ```
-
-
 
 ### 第三方模块IPy:
 
@@ -1770,8 +1765,6 @@ pyinstaller.exe [option] [file.py]
   -n 指定名字
   -p 指定python导入模块的路径
 ```
-
-
 
 ### 第三方模块pymysql:
 
@@ -2036,8 +2029,6 @@ if len(domain) >= 1 and domain[0] != "":
 else:
     print("域名有误")
 ```
-
-
 
 ### 第三方模块pexpect:
 

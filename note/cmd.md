@@ -97,9 +97,20 @@ secpol.msc
 
 创建IP安全策略, 不激活默认响应规则，不编辑属性
 
+```powershell
+netsh ipsec static add policy name="reject"
+```
+
 双击IP安全策略，不使用向导
 
 添加阻止所有，添加IP筛选器名为`拒绝所有`，属性编辑好源地址、目标地址、协议为`任意`，筛选器操作为`阻止`（需要自己新建）
+
+```powershell
+netsh ipsec static add filteraction name="阻止" action=block # 添加筛选器操作
+netsh ipsec static add filterlist name="拒绝所有" # 添加筛选器
+netsh ipsec static add filter filterlist="拒绝所有" srcaddr=any dstaddr=any description="拒绝一切" protocol=any mirrored=yes # 编辑筛选器的属性，即具体生效的规则
+netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝所有" filteraction="阻止" # 关联前面创建的policy、filteraction、filterlist命名为rejectlist
+```
 
 然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建）
 
