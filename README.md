@@ -26,6 +26,8 @@ fileDiff.py - 文本内容对比，生成HTML文件更直观的查看文本不�
 
 warningMail.py - 监控内存，分区空间，超过后发送警告邮件
 
+findTruePid.py -  查找Windows服务器下端口被不存在的进程占用的真实pid
+
 ## shell
 
 inotifywait.sh - 监控目录并同步
