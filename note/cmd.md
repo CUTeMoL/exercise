@@ -87,13 +87,11 @@ pause
 
 ## 二、管理工具
 
-### 1.本地安全策略(防火墙)
+### 1. secpol.msc
 
-```powershell
-secpol.msc
-```
+本地安全策略(防火墙)
 
-#### 步骤
+#### ipsec创建安全策略的步骤
 
 创建IP安全策略, 不激活默认响应规则，不编辑属性
 
@@ -114,4 +112,40 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 
 然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建）
 
-### 2.
+### 2. taskchd.msc
+
+查看计划任务
+
+### 3. services.msc
+
+查看服务以及编辑服务属性
+
+#### 编辑服务属性
+
+```powershell
+net start service_name # 启动
+net stop service_name # 停止
+sc config service_name start= disabled # 禁用
+sc config service_name start= auto # 自动启动
+sc delete service_name # 卸载命令
+```
+
+### 4. gpedit.msc
+
+组策略
+
+### 5. lusrmgr.msc
+
+用户和组分配权利和权限管理
+
+### 6. diskmgmt.msc
+
+磁盘分区管理
+
+### 7. appwiz.cpl
+
+程序与功能
+
+### 8. eventvwr
+
+系统日志
