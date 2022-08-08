@@ -85,6 +85,58 @@ if %var% leq 3 goto label1
 pause
 ```
 
+7. find
+
+文件中搜索指定字符串
+
+```powershell
+find [option] "string" [drive:]\[path]\filename
+/V 未包含
+/C 包含字符串的行数
+/N 显示行号
+/I 忽略大小写
+```
+
+### 8. type
+
+显示文件内容
+
+```powershell
+type [drive:]\[path]\filename
+```
+
+### 9. start
+
+新建一个终端运行外部程序，无论是否成功都会继续执行之后的语句
+
+```powershell
+start explorer D:\
+```
+
+### 10. cls
+
+清屏
+
+### 11. assoc
+
+文件拓展名关联，即使用后缀名关联决定文件的类型
+
+```powershell
+assoc # 显示所有文件拓展名的关联
+assoc.txt # 显示.txt文件拓展名的关联
+assoc.txt=Word.Document.8 # 修改.txt文件拓展名关联到word文档
+```
+
+### 12. ftype
+
+文件类型关联的打开程序路径
+
+```powershell
+ftype # 显示所有文件类型的打开程序路径
+ftype exefile # 显示exefile的打开程序路径
+ftype exefile="%1" %*
+```
+
 ## 二、管理工具
 
 ### 1. secpol.msc
