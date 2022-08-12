@@ -139,7 +139,7 @@ ftype exefile="%1" %*
 
 ## 二、管理工具
 
-### 1. secpol.msc
+### 1. `secpol.msc`
 
 本地安全策略(防火墙)
 
@@ -164,11 +164,11 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 
 然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建）
 
-### 2. taskchd.msc
+### 2. `taskchd.msc`
 
 查看计划任务
 
-### 3. services.msc
+### 3. `services.msc`
 
 查看服务以及编辑服务属性
 
@@ -182,22 +182,26 @@ sc config service_name start= auto # 自动启动
 sc delete service_name # 卸载命令
 ```
 
-### 4. gpedit.msc
+### 4. `gpedit.msc`
 
 组策略
 
-### 5. lusrmgr.msc
+### 5. `lusrmgr.msc`
 
 用户和组分配权利和权限管理
 
-### 6. diskmgmt.msc
+### 6. `diskmgmt.msc`
 
 磁盘分区管理
 
-### 7. appwiz.cpl
+### 7. `appwiz.cpl`
 
 程序与功能
 
-### 8. eventvwr
+### 8. `eventvwr`
 
 系统日志
+
+### 9. `perfmon`
+
+性能收集器
