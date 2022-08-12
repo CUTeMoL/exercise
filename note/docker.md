@@ -4,87 +4,85 @@
 
 ```shell
 docker info
-	查看信息
+    查看信息
 docker ps
-	查看运行状态
-	-a 所有
-	-q 显示ID
+    查看运行状态
+    -a 所有
+    -q 显示ID
 docker run -d -p 8080:80 nginx
 docker container run -d -p 8080:80 nginx
-	run 运行容器
-	-d 后台运行
-	-i 交互
-	-t 分配一个伪终端
-	-e 设置环境变量
-	-p nat宿主机端口:容器端口
-	-P 发布所有容器端口到主机端口
-	--name 指定容器名称
-	-v /opt/wwwroot:/usr/share/nginx/html 挂载宿主机:容器 持久化
-	-h 指定容器主机名
-	--ip 指定容器IP 只能用于自定义网络
-	--network 连接容器到一个网络
-	-v 将文件系统附加到容器
-	--restart no|always|on-failure 容器退出时的重启策略
-	-m="500m" 设置内存
-	-memory-swap 允许交换到磁盘的内存量
-	–memory-swappiness=<0-100> 容器使用SWAP分区交换的百分比（0-100，默认为-1）
-	--cpus="2" 设置CPU
-	–cpuset-cpus 限制容器使用特定的CPU核心，如(0-3, 0,1)
-	–cpu-shares CPU共享（相对权重）
+    run 运行容器
+    -d 后台运行
+    -i 交互
+    -t 分配一个伪终端
+    -e 设置环境变量
+    -p nat宿主机端口:容器端口
+    -P 发布所有容器端口到主机端口
+    --name 指定容器名称
+    -v /opt/wwwroot:/usr/share/nginx/html 挂载宿主机:容器 持久化
+    -h 指定容器主机名
+    --ip 指定容器IP 只能用于自定义网络
+    --network 连接容器到一个网络
+    -v 将文件系统附加到容器
+    --restart no|always|on-failure 容器退出时的重启策略
+    -m="500m" 设置内存
+    -memory-swap 允许交换到磁盘的内存量
+    –memory-swappiness=<0-100> 容器使用SWAP分区交换的百分比（0-100，默认为-1）
+    --cpus="2" 设置CPU
+    –cpuset-cpus 限制容器使用特定的CPU核心，如(0-3, 0,1)
+    –cpu-shares CPU共享（相对权重）
 docker history nginx
-	build的历史
+    build的历史
 docker pull nginx
-	下载镜像
+    下载镜像
 docker push nginx
-	推送镜像
+    推送镜像
 docker image rm hello-world:latest
-	删除镜像
+    删除镜像
 docker image prune -a
-	删除没有使用的镜像
-	-a 没有在容器使用中的镜像
+    删除没有使用的镜像
+    -a 没有在容器使用中的镜像
 docker image tag
-	标签
+    标签
 docker image save -o
-	保存镜像到指定位置
+    保存镜像到指定位置
 docker image load -i
-	导入镜像从指定位置
-
+    导入镜像从指定位置
 ```
 
 ## 二、docker管理命令
 
 ```shell
 docker top cbb649424924
-	查看进程
+    查看进程
 docker exec -it cbb649424924 bash
-	进入运行中的容器
+    进入运行中的容器
 docker exec cbb649424924 ls
-	对容器运行ls指令
+    对容器运行ls指令
 docker inspect nginx
-	输出详细信息
+    输出详细信息
 docker container ls -a
-	列出所有容器
-	-a 列出所有
+    列出所有容器
+    -a 列出所有
 docker container start/stop 3df3ab517bbd
-	启动停止容器（可以使用ID或名称）
+    启动停止容器（可以使用ID或名称）
 docker container rm 3df3ab517bbd
-	删除容器
+    删除容器
 docker container prune
-	移除已停止容器
+    移除已停止容器
 docker rm -f $(docker ps -qa)
-	删除所有（包括运行中的）容器
+    删除所有（包括运行中的）容器
 docker commit cf1b8cac5454 image_name 
-	创建一个新镜像来自一个容器
+    创建一个新镜像来自一个容器
 docker cp ./a.txt web:/
-	复制文件
+    复制文件
 docker logs cbb649424924
-	获取一个容器日志
+    获取一个容器日志
 docker port cbb649424924
-	列出或指定容器端口映射
+    列出或指定容器端口映射
 docker container stats cbb649424924 --no-stream
-	显示容器资源使用统计
-	--no-stream 只显示一次
-
+    显示容器资源使用统计
+    --no-stream 只显示一次
 ```
 
 docker远程管理
@@ -110,8 +108,8 @@ systemctl daemon-reload && systemctl restart docker
 
 ```shell
 docker build -t image_name -f Dockerfile_name path|url|-[flags]
-	-t 指定镜像名称
-	-f 指定dockerfile文件名
+    -t 指定镜像名称
+    -f 指定dockerfile文件名
 ```
 
 ### dokcerfile编写
@@ -119,26 +117,26 @@ docker build -t image_name -f Dockerfile_name path|url|-[flags]
 ```shell
 dockerfile指令
 FROM centos/systemd
-	指定来源镜像
+    指定来源镜像
 RUN yum install epel-release -y && \
     yum install nginx -y
-	运行的命令
+    运行的命令
 CMD ["nginx", "-g", "daemon off;"]
-	运行容器时默认执行。如果有多个CMD，最后一个生效
+    运行容器时默认执行。如果有多个CMD，最后一个生效
 LABEL
-	标签
+    标签
 COPY
-	复制文件到镜像
+    复制文件到镜像
 ADD nginx-1.15.5.tar.gz
-	解压压缩包并复制
+    解压压缩包并复制
 ENV PATH $PATH:/usr/local/nginx/sbin
-	设置环境变量
+    设置环境变量
 USER
-	为RUN、CMD、ENTPYPOINT执行指定用户
+    为RUN、CMD、ENTPYPOINT执行指定用户
 EXPOSE 80
-	声明容器运行的服务端口
+    声明容器运行的服务端口
 WORKDIR /usr/local/nginx
-	为RUN、CMD、ENTPYPOINT、COPY和ADD设置工作目录
+    为RUN、CMD、ENTPYPOINT、COPY和ADD设置工作目录
 ```
 
 ### 案例: dockerfile部署tomcat
@@ -195,9 +193,9 @@ cp harbor.yml.tmpl harbor.yml
 harbor.yml
 
 ```yaml
-	hostname: reg.ctnrs.com
-	https: # 先注释https相关配置
-	harbor_admin_password: Harbor12345
+    hostname: reg.ctnrs.com
+    https: # 先注释https相关配置
+    harbor_admin_password: Harbor12345
 ```
 
 ```shell
@@ -248,15 +246,11 @@ docker exec -it tomcat1 bash
 ping tomcat2 
 ```
 
-
-
 ### 共享主机网络
 
 ```shell
 docker network create -d host host0
 ```
-
-
 
 ### 共享网卡
 
@@ -281,9 +275,9 @@ docker run -d -it --network=container:web1 --name=php php
 ```shell
 docker swarm init 
 option:
-	--advertise-addr 定义发布地址 IP|ifname
-	--listen-addr 指出的是这个集群暴露给外界调用的HTTP API的socket地址 IP:PORT
-	--data-path-addr是 数据传输的地址 IP|ifname
+    --advertise-addr 定义发布地址 IP|ifname
+    --listen-addr 指出的是这个集群暴露给外界调用的HTTP API的socket地址 IP:PORT
+    --data-path-addr是 数据传输的地址 IP|ifname
 ```
 
 例
@@ -384,3 +378,21 @@ networks:
     driver: bridge
 ```
 
+
+
+### 案例: KMS容器
+
+```shell
+git clone https://github.com/Wind4/vlmcsd-docker.git vlmcsd
+cd vlmcsd
+docker-compose up -d
+```
+
+windows上激活
+
+```powershell
+cd /d "%SystemRoot%\system32" 
+slmgr /skms 192.168.19.201 #设置KMS服务器地址
+slmgr /ato # 激活
+slmgr /xpr # #查看激活时间
+```
