@@ -411,9 +411,9 @@ print("nihao",file=fp)    #输出到文件中
 fp.close()    #关闭文件
 print("a"+"b")   #ab
 print("a","b")   #a b
-print("数字为"+str(7))   #数字为7   加号+是拼接需要前后类型相同
+print("数字为"+str(7))   #数字为7   加号+是拼接需要前后类型都是字符串
 print("数字为",7)   #数字为 7    逗号,不是拼接，是分开输出中间有空格
-print(a,end=' ')   #,end='分割符' 空格的形况下输出为1行
+print(a, end=' ')   #,end='分割符' 空格的形况下输出为1行
 print('''hello
 world''')        #输出为hello\nworld，纯粹的把三个字符中的内容输出
 print("hello \
@@ -663,10 +663,10 @@ eval(str)  #解析json
 计算在字符串中的有效python表达式，并返回一个对象
 
 ```python
->>> a = ['a', 'b', 'c', 'd']
->>> b = ['1', '2', '3', '4']
->>> list(zip(a, b))
-[('a', '1'), ('b', '2'), ('c', '3'), ('d', '4')]
+a = ['a', 'b', 'c', 'd']
+b = ['1', '2', '3', '4']
+list(zip(a, b)) # [('a', '1'), ('b', '2'), ('c', '3'), ('d', '4')]
+dict(zip(a, b)) # {'a': '1', 'b': '2', 'c': '3', 'd': '4'}
 ```
 
 合并两个列表的数据
@@ -700,10 +700,10 @@ print(abc.__len__()) # 使用字符串的__len__()方法来算字符串的长度
 ```
 
 ```python
-# enumerate()枚举
-str1 = "abcdef"
-for i,j in enumerate(str1):
-    print(i,j)
+# 用enumerate()来打印行号
+with open("G:/linux/vmware许可证.txt", "r", encoding='utf8') as f:
+    for line, text in  enumerate(f.readlines()):
+        print(line+1, text)
 ```
 
 ### 字符操作函数:
