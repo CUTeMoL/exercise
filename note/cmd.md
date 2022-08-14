@@ -85,7 +85,7 @@ if %var% leq 3 goto label1
 pause
 ```
 
-7. find
+### 7. find
 
 文件中搜索指定字符串
 
@@ -135,6 +135,30 @@ assoc.txt=Word.Document.8 # 修改.txt文件拓展名关联到word文档
 ftype # 显示所有文件类型的打开程序路径
 ftype exefile # 显示exefile的打开程序路径
 ftype exefile="%1" %*
+```
+
+### 13. whoami
+
+查询计算机名及用户
+
+```powershell
+whoami /all
+```
+
+### 14. sysprep
+
+重新生成SID
+
+```powershell
+sysprep
+```
+
+### 15. convert
+
+转换硬盘格式
+
+```powershell
+convert e: /fs:ntfs
 ```
 
 ## 二、管理工具
@@ -205,3 +229,15 @@ sc delete service_name # 卸载命令
 ### 9. `perfmon`
 
 性能收集器
+
+### 10. `msconfig`
+
+系统配置
+
+### 11. `explorer.exe`
+
+文件管理器
+
+### 12. `mmc`
+
+控制台
