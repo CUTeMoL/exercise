@@ -10,6 +10,8 @@ sudo apt install python3 python3-pip -y
 
 ### 2.虚拟环境
 
+#### 第一种方法
+
   安装:
 
 ```shell
@@ -48,6 +50,28 @@ rmvirtualenv python_auto
 
 ```shell
 workon python_auto
+```
+
+#### 第二种方法
+
+安装虚拟环境
+
+```shell
+cd dir
+python -m venv env_name
+```
+
+使用虚拟环境
+
+```shell
+.\Scripts\activate.bat
+source ./Scripts/activate
+```
+
+退出虚拟环境
+
+```shell
+.\Scripts\deactivate.bat
 ```
 
 ### 3.pip
@@ -98,6 +122,10 @@ pip config set global.index-url mirror_url
 山东理工大学：http://pypi.sdutlinux.org/ 
 
 豆瓣：http://pypi.douban.com/simple/
+
+```shell
+pip install xlsxwriter psutil ipy paramiko dnspython pyinstaller pymysql scapy pexpect -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
 
 ### 4.pycharm连接虚拟环境
 
@@ -676,7 +704,7 @@ dict(zip(a, b)) # {'a': '1', 'b': '2', 'c': '3', 'd': '4'}
 | 函数                      | 作用                                                   |
 | ----------------------- | ---------------------------------------------------- |
 | var0.isnumeric()        | 检测字符串是否只由数字组成，数字可以是： Unicode 数字，全角数字（双字节），罗马数字，汉字数字。 |
-| var1.isdigit():         | 判断var1是否为存数字（浮点数不行）                                  |
+| var1.isdigit()          | 判断var1是否为存数字（浮点数不行）                                  |
 | var2.islower()          | 判断var2是否为小写                                          |
 | var3.isupper()          | 判断var3是否为大写                                          |
 | var4.isalnum()          | 判断var4是否为数字字母混合                                      |
