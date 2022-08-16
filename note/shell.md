@@ -2072,3 +2072,15 @@ net.core.somaxconn = 16384 # 用来限制监听(LISTEN)队列最大数据包的�
 net.core.netdev_max_backlog = 16384 # 每个网络接口接收数据包的速率比内核处理这些包的速率快时，允许送到队列的数据包的最大数目，对重负载服务器而言，该值需要调高一点
 vm.swappiness=10 # 使用SWAP内存前可用内存剩余百分比，0不使用swap
 ```
+
+## 十七、服务自启动
+
+1.复制启动脚本到`/etc/init.d`或`/etc/rc.d/init.d`
+
+2.使用`chkconfig`设置开机启动
+
+```shell
+chkconfig --add service_name # 加入自启动
+chkconfig --list service_name # 查看运行级别
+chkconfig --levels 245 service_name off # 设置245下服务不自动启动
+```
