@@ -2005,3 +2005,70 @@ cat /root/ssh_up.txt /root/ssh_down.txt
 ```shell
 sudo ip link set mtu 1480 eth0
 ```
+
+## 十六、性能优化
+
+### 1./etc/security/limits.conf
+
+PAM针对会话的的资源限制
+
+`/etc/security/limits.d/`下的相同用户配置会覆盖`/etc/security/limits.conf`里的内容
+
+```shell
+<domain>      <type>  <item>         <value>
+domain # 可以是用户user_name、用户组@group_name、*所有
+type # soft警告，hard最大值
+item # 限制的具体项目{
+    core # 内核文件大小
+    data # 最大数据大小
+    fsize # 最大文件大小
+    memlock # 最大锁定内存地址空间
+    nofile # 最大文件打开数
+    rss # 最大持久设置大小
+    stack # 最大栈大小
+    cpu # 最多cpu占用时间
+    nproc # 进程最大数目
+    as # 地址空间限制
+    maxlogins # 此用户允许的最大登录数量
+    priority # 运行用户进程的优先级
+    locks # 用户持有的文件锁的最大数量
+    sigpending # pending信号最大数量
+    msgqueue # 消息队列最大可使用内存bytes
+    nice # 允许的最高优先级
+    rtprio # 实时优先级
+}
+value # 值{
+    最好只有nproc才可以设置unlimited
+}
+```
+
+`/etc/sysctl.conf`
+
+```shell
+net.ipv4.tcp_syn_retries = 1 # 一个新建连接，要发送多少个SYN请求才放弃
+net.ipv4.tcp_synack_retries = 1 # 三次握手的第二步，要发送多少次SYN+ACK才放弃
+net.ipv4.tcp_keepalive_time = 600 # 发送keepalive包前等待的时间，用于确认TCP连接是否有效，防止建立连接但不发送数据
+net.ipv4.tcp_keepalive_probes = 3 # 发送keepalive次数，用于确认TCP连接是否有效
+net.ipv4.tcp_keepalive_intvl =15 # keepalive包每次的发送的间隔
+# net.ipv4.tcp_retries1 = 3 # 放弃回应一个TCP连接请求前﹐需要进行多少次重试，规定最低为3
+net.ipv4.tcp_retries2 = 5 # 在丢弃激活(已建立通讯状况)的TCP连接之前﹐需要进行多少次重试
+net.ipv4.tcp_orphan_retries = 3 # 在近端丢弃TCP连接之前﹐要进行多少次重试。
+net.ipv4.tcp_fin_timeout = 2 # 对于本端断开的socket连接，TCP保持在FIN-WAIT-2状态的时间。
+net.ipv4.tcp_max_tw_buckets = 36000 # 系统在同时所处理的最大 timewait sockets 数目 如果超过此数的话﹐time-wait socket 会被立即砍除并且显示警告信息
+net.ipv4.tcp_tw_recycle = 1 # 打开快速 TIME-WAIT sockets 回收。除非得到技术专家的建议或要求﹐请不要随意修改这个值。(做NAT的时候，建议打开它)
+net.ipv4.tcp_tw_reuse = 1 # 表示是否允许重新应用处于TIME-WAIT状态的socket用于新的TCP连接
+# net.ipv4.tcp_max_orphans = 32768 # 系统所能处理不属于任何进程的TCP sockets最大数量。
+# net.ipv4.tcp_abort_on_overflow = 0 # 当守护进程太忙而不能接受新的连接，就象对方发送reset消息，默认值是false。
+net.ipv4.tcp_syncookies = 1 # 内核编译时选择了CONFIG_SYNCOOKIES时才会发生作用。当出现syn等候队列出现溢出时象对方发送syncookies。目的是为了防止syn flood攻击。
+net.ipv4.tcp_max_syn_backlog = 16384 # 对于那些依然还未获得客户端确认的连接请求﹐需要保存在队列中最大数目。
+net.ipv4.tcp_wmem = 8192 131072 16777216 # 发送缓冲的内存最小值|默认值|最大值
+net.ipv4.tcp_rmem = 32768 131072 16777216 # 接受缓存
+net.ipv4.tcp_mem = 786432 1048576 1572864 # 释放内存三个界值
+net.ipv4.ip_local_port_range = 1024 65000 # 表示用于向外连接的端口范围
+net.ipv4.ip_conntrack_max = 65536 # 系统支持的最大ipv4连接数，默认65536（事实上这也是理论最大值）
+net.ipv4.netfilter.ip_conntrack_max=65536 # 防火墙的最大ipv4连接数
+net.ipv4.netfilter.ip_conntrack_tcp_timeout_established=180 # 已建立的tcp连接的超时时间，默认432000，也就是5天
+net.core.somaxconn = 16384 # 用来限制监听(LISTEN)队列最大数据包的数量，超过这个数量就会导致链接超时或者触发重传机制。
+net.core.netdev_max_backlog = 16384 # 每个网络接口接收数据包的速率比内核处理这些包的速率快时，允许送到队列的数据包的最大数目，对重负载服务器而言，该值需要调高一点
+vm.swappiness=10 # 使用SWAP内存前可用内存剩余百分比，0不使用swap
+```
