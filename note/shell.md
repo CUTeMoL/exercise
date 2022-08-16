@@ -361,7 +361,7 @@ expect eof 表示此expect结束了
 
 ### 文本处理类
 
-​    grep
+#### grep
 
 ```shell
 grep  [option]  [file]
@@ -386,7 +386,7 @@ key$:以关键字结尾
 --color=auto:可以将找到的关键词部分加上颜色的显示
 ```
 
-​    sed
+#### sed
 
 ```shell
 sed [option] '地址定位 sed命令' filename
@@ -486,7 +486,7 @@ sed -n 's/root/#&/gp' /etc/passwd
 把root替换为#root
 ```
 
-​    awk
+#### awk
 
 ```shell
 awk [option] '地址定位 awk命令' file
@@ -571,7 +571,7 @@ awk '{ names = names $1 " "}END { print names }' 1.txt
 a b c d e
 ```
 
-​    cut
+#### cut
 
 ```shell
 cut  [option]  [file]
@@ -581,7 +581,7 @@ cut  [option]  [file]
 -f   : 截取列
 ```
 
-​    sort
+#### sort
 
 ```shell
 sort  [option]  [file]
@@ -596,7 +596,7 @@ sort  [option]  [file]
 -R   ：随机排序
 ```
 
-​    uniq
+#### uniq
 
 ```shell
 uniq  [option]  [file]
@@ -606,7 +606,7 @@ uniq  [option]  [file]
 -d   ：只显示重复行
 ```
 
-​    tee
+#### tee
 
 ```shell
 tee  [option]  [file]
@@ -614,14 +614,14 @@ tee  [option]  [file]
 -a   ：以追加的方式重定向
 ```
 
-​    tr
+#### tr
 
 ```
 tr "old" "new"
 字符转换
 ```
 
-​    wc
+#### wc
 
 ```shell
 wc
@@ -630,7 +630,7 @@ wc
 -w   单词数
 ```
 
-​    paste
+#### paste
 
 ```shell
 paste
@@ -639,7 +639,7 @@ paste
 -s   ：串行处理，非并行
 ```
 
-​    diff
+#### diff
 
 ```shell
 diff  [option]  [file1] [file2]
@@ -655,7 +655,7 @@ diff -uN file1 file2 > file.patch
 patch file1 file.patch
 ```
 
-​    printf
+#### printf
 
 ```shell
 printf "text%[标志][宽度][.精度][数据类型]text" text
@@ -699,21 +699,21 @@ abcdefg    "%.5s"    abcde
 
 ### 文件处理类
 
-​    basename
+#### basename
 
 ```
 basename
 取出名字
 ```
 
-​    dirname
+#### dirname
 
 ```
 dirname
 取出目录名
 ```
 
-​    find
+#### find
 
 ```shell
 find (dir) [option]=[value]
@@ -727,7 +727,7 @@ option:
 -size   文件大小  +5M(大于5m) -5m（小于5m）
 ```
 
-​    rsync
+#### rsync
 
 ```shell
 rsync
@@ -758,7 +758,7 @@ log file=/var/log/rsync.log
 rsync -av $user@$IP::replication /mysqld_bak/data
 ```
 
-​    scp
+#### scp
 
 ```shell
 scp [option] root@$IP:/root/1.txt ./
@@ -769,31 +769,31 @@ scp [option] root@$IP:/root/1.txt ./
 
 ### 监控类
 
-​    uptime
+#### uptime
 
 ```shell
 uptime # top的第一行
 ```
 
-​    w
+#### w
 
 ```shell
 w #uptime的详细情况+用户登陆信息
 ```
 
-​    who
+#### who
 
 ```shell
 who #用户登陆信息
 ```
 
-​    whoami
+#### whoami
 
 ```shell
 whoami #用户登陆信息(简)
 ```
 
-​    netstat
+#### netstat
 
 ```shell
 netstat
@@ -803,7 +803,126 @@ netstat
 -p   pid和进程名
 ```
 
-​    inotifywait
+#### vmstat
+
+```shell
+vmstat
+5 # 间隔5s采样一次
+-t # 显示时间
+-w # 提高可视性
+-d # 磁盘状态
+-D # 磁盘总信息
+-s # 纵向展示
+# procs中的r是等待b是休眠
+```
+
+#### iostat
+
+```shell
+iostat
+-x # 详细信息
+-d # 显示磁盘
+-k # kb
+-m # mb
+-t # 间隔时间
+-p # 磁盘分区情况
+rrqm/s # 每秒读请求
+wrqm/s # 每秒写请求
+r/s和w/s # 每秒读写请求数
+avgrq-sz # 请求扇区数
+avgqu-sz # 在设备队列中等待的请求数
+await # 每个IO请求花费的时间
+svctm # 实际请求服务的时间
+%util # 至少有一个活跃请求所占的时间百分比
+tps # 每秒IO请求数
+Blk_read/s # 每秒读取的block数.
+Blk_wrtn/s # 每秒写入的block数.
+Blk_read # 读入的block总数.
+Blk_wrtn # 写入的block总数
+```
+
+#### dstat
+
+```shell
+dstat
+-c # cpu
+-d # disk
+-g # 分页统计
+-i # interrupt
+-l # load-avvg
+-m # memory-usage
+-n # network
+-p # process runnable可运行态 uninterruptible等待态 new新进程
+-r # io
+-s # swap
+-t # time
+-y # system int中断 csw上下文
+```
+
+#### pidstat
+
+```shell
+pidstat
+-u # 默认的参数
+-r # 显示内存
+-d # IO
+-p # 指定PID
+-w # 上下文切换
+-t # 显示选择任务的线程的统计信息外的额外信息
+-l # 显示命令名和所有参数
+```
+
+#### top
+
+```shell
+top
+```
+
+#### htop
+
+```shell
+htop
+```
+
+#### mpstat
+
+```shell
+nmstat -P all 1
+```
+
+#### ps
+
+```shell
+ps
+-e # all
+-f # 格式化输出
+-o # 自定义输出项 pid,pcpu,pmem,stat,cmd
+--sort= # 排序
+```
+
+#### strace
+
+```shell
+strace # 跟踪程序执行过程中产生的系统调用及接收到的信号，帮助分析程序或命令执行中遇到的异常情况。
+-c # 统计某文件或进程的的系统调用情况
+-o # 重定向到文件
+-T # 显示系统调用的时间-t秒、-tt毫秒、-ttt微秒
+-p # 追踪具体的进程
+```
+
+#### lsof
+
+列出当前系统打开文件的工具
+
+```shell
+lsof /boot # 查看文件系统堵塞
+lsof -i：3306 # 查看端口被那个进程占用
+lsof -u lxw # 查看用户打开的进程
+lsof -p ${pid} # 查看进程打开哪些文件
+lsof -i @150.158.93.164 # 查看远程已打开的网络链接
+```
+
+#### inotifywait
 
 ```shell
 inotifywait
@@ -821,7 +940,7 @@ do
 done
 ```
 
-history
+#### history
 
 ```shell
 history
@@ -832,7 +951,7 @@ echo 'export HISTTIMEFORMAT="%F %T `whoami`" ' >> /etc/bashrc
 
 ### 网络管理
 
-​    ip
+#### ip
 
 ```shell
 ip [option]
@@ -840,7 +959,7 @@ address   当前网卡信息
 ip route   路由信息，可+add、del
 ```
 
-​    ifconfig
+#### ifconfig
 
 ```shell
 ifconfig
@@ -888,7 +1007,7 @@ ifconfig eth0 hw ether 00:AA:BB:CC:DD:EE
 ifconfig eth0 mtu 1500
 ```
 
-​    netplan
+#### netplan
 
 ```shell
 cat <<EOF >/etc/netplan/00-installer-config.yaml
@@ -909,7 +1028,7 @@ EOF
 
 ### 进程类
 
-​    nohup
+#### nohup
 
 ```shell
 nohup command &
@@ -917,7 +1036,7 @@ nohup command &
 &   后台运行
 ```
 
-​    kill
+#### kill
 
 ```shell
 kill [-s signal] [process]
@@ -926,7 +1045,7 @@ kill [-s signal] [process]
 -15   -TERM    正常停止
 ```
 
-​    at
+#### at
 
 ```shell
 at
@@ -939,7 +1058,7 @@ at > /bin/ls > /root/readme.txt
 at > ctrl+D 结束
 ```
 
-​    crontab
+#### crontab
 
 ```shell
 crontab
@@ -951,7 +1070,7 @@ crontab
 
 ### 安全类
 
-   用户权限
+#### 用户权限
 
 ```shell
 chmod #权限
@@ -995,7 +1114,7 @@ groupmod
 -n    修改名字
 ```
 
-​    passwd
+#### passwd
 
 ```shell
 passwd
@@ -1003,7 +1122,7 @@ passwd
 示例：echo "123456"|passwd --stdin root
 ```
 
-​    acl
+#### acl
 
 ```shell
 getfacl
@@ -1019,7 +1138,7 @@ setfacl
 setfacl -m u:lxw:rw readme.txt
 ```
 
-​    ssh
+#### ssh
 
 ```shell
 # 远程
@@ -1038,7 +1157,7 @@ scp [option] root@$IP:/root/1.txt ./
 -P   端口
 ```
 
-​    pwgen
+#### pwgen
 
 ```shell
 pwgen
@@ -1055,7 +1174,7 @@ pwgen
 -v   不使用元音
 ```
 
-​    firewall-cmd
+#### firewall-cmd
 
 ```shell
 firewall-cmd
@@ -1067,7 +1186,7 @@ firewall-cmd --zone=public --add-port=端口号/tcp  --permanent   添#加端口
 firewall-cmd --reload   #热重载
 ```
 
-​    iptables
+#### iptables
 
 保存规则
 
@@ -1391,7 +1510,7 @@ vim /etc/sysconfig/iptables
 
 ### 硬盘操作类
 
-​    dd
+#### dd
 
 ```shell
 dd 
@@ -1402,7 +1521,7 @@ bs=   每一块的数据量
 count=   一共多少块
 ```
 
-​    lvm
+#### lvm
 
 ```shell
 pvcreate [disk-partition] [disk-partition]
@@ -1426,7 +1545,7 @@ resize2fs /dev/[vgname]/[lvname]
 xfs_growfs /dev/[vgname]/[lvname]
 ```
 
-​    mount
+#### mount
 
 ```shell
 mount 
@@ -1444,14 +1563,14 @@ echo \
 
 ### 用户权限类
 
-​    su
+#### su
 
 ```
 su user   切换用户环境变量不变
 su - user   切换用户环境变量和目录改变
 ```
 
-​    visudo
+#### visudo
 
 ```visudo
 #user    MACHINE=(RUN_AS_USER) COMMANDS
@@ -1468,7 +1587,7 @@ lxw     ALL=(ALL)       SERVICES, STORAGE
 可以分行写
 ```
 
-​    chattr
+#### chattr
 
 ```shell
 chattr [+a|-a|+i|-i|-d]
@@ -1485,7 +1604,7 @@ lsattr   #查看文件属性
 
 ### 其他类:
 
-mysql-cli
+#### mysql-cli
 
 ```shell
 mysql
@@ -1497,7 +1616,7 @@ mysql
 -X   XML输出
 ```
 
-curl
+#### curl
 
 ```shell
 curl
@@ -1509,7 +1628,7 @@ curl
 --connect-timeout  定义超时时间
 ```
 
-date
+#### date
 
 ```shell
 date +[option]

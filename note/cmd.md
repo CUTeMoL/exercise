@@ -161,6 +161,74 @@ sysprep
 convert e: /fs:ntfs
 ```
 
+### 16. tasklist
+
+列出进程
+
+```powershell
+tasklist 
+/M # 列出调用的模块，若指定模块则列出使用此模块的进程
+/SVC # 列出操控此进程的服务名
+/FO # 指定输出格式"TABLE","LIST","CSV"
+```
+
+### 17. start
+
+运行程序或命令
+
+```powershell
+start process_name
+```
+
+### 18. taskkill
+
+```powershell
+taskkill
+/PID # 指定PID
+/IM # 指定名称
+/T # 包括子进程
+/F # 强制
+```
+
+### 19. net
+
+服务管理
+
+```powershell
+net start # 列出启动的服务
+net start service_name # 启动服务
+```
+
+### 20. copy
+
+复制
+
+```powershell
+copy dir\file_name dir\file_name
+```
+
+### 20. move
+
+剪切
+
+```powershell
+move dir\file_name dir\file_name
+```
+
+### 21. del
+
+删除
+
+```powershell
+del file_name
+```
+
+### 22. ren
+
+```powershell
+ren old_name new_name
+```
+
 ## 二、管理工具
 
 ### 1. `secpol.msc`
