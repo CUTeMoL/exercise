@@ -1648,6 +1648,15 @@ date +[option]
 -s  设定时间  "yyyy-mm-dd  hh:mm:ss"
 ```
 
+#### sysctl
+
+```shell
+sysctl # 配置内核参数
+-w key=value # 临时设置某个值
+-p file # 从文件中读取配置，默认sysctl.conf
+-a # 显示所有参数
+```
+
 ## 十、运行级别
 
 ```shell
