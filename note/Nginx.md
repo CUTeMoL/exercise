@@ -34,7 +34,7 @@ include /etc/nginx/modules-enabled/*.conf; # 包含的配置文件路径
 worker_rlimit_nofile 51200; # 最大文件打开数（连接），可设置为系统优化后的ulimit -HSn的结果
 events {
     use epoll; # epoll是多路复用IO(I/O Multiplexing)中的一种方式,但是仅用于linux2.6以上内核,可以大大提高nginx的性能
-    worker_connections 768; #每个worker进程⽀支持的最⼤大连接数
+    worker_connections 2048; #每个worker进程⽀支持的最⼤大连接数
     # multi_accept on;
 }
 http {
@@ -51,9 +51,9 @@ http {
         default_type application/octet-stream; # 默认的文件类型
     # 设定请求缓存
         server_names_hash_bucket_size 128;
-        client_header_buffer_size 512k;
-        large_client_header_buffers 4 512k;
-        client_max_body_size 100m;
+        client_header_buffer_size 512k; # request line + request header不超过这个值时放行请求，否则以large_client_header_buffers为准
+        large_client_header_buffers 4 512k; # request line & request header 不超过设定值，request line + request header 不超过4*512K
+        client_max_body_size 100m; # 设置请求体大小
     #FastCGI相关参数：为了改善网站性能：减少资源占用，提高访问速度，一般配合PHP
         fastcgi_connect_timeout 300;
         fastcgi_send_timeout 300;
@@ -101,13 +101,12 @@ http {
         # gzip_buffers 16 8k; # 压缩缓冲区大小，表示申请16个单位为8K的内存作为压缩结果流缓存
         # gzip_http_version 1.1; # 压缩的版本
         # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
+        gzip_disable "MSIE [1-6]\."; # 配置禁用gzip条件，支持正则。此处表示ie6及以下不启用gzip（因为ie低版本不支持）
     ##
     # Virtual Host Configs
     ##
-
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
+        include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/sites-enabled/*;
 }
 ```
 

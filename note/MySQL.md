@@ -31,11 +31,11 @@ datadir=/mysqld/data
 port=3306
 socket=/tmp/mysql.sock
 character_set_server=utf8mb4
-collation-server=utf8mb4_general_ci
+collation_server=utf8mb4_general_ci
 transaction_isolation=READ-COMMITTED
-server-id=10
+server_id=10
 log-bin=/mysqld/data/binlog
-binlog-format=row
+binlog_format=row
 user=mysql
 [client]
 port=3306
@@ -78,8 +78,8 @@ datadir=/mysqld/data
 port=3306
 socket=/tmp/mysql.sock
 character_set_server=utf8mb4
-collation-server=utf8mb4_general_ci
-server-id=10
+collation_server=utf8mb4_general_ci
+server_id=10
 log-bin=/mysqld/data/binlog
 [client]
 port=3306
@@ -102,7 +102,7 @@ service mysqld.server start
 
 1.在my.cnf中添加
 
-```my.cnf
+```shell
 [mysqld_multi]
 mysqld=/usr/local/mysql/bin/mysqld_safe
 mysqladmin=/usr/local/mysql/bin/mysqladmin
@@ -112,8 +112,8 @@ basedir=/usr/local/mysql
 port=3307
 datadir=/mysql_3307/data
 socket=/tmp/mysql_3307.sock
-log-error=/mysqld_3307/data/error.log
-innodb_buffer_pool_size = 32M
+log_error=/mysqld_3307/data/error.log
+innodb_buffer_pool_size=32M
 ```
 
 2.
@@ -150,23 +150,122 @@ user=username
 pass=password
 ```
 
-有密码才能通过mysqld——multi命令管理实例
+有密码才能通过`mysqld_multi`命令管理实例
 
 ## 二、my.cnf配置参数
 
-```my.cnf
+```shell
 [mysqld]
+#### 基本 ####
+server_id=10
 basedir=/usr/local/mysql
 datadir=/mysqld/data
 port=3306
 socket=/tmp/mysql.sock
+log_timestamps=SYSTEM # log记录时采用系统时间
+explicit_defaults_for_timestamp=on # on时timestamp类型字段不自动更新为当前时间
+# bind-address=0.0.0.0
+
+#### 字符集 ####
+# default-character-set=utf8 # 旧版本使用
 character_set_server=utf8mb4
-collation-server=utf8mb4_general_ci
-server-id=10
+collation_server=utf8mb4_general_ci
+
+#### binlog ####
 log-bin=/mysqld/data/binlog
+expire_logs_days=10 # binlog过期时间
+max_binlog_size=100M # binlog文件的大小
+sync_binlog=1 # 事务提交时，保证2进制文件一定落盘(每N次事务进行一次刷盘)
+binlog_cache_size=64K  # 默认就行，一般够用
+max_binlog_cache_size=2G  # 有大事务时，调高
+binlog_format=ROW # 日志格式STATEMENT、ROW、MIXED
+### 复制 ###
+relay_log_info_repository=TABLE # 用来决定slave同步的位置信息记录在哪里，改写磁盘为写表，把event操作都放在一个事务里，保证事务一致性
+master_info_repository=TABLE # 决定了slave的master status是存储在master.info还是slave_master_info表
+slave_parallel_workers=8 # 从机复制线程数
+gtid_mode=on # 全局统一事务标识符，高可用的前提
+enforce_gtid_consistency=1 # 强制GTID一致性检查
+log_slave_updates=1 # 从机中继日志升级为BINlog
+binlog_checksum=1 # 验证 event 的完整性
+relay_log_recovery=1 # 丢失relay log时，舍弃所有未执行的relay log，重新生成一个relay log（保持数据一致性）
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
+## 并行复制 ##
+binlog_transaction_dependency_tracking=writeset # writeset_session、writeset_session、commit_order
+transaction_write_set_extraction=XXHASH64 # 并行复制算法
+
+#### undo log ####
+innodb_undo_directory=/data/undospace/ # undo独立表空间的存放目录,通常放在.ibd文件中，如果关闭独立表空间，则放在共享表空间ibdata1
+innodb_undo_logs=128 # 回滚段为128KB
+innodb_undo_tablespaces=4 # 指定有4个undo log文件
+innodb_max_undo_log_size=4G # undolog大小
+
+#### redo log ####
+innodb_log_buffer_size=32M # 数据更改记录写入到日志缓存中。如果缓存满了，才会写入到磁盘中,设置比较大可以减少IO,但是一般8M够用
+innodb_log_file_size=4G # redolog至少4G、推荐8G
+innodb_log_files_in_group=2 # 指定重做日志文件组中文件的数量，默认2 
+
+#### slow query log ####
+slow_query_log=1 # 是否打开慢查询日志
+log_query_time=2 # 慢查询日志阈值，超过该值的有问题，将会记录
+log_queries_not_using_indexes=1 # 将没有使用索引的SQL记录到慢查询日志
+log_throttle_queries_not_using_indexes=60 # 限制每分钟记录没有使用索引SQL语句的次数
+min_examined_row_limit=100 # 扫描记录少于该值的SQL不记录到慢查询日志,比如该值=100时，扫描记录超过100行同时超过阈值才记录
+log_slow_admin_statements=1 # 记录管理操作，如alter/analyze table
+log_slow_slave_statements=1 # 在从服务器上开启慢查询日志
+
+#### 优化 ####
+transaction_isolation=READ-COMMITTED # 事务的隔离级别
+skip_name_resolve=1 # 跳过hostname解析
+open_files_limit=65535 #最大文件打开数
+back_log=500 # 如果MySql的连接数达到max_connections时，新来的请求将会被存在堆栈中，以等待某一连接释放资源，该堆栈的数量即back_log
+max_connections=2048
+max_user_connections=400
+max_connect_errors=1000000 # 指定允许连接不成功的最大尝试次数
+interactive_timeout=600 # 在关闭一个交互的连接之前所要等待的秒数
+wait_timeout=600 # 在关闭一个非交互的连接之前所要等待的秒数
+max_allowed_packet=32M # 一次传送数据包的过程当中最大允许的数据包大小
+### table cache ### 
+# 可以通过show global status like "%Open%_table%";灵活调整
+table_definition_cache=1024 # 如果打开的表实例的数量超过了table_definition_cache设置,LRU机制将开始标记表实例以进行清除，并最终将它们从数据字典缓存中删除
+table_open_cache=512 # 所有线程打开的表的数量
+# table_cache=512 # 旧
+table_open_cache_instances=64 # 打开的表缓存实例的数量。
+### thread one-thread-per-connection ### 
+# innodb_thread_concurrency=0 # 不限制并发，默认为0
+thread_stack=512K # 每个连接线程被创建时，MySQL给它分配的内存大小
+thread_cache_size=768 # 线程缓存
+### SQL 优化###
+
+key_buffer_size=2048M # 设置索引块(index Blocks)缓存的大小，它被所有线程共享，此参数只应于MYISAM存储引擎
+# key_buffer_size=2048M # 旧版
+read_rnd_buffer_size=4M # 设置查询排序之后的优化
+join_buffer_size=4M # JOIN时决定每张表的最大内存，可以减少内表的扫描次数
+sort_buffer_size=4M # ORDER BY时决定排序的最大内存
+tmp_table_size=32M # 临时表大小
+max_heap_table_size=32M # 定义了用户可以创建的内存表(包括临时表)大小
+slave_rows_search_algorithms="INDEX_SCAN,HASH_SCAN" # 数据查询方式
+myisam_max_sort_file_size=100G # mysql重建索引时允许使用的临时文件最大大小
+myisam_repair_threads=1 # Repair by sorting过程中并行创建MyISAM表索引(每个索引在自己的线程内)
+lock_wait_timeout=3600 # 数据结构ddl操作的锁的等待时间
+## MyISAM优化 ##
+read_buffer_size=8M # 设置Myisam查询优化
+bulk_insert_buffer_size=64M # 设置MyISAM批量插入数据优化
+myisam_sort_buffer_size=128M # 设置MyISAM查询排序的优化
+## innodb优化 ##
+innodb_sync_spin_loops=100 # 自旋锁-不间断地测试来查看一个资源是否变为可用状态，次数
+innodb_spin_wait_delay=6 # 自旋锁等待时间
+innodb_buffer_pool_size=4096M # 存储引擎缓冲池内存的（60%-80%）
+innodb_buffer_pool_instances=4 # 内存总大小innodb_buffer_pool_size不变，innodb_buffer_pool被拆分为n个，效率提升，设置为COU数
+innodb_buffer_pool_load_at_startup=1 #开机时载入热点数据
+innodb_buffer_pool_dump_at_shutdown=1 # 关闭时热点数据持久化
+innodb_data_file_path=ibdata1:1G:autoextend #指定innodb tablespace文件
+innodb_flush_log_at_trx_commit=1 # 确保数据落盘，但是2性能最优
+
+
 [client]
 port=3306
 socket=/tmp/mysql.sock
+prompt="\u@\h:\p \R:\m[\d]> "
 ```
 
 ## 三、INNODB
@@ -185,7 +284,7 @@ socket=/tmp/mysql.sock
 
 ​    自适应hash索引
 
-```my.cnf
+```shell
 innodb_adaptive_hash_index=off  #最好不要用
 innodb_adaptive_hash_index_parts=8
 ```
@@ -194,7 +293,7 @@ innodb_adaptive_hash_index_parts=8
 
 ​    刷脏页
 
-```my.cnf
+```shell
 innodb_flush_neighbors=0   
 ```
 
@@ -208,11 +307,7 @@ innodb_flush_neighbors=0
 
 ### INNODB存储引擎缓冲池
 
-```my.cnf
-innodb_buffer_pool_size
-```
-
-建议为内存的（60%-80%）
+`innodb_buffer_pool_size`建议为内存的（60%-80%）
 
 通过space（表空间ID和page_no叶的编号定位）
 
@@ -248,13 +343,12 @@ innodb_old_blocks_pct=n
 innodb_old_blocks_time=1000
 # 单位毫秒，老生代停留时间窗口，即同时满足“被访问”与“在老生代停留时间超过1秒”两个条件，才会被插入到新生代头部。
 
-# innodb_buffer_pool_instances=N要设置为CPU核心数
-内存总大小innodb_buffer_pool_size不变，innodb_buffer_pool被拆分为N个，效率提升
+innodb_buffer_pool_instances=N # 要设置为CPU核心数内存总大小innodb_buffer_pool_size不变，innodb_buffer_pool被拆分为N个，效率提升
 ```
 
 缓存热点数据|持久化
 
-```my.cnf
+```shell
 innodb_buffer_pool_dump_at_shutdown    #关闭时持久化
 innodb_buffer_pool_dump_now     #现在就持久化
 innodb_buffer_pool_dump_pct=n     #加载数据pct决定备份前N%
@@ -371,7 +465,7 @@ redo log buffer刷新条件
 3.事务提交时（如果下面innodb_flush_log_at_trx_commit值为1）
 
 ```my.cnf
-innodb_log_buffer_size # 通常8M够用
+innodb_log_buffer_size # innodb日志缓存大小。innodb会把数据更改记录写入到日志缓存中。如果缓存满了，才会写入到磁盘中。增大innodb_log_buffer_size，会有效的减少I/O次数。一般的值为4M或者8M。
 innodb_flush_log_at_trx_commit={0|1|2}
 ```
 
@@ -469,10 +563,11 @@ Innodb_force_recovery可以设置6个非零值：
 mvcc多版本并发控制靠undo实现，读正在更新（尚未commit）的操作，读的是之前的版本（undo版本）
 相关变量
 
-```my.cnf
+```shell
 innodb_undo_directory = /data/undospace/ –undo独立表空间的存放目录,通常放在.ibd文件中，如果关闭独立表空间，则放在共享表空间ibdata1
 innodb_undo_logs = 128 # 回滚段为128KB
 innodb_undo_tablespaces = 4 # 指定有4个undo log文件
+innodb_max_undo_log_size=4G # undolog大小
 ```
 
 ## 六、事务
@@ -582,7 +677,7 @@ SHOW PROCESSLIST;
 
 可以提升性能, 但尽量不要设置，调优很难
 
-```
+```shell
 binlog_group_commit_sync_delay=n  #等待多少毫秒提交一次
 binlog_group_commit_sync_no_delay_count  #等待多少条提交一次
 ```
@@ -602,15 +697,16 @@ xa commit 'name';
 
 ### binlog配置解析
 
-```my.cnf
+```shell
 log-bin=/binlog/mysqld-bin   #日志的路径及名字
-binlog-format=row   #日志格式STATEMENT、ROW、MIXED
+binlog_format=row   #日志格式STATEMENT、ROW、MIXED
 log-expire-day=7   #binlog失效天数
 binlog_rows_query_log_events=1   #会记录对应的SQL语句
 sync_binlog=1    #事务提交时，保证2进制文件一定落盘
 max_binlog_size=2048M   #binlog大小
-transaction-isolation=READ-COMMITTED
+transaction_isolation=READ-COMMITTED
 binlog_cache_size=32K    #默认就行，一般够用
+max_binlog_cache_size=2G    #有大事务时，调高
 innodb_flush_log_at_trx_commit=1  #确保数据落盘
 innodb_support_xa=1   #支持xa两段式事务提交。
 relay_log_recovery=1    #将sql线程的位置初始化到新的relay log
@@ -621,6 +717,7 @@ slave_parallel_type=logical_clock   #逻辑回放，主机怎么做从机就怎�
 gtid_mode=on     #开启gtid
 log_slave_updates=1    #从机中继日志升级为BINlog
 enforce-gtid-consistency=1   #强制GTID一致性检查
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
 ```
 
 为什么relay_log_recovery=1和relay_log_info_repository=TABLE可以保证一致性？
@@ -690,7 +787,7 @@ flush logs;
 
 4.mysqlbinlog -vv binlog.000001 --start-position=3309 stop-position=3401 -B|mysql -p    #确认以后执行flashback
 
-### 删除binglog
+### 删除binlog
 
 ```sql
 purge binary logs to 'mysql-bin.000017';
@@ -2343,10 +2440,10 @@ mysqlimport dbname /path/file --fields-terminated-by=':' --lines-terminated-by='
 
 ### my.cnf
 
-```my.cnf
+```shell
 slow_query_log=1 #是否打开慢查询日志 =1开启
 slow_query_log_file=slow.log #决定慢查询日志名称
-long_query_time=2 #慢查询日志阈值，超过该值的有问题，将会记录
+log_query_time=2 #慢查询日志阈值，超过该值的有问题，将会记录
 min_examined_row_limit=100 #扫描记录少于该值的SQL不记录到慢查询日志,比如该值=100时，扫描记录超过100行同时超过阈值才记录
 log_queries_not_using_indexes #将没有使用索引的SQL记录到慢查询日志
 log_throttle_queries_not_using_indexes=10 #限制每分钟记录没有使用索引SQL语句的次数
@@ -2503,7 +2600,7 @@ thread_pool_stall_limit    #该参数设置timer线程的检测group是否异常
 
 ```my.cnf
 log-bin=/binlog/mysqld-bin   #日志的路径及名字
-binlog-format=row   #日志格式STATEMENT、ROW、MIXED ，主从复制要选择ROW，STATEMENT会有数据不一致风险
+binlog_format=row   #日志格式STATEMENT、ROW、MIXED ，主从复制要选择ROW，STATEMENT会有数据不一致风险
 log-expire-day=7   #binlog失效天数,设置可以节省磁盘空间，也可以不设置，用于做增量备份
 binlog_rows_query_log_events=1   #会记录对应的SQL语句，最好要开启1=ON
 ```
@@ -2607,16 +2704,17 @@ CHANGE MASTER TO MASTER_LOG_FILE='BIN.000001',MASTER_LOG_POS=154;
 
 master:
 
-```
+```shell
 [mysqld]
-server-id=10 # 每一台都设置为不一样的ID
+server_id=10 # 每一台都设置为不一样的ID
 log-bin=/mysqld/data/binlog #开启二进制日志
-binlog-format=row # 格式设置为row，不会丢数据
+binlog_format=row # 格式设置为row，不会丢数据
 sync_binlog=1 # 事务提交时，保证2进制文件一定落盘(每N次事务进行一次刷盘)
 innodb_flush_log_at_trx_commit=1 # 确保数据落盘
 innodb_support_xa=1 # 支持xa两段式事务提交
 binlog_rows_query_log_events=1 # 会记录对应的SQL语句
 binlog_cache_size=64K  # 默认就行，一般够用
+max_binlog_cache_size=2G  # 有大事务时，调高
 relay_log_recovery=1 # 丢失relay log时，舍弃所有未执行的relay log，重新生成一个relay log（保持数据一致性）
 relay_log_info_repository=TABLE # 改写磁盘为写表，把event操作都放在一个事务里，保证事务一致性
 log_slave_updates=1 # 从机中继日志升级为BINlog
@@ -2624,9 +2722,9 @@ log_slave_updates=1 # 从机中继日志升级为BINlog
 
 salve:
 
-```
+```shell
 [mysqld]
-server-id=11
+server_id=11
 read_only=1 # 不写数据只做从库时设置
 relay_log_recovery=1
 relay_log_info_repository=TABLE
@@ -2634,26 +2732,29 @@ log_slave_updates=1
 master_info_repository=TABLE # 决定了slave的master status是存储在master.info还是slave_master_info表
 slave_parallel_type=logical_clock # #逻辑回放，主机怎么做从机就怎么做
 slave_parallel_workers=8 # 从机复制的线程数
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
 ```
 
-高可用的情况：主从配置一致
+高可用的情况：主从配置一致(真正的高可用需要GTID)
 
-```my.cnf
+```shell
 [mysqld]
-server-id=10 # 这个要改
+server_id=10 # 这个要改
 log-bin=/mysqld/data/binlog
-binlog-format=row
+binlog_format=row
 sync_binlog=1
 innodb_flush_log_at_trx_commit=1 
 innodb_support_xa=1
 binlog_rows_query_log_events=1 
 binlog_cache_size=64K
+max_binlog_cache_size=2G
 relay_log_recovery=1
 relay_log_info_repository=TABLE
 log_slave_updates=1
 master_info_repository=TABLE
 slave_parallel_type=logical_clock
 slave_parallel_workers=8 
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
 ```
 
 1.创建用于同步的账号
@@ -2737,11 +2838,11 @@ GTID复制
 
 MASTER  >> my.cnf
 
-```my.cnf
+```shell
 [mysqld]
-server-id=10
+server_id=10
 log-bin=/mysqld/data/binlog
-binlog-format=row
+binlog_format=row
 sync_binlog=1
 innodb_flush_log_at_trx_commit=1 
 innodb_support_xa=1
@@ -2750,15 +2851,17 @@ log_slave_updates=1
 enforce-gtid-consistency=1
 binlog_rows_query_log_events=1 
 binlog_cache_size=64K
+max_binlog_cache_size=2G
 relay_log_recovery=1
 relay_log_info_repository=TABLE
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
 ```
 
 SLAVE  >>  my.cnf
 
-```my.cnf
+```shell
 [mysqld]
-server-id=11
+server_id=11
 read_only=1
 relay_log_recovery=1
 relay_log_info_repository=TABLE
@@ -2769,19 +2872,21 @@ slave_parallel_workers=8
 gtid_mode=on
 log_slave_updates=1
 enforce-gtid-consistency=1
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
 ```
 
 高可用的话：主从配置一致
 
-```my.cnf
-server-id=10 # ID修改
+```shell
+server_id=10 # ID修改
 log-bin=/mysqld/data/binlog
-binlog-format=row
+binlog_format=row
 sync_binlog=1
 innodb_flush_log_at_trx_commit=1 
 innodb_support_xa=1
 binlog_rows_query_log_events=1 
 binlog_cache_size=64K
+max_binlog_cache_size=2G
 relay_log_recovery=1
 relay_log_info_repository=TABLE
 master_info_repository=TABLE
@@ -2790,6 +2895,7 @@ slave_parallel_workers=8
 gtid_mode=on
 log_slave_updates=1
 enforce-gtid-consistency=1
+relay_log_purge=1 # 旧relay logs会在SQL线程执行完毕后被自动删除，保证数据一致性
 ```
 
 2.重启MYSQLD
@@ -2812,10 +2918,10 @@ start slave;
 
 6.关闭主从服务器只读模式
 
-7.
+7.查看slave的情况
 
 ```sql
-show slave status\G   # 查看slave的情况
+show slave status\G
 ```
 
 ### 在线升级GTID
