@@ -1145,11 +1145,14 @@ setfacl -m u:lxw:rw readme.txt
 ssh
 -X # X11
 -Y # X11(安全)
+-i # 指定私钥的位置
 
 #免密登陆密钥生成
 ssh-keygen -P "" -f /$user/.ssh/id_rsa
--P   密钥
--f   指定文件位置名称
+-P # 密钥
+-f # 指定文件位置名称
+-t # 指定类型，默认rsa
+-b # bit，默认长度2048
 # 远程复制
 scp [option] root@$IP:/root/1.txt ./
 前 >> 后
