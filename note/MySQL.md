@@ -140,9 +140,9 @@ mysqld_multi start 1 #启动mysqld1
 mysqld_multi report #查看多实例状态
 ```
 
-[mysql1]没定义的会继承[mysqld]
+`[mysql1]`没定义的会继承`[mysqld]`
 
-6.
+6.添加密码
 
 ```my.cnf
 [mysqld_multi]
@@ -216,7 +216,8 @@ log_slow_slave_statements=1 # 在从服务器上开启慢查询日志
 #### 优化 ####
 transaction_isolation=READ-COMMITTED # 事务的隔离级别
 skip_name_resolve=1 # 跳过hostname解析
-open_files_limit=65535 #最大文件打开数
+open_files_limit=65535 # 最大文件打开数
+innodb_open_files=65535 # innodb层同时打开的文件数量，大于也不会报错，会根据LRU淘汰
 back_log=500 # 如果MySql的连接数达到max_connections时，新来的请求将会被存在堆栈中，以等待某一连接释放资源，该堆栈的数量即back_log
 max_connections=2048
 max_user_connections=400
@@ -224,6 +225,9 @@ max_connect_errors=1000000 # 指定允许连接不成功的最大尝试次数
 interactive_timeout=600 # 在关闭一个交互的连接之前所要等待的秒数
 wait_timeout=600 # 在关闭一个非交互的连接之前所要等待的秒数
 max_allowed_packet=32M # 一次传送数据包的过程当中最大允许的数据包大小
+innodb_io_capacity=4000 # 磁盘IO，影响刷脏页，通常设置为innodb_io_capacity_max的一半，SSD下推荐设置3000-6000
+innodb_io_capacity_max=8000 # 最大值
+
 ### table cache ### 
 # 可以通过show global status like "%Open%_table%";灵活调整
 table_definition_cache=1024 # 如果打开的表实例的数量超过了table_definition_cache设置,LRU机制将开始标记表实例以进行清除，并最终将它们从数据字典缓存中删除
@@ -259,9 +263,18 @@ innodb_buffer_pool_instances=4 # 内存总大小innodb_buffer_pool_size不变，
 innodb_buffer_pool_load_at_startup=1 #开机时载入热点数据
 innodb_buffer_pool_dump_at_shutdown=1 # 关闭时热点数据持久化
 innodb_data_file_path=ibdata1:1G:autoextend #指定innodb tablespace文件
-innodb_flush_log_at_trx_commit=1 # 确保数据落盘，但是2性能最优
-
-
+innodb_write_io_threads=8
+innodb_read_io_threads=8 #innodb_write_io_threads+innodb_read_io_threads=CPU核心数
+innodb_flush_log_at_trx_commit=1 # 确保数据落盘redolog文件，但是2性能最优
+innodb_flush_sync=0 # =1时check point导致的io情况下，会忽略innodb_io_capacity的设置
+innodb_flush_neighbors=0 # SSD一定要选0，刷邻近的脏页
+innodb_purge_threads=4 # 回收线程，真正删除数据
+innodb_page_cleaners=4 #刷脏线程数，值小于等于innodb_buffer_pool_instances的值
+innodb_max_dirty_pages_pct=50 # 脏页占比上限
+innodb_flush_method=O_DIRECT   #fdatasync(默认，占内存)，O_DSYNC（性能最差），O_DIRECT（不经过OS缓冲，最不占内存）
+innodb_lru_scan_depth= # 每个buffer_pool的空闲page数量
+innodb_checksum_algorithm=crc32 # 定义InnoDB中的checksum 算法
+innodb_lock_wait_timeout=10 # 锁等待超时时间
 [client]
 port=3306
 socket=/tmp/mysql.sock
@@ -466,7 +479,7 @@ redo log buffer刷新条件
 
 ```my.cnf
 innodb_log_buffer_size # innodb日志缓存大小。innodb会把数据更改记录写入到日志缓存中。如果缓存满了，才会写入到磁盘中。增大innodb_log_buffer_size，会有效的减少I/O次数。一般的值为4M或者8M。
-innodb_flush_log_at_trx_commit={0|1|2}
+innodb_flush_log_at_trx_commit={0|1|2} # 0每秒刷一次磁盘中的redo，可能丢1秒数据，1每次事务提交时,刷磁盘中的redo，2刷到文件系统，数据库崩了数据不丢，系统崩了可能丢1秒
 ```
 
 ### redo log file
@@ -968,7 +981,7 @@ INNODB_TRX
 
 INNODB_LOCKS
 
-INNODB_LOCK_WAITS(5.7以上推荐)
+INNODB_LOCK_WAITS(5.7推荐，8.0不能用)
 
 ```sql
 SELECT
