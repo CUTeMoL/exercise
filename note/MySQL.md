@@ -275,6 +275,11 @@ innodb_flush_method=O_DIRECT   #fdatasync(默认，占内存)，O_DSYNC（性能
 innodb_lru_scan_depth= # 每个buffer_pool的空闲page数量
 innodb_checksum_algorithm=crc32 # 定义InnoDB中的checksum 算法
 innodb_lock_wait_timeout=10 # 锁等待超时时间
+innodb_rollback_on_timeout=1 # 在 OFF 的时候事务超时后会回滚事务内最新执行的一条语句.如果值为 ON 会回滚整个事务
+innodb_print_all_deadlocks=1 # 将死锁信息自动记录到 MySQL 的错误日志
+innodb_file_per_table=1 # 每张表都有独立的表空间
+innodb_online_alter_log_max_size=536870912 # DDL日志大小，太小可能会导致DDL失败
+innodb_stats_on_metadata=0 # 
 [client]
 port=3306
 socket=/tmp/mysql.sock
@@ -971,7 +976,7 @@ innodb_deadlock_detect=0  #不开启死锁检测机制
 ```
 
 ```sql
-PAPER LESS
+PAGER LESS
 show engine innodb status\G   #找到TRANSACTIONS可以查询死锁信息
 ```
 
@@ -3110,3 +3115,39 @@ mysql_config_editor set --login-path=my3306 --user=root --socket=/tmp/mysql3306.
 mysql_config_editor print --all
 mysql --login-path=my3306
 ```
+
+## 二十五、MySQL实用命令行用法
+
+`connect`、`\r`重新连接
+
+`ego``\G`垂直显示结果
+
+`go`、`\g`、`;`表格显示
+
+`pager less`、`\P less`以`less`的效果显示
+
+`nopager`、`\n`默认的方式输出
+
+`tee`、`\T`将命令行的结果保存到外部文件
+
+`notee`、`\t`不把执行结果输出到文件
+
+`system command`、`\! command`执行系统命令
+
+`source file.sql`、`\.file.sql `执行包含sql语句的文件
+
+`clear`、`\c`结束命令行输入
+
+`delimiter`、`\d`设置sql语句分隔符
+
+`edit`、`\e`进入脚本编辑模式
+
+`print`、`\p`显示执行的语句
+
+`prompt`、`\R`改变终端显示
+
+`quit`、`exit`、`\q`退出
+
+`status`、`\s`显示信息
+
+`use`、`\u`切换数据库
