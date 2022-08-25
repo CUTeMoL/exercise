@@ -291,6 +291,21 @@ innodb_status_output=0 # show engine innodb status的结果周期性添加到log
 innodb_status_output_locks=0 # 记录详细的锁信息，一般设置关闭，用 SET GLOBAL innodb_status_output_locks=1 来查看锁的详细信息
 performance_schema=1 # 启用性能监控
 
+#### 启用监控 ####
+innodb_monitor_enable="module_innodb"
+innodb_monitor_enable="module_server"
+innodb_monitor_enable="module_dml"
+innodb_monitor_enable="module_ddl"
+innodb_monitor_enable="module_trx"
+innodb_monitor_enable="module_os"
+innodb_monitor_enable="module_purge"
+innodb_monitor_enable="module_log"
+innodb_monitor_enable="module_lock"
+innodb_monitor_enable="module_buffer"
+innodb_monitor_enable="module_index"
+innodb_monitor_enable="module_ibuf_system"
+innodb_monitor_enable="module_buffer_page"
+innodb_monitor_enable="module_adaptive_hash"
 [client]
 port=3306
 socket=/tmp/mysql.sock
