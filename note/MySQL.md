@@ -234,12 +234,13 @@ table_definition_cache=1024 # 如果打开的表实例的数量超过了table_de
 table_open_cache=512 # 所有线程打开的表的数量
 # table_cache=512 # 旧
 table_open_cache_instances=64 # 打开的表缓存实例的数量。
+
 ### thread one-thread-per-connection ### 
 # innodb_thread_concurrency=0 # 不限制并发，默认为0
 thread_stack=512K # 每个连接线程被创建时，MySQL给它分配的内存大小
 thread_cache_size=768 # 线程缓存
-### SQL 优化###
 
+### SQL 优化###
 key_buffer_size=2048M # 设置索引块(index Blocks)缓存的大小，它被所有线程共享，此参数只应于MYISAM存储引擎
 # key_buffer_size=2048M # 旧版
 read_rnd_buffer_size=4M # 设置查询排序之后的优化
@@ -255,6 +256,9 @@ lock_wait_timeout=3600 # 数据结构ddl操作的锁的等待时间
 read_buffer_size=8M # 设置Myisam查询优化
 bulk_insert_buffer_size=64M # 设置MyISAM批量插入数据优化
 myisam_sort_buffer_size=128M # 设置MyISAM查询排序的优化
+query_cache_size=128M # 弃用，查询结果高速缓存大小
+query_cache_type=0 # 弃用
+have_query_cache=0 # 不推荐使用了 
 ## innodb优化 ##
 innodb_sync_spin_loops=100 # 自旋锁-不间断地测试来查看一个资源是否变为可用状态，次数
 innodb_spin_wait_delay=6 # 自旋锁等待时间
@@ -273,13 +277,20 @@ innodb_page_cleaners=4 #刷脏线程数，值小于等于innodb_buffer_pool_inst
 innodb_max_dirty_pages_pct=50 # 脏页占比上限
 innodb_flush_method=O_DIRECT   #fdatasync(默认，占内存)，O_DSYNC（性能最差），O_DIRECT（不经过OS缓冲，最不占内存）
 innodb_lru_scan_depth= # 每个buffer_pool的空闲page数量
+innodb_checksums=1 # 启用校验和，防数据丢失
 innodb_checksum_algorithm=crc32 # 定义InnoDB中的checksum 算法
 innodb_lock_wait_timeout=10 # 锁等待超时时间
 innodb_rollback_on_timeout=1 # 在 OFF 的时候事务超时后会回滚事务内最新执行的一条语句.如果值为 ON 会回滚整个事务
 innodb_print_all_deadlocks=1 # 将死锁信息自动记录到 MySQL 的错误日志
 innodb_file_per_table=1 # 每张表都有独立的表空间
 innodb_online_alter_log_max_size=536870912 # DDL日志大小，太小可能会导致DDL失败
-innodb_stats_on_metadata=0 # 
+innodb_stats_on_metadata=0 # 在进行元数据查询的时候会进行innodb更新统计，关闭后提升读性能
+internal_tmp_disk_storage_engine=InnoDB # 磁盘临时表的引擎
+innodb_status_file=1 # 不再使用
+innodb_status_output=0 # show engine innodb status的结果周期性添加到log-err，占地盘
+innodb_status_output_locks=0 # 记录详细的锁信息，一般设置关闭，用 SET GLOBAL innodb_status_output_locks=1 来查看锁的详细信息
+performance_schema=1 # 启用性能监控
+
 [client]
 port=3306
 socket=/tmp/mysql.sock
@@ -1006,11 +1017,11 @@ ON r.trx_id=w.requesting_trx_id;
 锁以事务为单位，commit后释放锁
 
 ```my.cnf
-innodb_lock_wait_timeout=3  #单位为秒，锁等待超时时间
+innodb_lock_wait_timeout=3  # 单位为秒，锁等待超时时间
 ```
 
 ```sql
-set global innodb_status_output_locks=1;  #输出锁的信息
+set global innodb_status_output_locks=1;  # 输出锁的信息
 ```
 
 ### 加锁语法
@@ -3069,9 +3080,9 @@ AFTER_SYNC：需要等待从机的ACK才能commit，亦称无损复制
 
 AFTER_COMMIT：先COMMIT再等待从机的ACK
 
-```my.cnf
-rpl_semi_sync_master_timeout=1000;     #设置等待ACK的超时时间
-rpl_semi_sync_master_wait_for_slave_count=1;    #至少等待几台从机的ACK才能COMMIT事务
+```shell
+rpl_semi_sync_master_timeout=1000;     # 设置等待ACK的超时时间
+rpl_semi_sync_master_wait_for_slave_count=1;    # 至少等待几台从机的ACK才能COMMIT事务
 ```
 
 安装部署
@@ -3110,7 +3121,7 @@ install plugin validate_password soname 'validate_password.so';
 
 ## 二十四、免密登录
 
-```sql
+```shell
 mysql_config_editor set --login-path=my3306 --user=root --socket=/tmp/mysql3306.sock --password
 mysql_config_editor print --all
 mysql --login-path=my3306
@@ -3151,3 +3162,9 @@ mysql --login-path=my3306
 `status`、`\s`显示信息
 
 `use`、`\u`切换数据库
+
+`charset`、`\C`字符集设定
+
+`warnings`、`\W`每条语句都显示警告
+
+`nowarning`、`\w`不显示警告
