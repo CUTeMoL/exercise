@@ -1568,9 +1568,10 @@ echo \
 
 #### su
 
-```
-su user   切换用户环境变量不变
-su - user   切换用户环境变量和目录改变
+```shell
+su user   # 切换用户环境变量不变
+su - user   # 切换用户环境变量和目录改变
+-c program # 指定某用户执行程序
 ```
 
 #### visudo
