@@ -1121,33 +1121,35 @@ print("---")
 
 ### os:
 
-|           | os函数                                  | 作用                                                     |
-| --------- | ------------------------------------- | ------------------------------------------------------ |
-| 查         | os.getcwd()                           | 打印当前目录（pwd）                                            |
-|           | os.chdir("/dir")                      | 改变当前目录                                                 |
-|           | os.curdir                             | 打印当前目录（.）                                              |
-|           | os.pardir                             | 打印上级目录（..）                                             |
-|           | os.listdir("/dir")                    | 列出目录里的内容                                               |
-|           | os.stat("/dir/file")                  | 查看文件的状态（类key: value的元组），可以用下标来元素切片，也可以通过.key_name获取所需值 |
-|           | os.path.getsize("/dir/file")          | 获取文件的大小                                                |
-|           | os.path.abspath("file")               | 获取文件的绝对路径                                              |
-|           | os.path.dirname("/dir/file")          | 获取文件的绝对路径目录                                            |
-|           | os.path.basename("/dir/file")         | 获取文件的名称                                                |
-|           | os.path.split("/dir/file")            | 把dirname和basename分开，结果以tuple类型输出                       |
-|           | os.path.join("/dir", "file")          | 把dirname和basename合并                                    |
-|           | os.path.isfile("/dir/file")           | 判断是否为文件                                                |
-|           | os.path.isabs("/dir/file")            | 判断是否为绝对路径                                              |
-|           | os.path.exists("dir/file")            | 判断路径文件，存在为True                                         |
-|           | os.path.isdir("dir/file")             | 判断是否为目录                                                |
-|           | os.path.islink("dir/file")            | 判断是否为链接文件                                              |
-| 改         | os.rename("/dir/file1", "/dir/file2") | 改名                                                     |
-|           | os.remove("/dir/file")                | 删除                                                     |
-|           | os.mkdir("/dir")                      | 创建目录                                                   |
-|           | os.rmdir("/dir")                      | 删除目录                                                   |
-|           | os.makedirs("/dir1/dir2/dir3")        | 递归创建目录                                                 |
-|           | os.removedirs("/dir1/dir2/dir3")      | 递归删除目录                                                 |
-| 仅LINUX平台下 | os.popen("bash_command")              | 调用shell命令，不输出命令返回的结果，需要得到命令的结果则需要加上.read()来获取          |
-|           | os.system("bash_command")             | 调用shell命令，一定会返回命令的结果，但print()的结果是命令运行后的返回值return       |
+|               | os函数                                | 作用                                                         |
+| ------------- | ------------------------------------- | ------------------------------------------------------------ |
+| 查            | os.getcwd()                           | 打印当前目录（pwd）                                          |
+|               | os.chdir("/dir")                      | 改变当前目录                                                 |
+|               | os.curdir                             | 打印当前目录（.）                                            |
+|               | os.pardir                             | 打印上级目录（..）                                           |
+|               | os.listdir("/dir")                    | 列出目录里的内容                                             |
+|               | os.stat("/dir/file")                  | 查看文件的状态（类key: value的元组），可以用下标来元素切片，也可以通过.key_name获取所需值 |
+|               | os.access("file", os.R_OK)            | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)              |
+|               | os.path.getsize("/dir/file")          | 获取文件的大小                                               |
+|               | os.path.abspath("file")               | 获取文件的绝对路径                                           |
+|               | os.path.dirname("/dir/file")          | 获取文件的绝对路径目录                                       |
+|               | os.path.basename("/dir/file")         | 获取文件的名称                                               |
+|               | os.path.split("/dir/file")            | 把dirname和basename分开，结果以tuple类型输出                 |
+|               | os.path.join("/dir", "file")          | 把dirname和basename合并                                      |
+|               | os.path.isfile("/dir/file")           | 判断是否为文件                                               |
+|               | os.path.isabs("/dir/file")            | 判断是否为绝对路径                                           |
+|               | os.path.exists("dir/file")            | 判断路径文件，存在为True                                     |
+|               | os.path.isdir("dir/file")             | 判断是否为目录                                               |
+|               | os.path.islink("dir/file")            | 判断是否为链接文件                                           |
+|               | os.environ                            | 返回返回json格式的环境变量，与字典相同，也可以通过os.environ["key"]="value",来设置变量，但退出终端后失效 |
+| 改            | os.rename("/dir/file1", "/dir/file2") | 改名                                                         |
+|               | os.remove("/dir/file")                | 删除                                                         |
+|               | os.mkdir("/dir")                      | 创建目录                                                     |
+|               | os.rmdir("/dir")                      | 删除目录                                                     |
+|               | os.makedirs("/dir1/dir2/dir3")        | 递归创建目录                                                 |
+|               | os.removedirs("/dir1/dir2/dir3")      | 递归删除目录                                                 |
+| 仅LINUX平台下 | os.popen("bash_command")              | 调用shell命令，不输出命令返回的结果，需要得到命令的结果则需要加上.read()来获取 |
+|               | os.system("bash_command")             | 调用shell命令，一定会返回命令的结果，但print()的结果是命令运行后的返回值return |
 
 ```python
 __file__   #当前文件
