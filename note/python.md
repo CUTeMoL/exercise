@@ -1129,7 +1129,7 @@ print("---")
 |               | os.pardir                                                    | 打印上级目录（..）                                           |
 |               | os.listdir("/dir")                                           | 返回列表形式的目录内容                                       |
 |               | os.scandir(“/dir”)                                           | 返回目录，需要遍历打印出来                                   |
-|               | os.walk("/dir")                                              | 遍历目录树，返回(dirpath, dirnames, filenames)               |
+|               | os.walk("/dir")                                              | 遍历目录树，返回(dirpath路径, dirnames目录中的文件夹列表, filenames目录中的文件列表) |
 |               | os.stat("/dir/file")                                         | 查看文件的状态（类key: value的元组），可以用下标来元素切片，也可以通过.key_name获取所需值 |
 |               | os.access("file", os.R_OK)                                   | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)              |
 |               | os.path.getsize("/dir/file")                                 | 获取文件的大小                                               |
