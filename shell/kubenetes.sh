@@ -141,8 +141,8 @@ cert_install()
 
 
 if [ -e /data/work/ca.pem ] || [ -e /data/work/ca-key.pem ];then
-    read -p "certificate_ca is exists, if you want to generate new ca certificate, please input y" flag
-    if [ $flag = y ];then
+    read -p "ca certificate is exists,if you want to generate new ca certificateplease input y: " flag
+    if [[ $flag = y ]];then
         generate_certificate_ca() >/dev/null 2>&1 && echo "ca certificate completed"
     else
         echo "use old ca certificate"
