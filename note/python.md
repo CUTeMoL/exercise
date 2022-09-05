@@ -342,13 +342,13 @@ print(abc.isspace())
 
 布尔类型bool: 
 
-  True: 1
+True: 1
 
-  False: 0
+False: 0
 
-  可以进行数值运算
+可以进行数值运算
 
-  下列几种情况值为假，在if或者while中表现为真
+下列几种情况值为假，在if或者while中表现为真
 
 ```python
 False 或 None
