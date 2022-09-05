@@ -10,15 +10,15 @@ sudo apt install python3 python3-pip -y
 
 ### 2.虚拟环境
 
-#### 第一种方法
+#### 第一种方法(推荐第二种)
 
-  安装:
+安装
 
 ```shell
 sudo apt install virtualenv virtualenvwrapper -y
 ```
 
-  配置:
+配置
 
 ```shell
 vim ~/.bashrc
@@ -26,33 +26,33 @@ export WORKON_HOME=$HOME/.virtualenvs
 source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
 ```
 
-  创建虚拟环境安装模块:
+创建虚拟环境安装模块:
 
-​    创建命令:
+创建命令
 
 ```shell
 mkvirtualenv -p /usr/bin/python3 python_auto
 ```
 
-​    退出虚拟环境:
+退出虚拟环境
 
 ```shell
 deactivate
 ```
 
-​    删除虚拟环境:
+删除虚拟环境
 
 ```shell
 rmvirtualenv python_auto
 ```
 
-​    进入虚拟环境:
+进入虚拟环境
 
 ```shell
 workon python_auto
 ```
 
-#### 第二种方法
+#### 第二种方法(更好)
 
 安装虚拟环境
 
@@ -76,40 +76,40 @@ source ./Scripts/activate
 
 ### 3.pip
 
-  安装
+安装
 
 ```shell
 pip install module_name
 ```
 
-  查看模块
+查看模块
 
 ```shell
 pip list
 pip freeze
 ```
 
-  删除模块
+删除模块
 
 ```shell
 pip uninstall module
 ```
 
-  pip源配置:
+pip源配置:
 
-​    临时:
+临时:
 
 ```shell
-pip install -i mirror_url
+pip install $package -i $mirror_url
 ```
 
-​    永久:
+永久:
 
 ```shell
 pip config set global.index-url mirror_url
 ```
 
-​    源:
+源:
 
 清华：https://pypi.tuna.tsinghua.edu.cn/simple
 
@@ -129,92 +129,91 @@ pip install xlsxwriter psutil ipy paramiko dnspython pyinstaller pymysql scapy p
 
 ### 4.pycharm连接虚拟环境
 
-  ssh联通（root用户）
+ssh联通（root用户）
 
-  pycharm建立项目
+pycharm建立项目
 
-  配置远程解释器
+配置远程解释器
 
-  同步代码
+同步代码
 
 ## 二、变量
 
-### 保留字：
+### 保留字
 
-  不可以作为变量
+不可以作为变量
 
 ```python
 and if as assert break class continue def del elif else except finally for from  False global import in is lambda nonlocal not None or pass raise return try True while with yield
 ```
 
-### 标识符：
+### 标识符
 
-​    标识变量、函数、类、模块和其他对象的名称
+标识变量、函数、类、模块和其他对象的名称
 
-​    由字母、下划线和数字组成（第一个字符不可为数字）
+由字母、下划线和数字组成（第一个字符不可为数字）
 
-​    不可使用保留字
+不可使用保留字
 
-​    区分字母大小写
+区分字母大小写
 
-​    下划线开头的具备特殊意义
+下划线开头的具备特殊意义
 
-​        单下划线开头代表类
-
-​        双下划线开头代表类的私有成员
-
-​        双下划线开头及双下划线结尾，是python专用标识
+| 下划线开头                 | 意义             |
+| -------------------------- | ---------------- |
+| 单下划线开头               | 代表类           |
+| 双下划线开头               | 代表类的私有成员 |
+| 双下划线开头及双下划线结尾 | python专用标识   |
 
 ### 变量：
 
-​    必须是有效的标识符
+必须是有效的标识符
 
-​    不能使用保留字
+不能使用保留字
 
-​    慎用小写l和大写O
+慎用小写l和大写O
 
-​    尽量选择有意义的单词
+尽量选择有意义的单词
 
-​    全局变量，到处都能用，包括函数内部
+全局变量，到处都能用，包括函数内部
 
-​    函数内定义的变量是局部变量，仅函数内生效（除非使用global var  来声明函数内部要定义这一个全局变量）
+函数内定义的变量是局部变量，仅函数内生效（除非使用global var  来声明函数内部要定义这一个全局变量）
 
-​    格式:
+允许多个变量指向同一个值（内存位置相同）
 
-​        整形→变量名=value
+可以使用id()获取变量的内存
 
-​        字符串→变量名="value"
+#### 定义变量的方法
 
-​        可以使用type()返回变量的类型
+| 类型   | 格式                              |
+| ------ | --------------------------------- |
+| 整形   | 变量名=int                        |
+| 字符串 | 变量名="str"                      |
+| 列表   | 变量名=["str", int]               |
+| 元组   | 变量名=(int,  "str")              |
+| 字典   | 变量名={"str": "str", "str": int} |
+| 集合   | 变量名=(int, "str")               |
 
-​    允许多个变量指向同一个值（内存位置相同）
-
-​        可以使用id()获取变量的内存
-
-```
+```python
 #!/usr/bin/python                # 声明类型,指明解释器命令路径
 #-*- coding: utf-8 -*-            # 指定字符格式为utf-8（可以打印中文）,python3不用再指定了
 ```
 
-​    同时多个变量赋值:
+也同时多个变量赋值:
 
 ```python
 a, b, c = 1, 2, 3
 ```
 
-​    定义一个常量:
-
-```python
-MAX_CONNECTIONS = 5000    #名称全大写
-```
-
 ## 三、注释
+
+`#`可以注释之后的行内信息
 
 ```python
 print("hello world")   # 打印hello world
 ```
 
-↑单行注释    #[空格]
+`'''`到`'''`之间可以注释多行内容
 
 ```python
 '''
@@ -222,8 +221,6 @@ print("hello world")   # 打印hello world
   这是一段无意义内容
 '''
 ```
-
-↑多行注释
 
 ## 四、基本数据类型
 
@@ -233,71 +230,74 @@ print("hello world")   # 打印hello world
 
 ### 数字:
 
-  整数int:
+整数int:
 
-​    十进制: 
-
-​      可以使用下划线使数字更易读:
+十进制: 
 
 ```python
-universe_age = 14_000_000_000
-print(universe_age)   #14000000000
+universe_age = 14_000_000_000 # 可以使用下划线使数字更易读
+print(universe_age)   # 14000000000
 ```
 
-​    八进制: 0o/0O开头
+八进制
 
 ```python
-print(-0o123)
--83
+print(-0o123) # 0o/0O开头
+-83 # 打印出来是十进制
 ```
 
-​    十六进制: 0x/0X开头
+十六进制
 
 ```python
-print (-0x6AF)
--1711
+print (-0x6AF) # 0x/0X开头
+-1711 # 打印出来是十进制
 ```
 
-​    二进制: 
+二进制
 
-  浮点数float: 整数＋小数
+```python
+print(-0b10) # 0b开头
+-2 # 打印出来-2
+```
 
-    ~~~python
-    print (-6.16e-2)
-    -0.0616
-    ~~~
+浮点数float
+
+```python
+print (-6.16e-2) # e^n代表10^n次方
+-0.0616
+```
 
   复数: 实数与虚部相加
 
 ### 字符串str:
 
-  不可变值数据类型
+不可变值数据类型
 
-  使用引号连接起来的一段字符
+使用引号连接起来的一段字符
 
-  字符串属于序列，属于序列的数据类型都有[下标、遍历循环、切片、拼接]的特性
+字符串属于序列，属于序列的数据类型都有[下标、遍历循环、切片、拼接]的特性
 
-​    ''和""必须在同一行
+''和""必须在同一行
 
-​    '''   '''在不同行
+'''   '''在不同行
 
-​    字符串下标:
+字符串下标:
 
 ```python
 str1 = "abcde"
 for i in str1:
-    print(str1[i])
+    print(str1[i]) # 遍历输出
 ```
 
-​    字符串切片:
+字符串切片:
 
-​      `str1[n1:n2:n3]`   第一个数起点是下标(不填默认0)，第二个数是终点但不包括它(不填默认最终)，第三个数是步长不写默认为1（有点像range()）
+`str1[n1:n2:n3]`   第一个数起点是下标(不填默认0)，第二个数是终点但不包括它(不填默认最终)，第三个数是步长不写默认为1（有点像range()）
 
 ```python
 str1 = "abcde67890"
-print(str1[1:3])    #结果为bc
-print(str1[1:-1:2])    #结果为bd68(-1代表最后一个数但不包括终点0)
-print(str1[::-1])    #结果为09876edcba
+print(str1[1:3])    # 结果为bc
+print(str1[1:-1:2])    # 结果为bd68(-1代表最后一个数但不包括终点0)
+print(str1[::-1])    # 结果为09876edcba
 ```
 
 ​    字符操作:
@@ -399,22 +399,23 @@ print(os[num1:num2:num3])   #num1起点(默认0),num2终点但不包括,num3偏�
 
 ## 五、数据类型转换
 
-| 函数                   | 作用                                                    |
-| -------------------- | ----------------------------------------------------- |
-| int(x)               | 将x转换成整数类型                                             |
+| 函数                 | 作用                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| int(x)               | 将x转换成整数类型                                            |
 | float(x)             | 将X转换成浮点数                                              |
-| complex(real[,imag]) | 创建一个复数                                                |
-| str(x)               | 转为字符串                                                 |
-| repr(x)              | 表达式字符串(解释器可读取的形式\|保留转义字符)                             |
+| complex(real[,imag]) | 创建一个复数                                                 |
+| str(x)               | 转为字符串                                                   |
+| repr(x)              | 表达式字符串(解释器可读取的形式\|保留转义字符)               |
 | eval(str)            | 计算在字符串中的有效python表达式，并返回一个对象。例如：x="8";eval('x+1');>>>9 |
-| chr(x)               | 将整数x转换为一个字符 例如：97-122 = a-z                           |
-| ord(x)               | 将一个字符x转换为对应的整数值                                       |
-| hex(x)               | 将整数x转换为一个十六进制字符串                                      |
-| oct(x)               | 将整数x转换为一个八进制字符串                                       |
-| list(x)              | 将x转换为列表                                               |
-| tuple(x)             | 将xxx转换为元组                                             |
-| dict(x)              | 将xxx转换为字典                                             |
-| set(xxx)             | 将xxx转换为集合                                             |
+| chr(x)               | 将整数x转换为一个字符 例如：97-122 = a-z                     |
+| ord(x)               | 将一个字符x转换为对应的整数值                                |
+| bin(x)               | 将整数x转换为一个二进制字符串                                |
+| hex(x)               | 将整数x转换为一个十六进制字符串                              |
+| oct(x)               | 将整数x转换为一个八进制字符串                                |
+| list(x)              | 将x转换为列表                                                |
+| tuple(x)             | 将xxx转换为元组                                              |
+| dict(x)              | 将xxx转换为字典                                              |
+| set(xxx)             | 将xxx转换为集合                                              |
 
 ## 六、基本输入与输出
 
@@ -612,10 +613,23 @@ r = a if a > b else b
 
 要注意缩进，根据缩进决定嵌套
 
+```python
+if flag:        # 表示为真
+if not flag:    # 表示为假
 ```
-if flag:        #表示为真
-if not flag:    #表示为假
+
+可以用来判断变量是否输入
+
+```python
+qq = input("输入则为输入值，没输入则为3306：")
+if not qq:
+    qq = 3306
+else:
+    pass
+print(qq) # 没输入的情况下，输出为3306
 ```
+
+
 
 ## 十、循环
 
