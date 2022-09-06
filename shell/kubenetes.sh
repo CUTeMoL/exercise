@@ -21,26 +21,28 @@ masters_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep 
 nodes_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "k-n[0-9]\{1,3\}" | awk '{print $1}' `)
 etcds_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "etcd[0-9]\{1,3\}" | awk '{print $1}' `)
 
-# 2.做好免密,运行脚本的机器必须能以ROOT账户免密登录各节点
+# 2.做好免密,运行脚本的机器必须能以ROOT账户免密登录各节点,脚本默认使用22端口
 
 # 3.以ROOT用户运行此脚本
 
 
+cfssl_install() {
+    rm -rf /bin/cfssl /bin/cfssljson /bin/cfssl-certinfo
+    curl -L https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssl_1.5.0_linux_amd64 -o /bin/cfssl >/dev/null 2>&1
+    curl -L https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssljson_1.5.0_linux_amd64 -o /bin/cfssljson >/dev/null 2>&1
+    curl -L https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssl-certinfo_1.5.0_linux_amd64 -o /bin/cfssl-certinfo >/dev/null 2>&1
+    chmod +x /bin/cfssl
+    chmod +x /bin/cfssljson
+    chmod +x /bin/cfssl-certinfo
+}
 
-
-cert_install() {
+cfssl_check() {
     while [ true ]
     do
         if [ -x /bin/cfssl ] && [ -x /bin/cfssljson ] && [ -x /bin/cfssl-certinfo ];then
             echo "cfssl is ok" && break
         else
-            rm -rf /bin/cfssl /bin/cfssljson /bin/cfssl-certinfo
-            curl -L https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssl_1.5.0_linux_amd64 -o /bin/cfssl >/dev/null 2>&1
-            curl -L https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssljson_1.5.0_linux_amd64 -o /bin/cfssljson >/dev/null 2>&1
-            curl -L https://github.com/cloudflare/cfssl/releases/download/v1.5.0/cfssl-certinfo_1.5.0_linux_amd64 -o /bin/cfssl-certinfo >/dev/null 2>&1
-            chmod +x /bin/cfssl
-            chmod +x /bin/cfssljson
-            chmod +x /bin/cfssl-certinfo
+            cfssl_install
             if [ -x /bin/cfssl ] && [ -x /bin/cfssljson ] && [ -x /bin/cfssl-certinfo ];then
                 echo "cfssl is ok" && break
             else
@@ -50,7 +52,9 @@ cert_install() {
     done
 }
 
-generate_certificate_ca(){
+
+generate_certificate_ca() {
+    cfssl_check
     cat > /data/work/ca-config.json <<EOF
 {
     "signing": {
@@ -94,13 +98,14 @@ EOF
 EOF
     /bin/cfssl gencert -initca /data/work/ca-csr.json | /bin/cfssljson -bare /data/work/ca >/dev/null 2>&1 
     if [ $? -eq 0 ];then
-        echo "CA certificate is ok" 
+        echo "CA certificate is ok" $$ return 0
     else
-        echo "please check CA certificate " && exit
+        echo "please check CA certificate " && exit 1
     fi
 }
 
-generate_certificate_etcd(){
+generate_certificate_etcd() {
+    cfssl_check
     cat > /data/work/etcd-csr.json <<EOF
 {
     "CN": "etcd",
@@ -124,7 +129,7 @@ generate_certificate_etcd(){
 EOF
     for host_ipAddr in $@
     do
-        sed -i "/127.0.0.1/i\ \ \ \ \ \ \ \ \"$host_ipAddr\"," /data/work/etcd-csr.json
+        sed -i "/127.0.0.1/i\        \"$host_ipAddr\"," /data/work/etcd-csr.json
     done
     /bin/cfssl gencert -ca=/data/work/ca.pem -ca-key=/data/work/ca-key.pem \
     -config=/data/work/ca-config.json -profile=kubernetes /data/work/etcd-csr.json | \
@@ -138,9 +143,9 @@ EOF
     fi
 }
 
-
-mkidr /data/work -p
-cat > /etc/modules-load.d/k8s.conf <<EOF
+Environment_init() {
+    mkdir /data/work -p
+    cat > /etc/modules-load.d/k8s.conf <<EOF
 br_netfilter
 overlay
 ip_vs
@@ -149,47 +154,59 @@ ip_vs_wrr
 ip_vs_sh
 nf_conntrack_ipv4
 EOF
-cat > /etc/sysctl.d/k8s.conf <<EOF
+    cat > /etc/sysctl.d/k8s.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
 EOF
+    for host in ${hosts[@]}
+    do
+        rsync -avz /etc/modules-load.d/k8s.conf $host:/etc/modules-load.d/k8s.conf>/dev/null 2>&1
+        rsync -avz /etc/sysctl.d/k8s.conf $host:/etc/sysctl.d/k8s.conf >/dev/null 2>&1
+        ssh $host "sysctl --system && modprobe ip_vs ip_vs_rr ip_vs_wrr ip_vs_sh nf_conntrack_ipv4" >/dev/null 2>&1
+        ssh $host "apt-get install ipvsadm -y && apt-get install net-tools -y" >/dev/null 2>&1
+        ssh $host "mkdir -p /etc/kubernetes/ && /etc/kubernetes/ssl && /var/log/kubernetes"
+    done
+}
 
 
-cert_install
 
-if [ -e /data/work/ca.pem ] || [ -e /data/work/ca-key.pem ];then
-    read -p "CA certificate is exists,if you want to generate new ca certificateplease input y: " flag
-    if [[ $flag = y ]];then
+get_CA_cert() {
+    if [ -e /data/work/ca.pem ] || [ -e /data/work/ca-key.pem ];then
+        read -p "CA certificate is exists,if you want to generate new ca certificateplease input y: " flag
+        if [[ $flag = y ]];then
+            generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
+        else
+            echo "CA certificate no change"
+        fi
+    else
         generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
-    else
-        echo "CA certificate no change"
     fi
-else
-    generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
-fi
+}
 
-if [ -e /data/work/etcd.pem ] || [ -e /data/work/etcd-key.pem ];then
-    read -p "certificate_ca is exists, if you want to generate new ca certificate, please input y" flag
-    if [ $flag = y ];then
-        generate_certificate_ctcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
+get_etcd_cert() {
+    if [ -e /data/work/etcd.pem ] || [ -e /data/work/etcd-key.pem ];then
+        read -p "certificate_ca is exists, if you want to generate new ca certificate, please input y: " flag
+        if [ $flag = y ];then
+            generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
+        else
+            echo "etcd certificate no change"
+        fi
     else
-        echo "etcd certificate no change"
+        generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
     fi
-else
-    generate_certificate_etcd ${etcds_ip[*]} >/dev/null 2>&1 && echo "etcd certificate completed"
-fi
+}
+
+main() {
+    Environment_init
+    cert_install
+    get_CA_cert
+    get_etcd_cert
+}
+
+main
 
 
-
-for host in ${hosts[@]}
-do
-    rsync -avz /etc/modules-load.d/k8s.conf $i:/etc/modules-load.d/k8s.conf>/dev/null 2>&1
-    rsync -avz /etc/sysctl.d/k8s.conf $i:/etc/sysctl.d/k8s.conf >/dev/null 2>&1
-    ssh $i "sysctl --system && modprobe ip_vs ip_vs_rr ip_vs_wrr ip_vs_sh nf_conntrack_ipv4" >/dev/null 2>&1
-    ssh $i "apt-get install ipvsadm -y && apt-get install net-tools -y" >/dev/null 2>&1
-    ssh $i "mkdir -p /etc/kubernetes/ && /etc/kubernetes/ssl && /var/log/kubernetes"
-done
 
 for host in ${etcds[@]}
 do
