@@ -126,10 +126,11 @@ ${array[@]:1:2} 从1开始，获取后面的2个元素
 function function_name() {
     command1
     command2
+    return 0 # 函数中可以添加return，反应此函数的运行状态
 }
-```
 
-函数中可以添加return，反应此函数的运行状态
+function $para ${array[@]} # 可以传递参数，参数可以是变量、数组
+```
 
 ## 四、四则运算
 

@@ -10,11 +10,16 @@
 # 192.168.1.105 k-n2
 # 192.168.1.106 k-n3
 
-# 根据实际情况编写主机名称的数组
-hosts=(`grep -v "^#" /etc/hosts |grep -v "localhost" | awk '{print $2}' `)
-masters=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -e "k-m[0-9]\{1,3\}" `)
-nodes=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -e "k-n[0-9]\{1,3\}" `)
-etcds=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -e "etcd[0-9]\{1,3\}" `)
+# 根据实际情况编写主机名称和ip地址的数组
+hosts=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | awk '{print $2}' `)
+masters=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-m[0-9]\{1,3\}" `)
+nodes=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-n[0-9]\{1,3\}" `)
+etcds=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "etcd[0-9]\{1,3\}" `)
+
+hosts_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | awk '{print $1}' `)
+masters_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "k-m[0-9]\{1,3\}" | awk '{print $1}' `)
+nodes_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "k-n[0-9]\{1,3\}" | awk '{print $1}' `)
+etcds_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "etcd[0-9]\{1,3\}" | awk '{print $1}' `)
 
 # 2.做好免密,运行脚本的机器必须能以ROOT账户免密登录各节点
 
@@ -45,7 +50,7 @@ cert_install() {
     done
 }
 
-generate_certificate_ca() {
+generate_certificate_ca(){
     cat > /data/work/ca-config.json <<EOF
 {
     "signing": {
@@ -87,19 +92,20 @@ EOF
   }
 }
 EOF
-    /bin/cfssl gencert -initca /data/work/ca-csr.json | /bin/cfssljson -bare /data/work/ca >/dev/null 2>&1 && \
-    echo "CA certificate is ok" || echo "please check ca_cert " && exit
+    /bin/cfssl gencert -initca /data/work/ca-csr.json | /bin/cfssljson -bare /data/work/ca >/dev/null 2>&1 
+    if [ $? -eq 0 ];then
+        echo "CA certificate is ok" 
+    else
+        echo "please check CA certificate " && exit
+    fi
 }
 
-generate_certificate_etcd() {
+generate_certificate_etcd(){
     cat > /data/work/etcd-csr.json <<EOF
 {
     "CN": "etcd",
     "hosts": [
-        "127.0.0.1",
-        "192.168.1.101",
-        "192.168.1.102",
-        "192.168.1.103"
+        "127.0.0.1"
     ],
     "key": {
         "algo": "rsa",
@@ -116,9 +122,20 @@ generate_certificate_etcd() {
     ]
 }
 EOF
+    for host_ipAddr in $@
+    do
+        sed -i "/127.0.0.1/i\ \ \ \ \ \ \ \ \"$host_ipAddr\"," /data/work/etcd-csr.json
+    done
     /bin/cfssl gencert -ca=/data/work/ca.pem -ca-key=/data/work/ca-key.pem \
     -config=/data/work/ca-config.json -profile=kubernetes /data/work/etcd-csr.json | \
-    cfssljson -bare /data/work/etcd && echo "etcd certificate is ok" || echo "please check etcd_cert " && exit
+    /bin/cfssljson -bare /data/work/etcd 
+    if [ $? -eq 0 ];then
+        echo "etcd certificate is ok" 
+        return 0
+    else
+        echo "please check etcd_cert " 
+        exit 1
+    fi
 }
 
 
@@ -137,29 +154,30 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
 EOF
-cert_install()
 
+
+cert_install
 
 if [ -e /data/work/ca.pem ] || [ -e /data/work/ca-key.pem ];then
-    read -p "ca certificate is exists,if you want to generate new ca certificateplease input y: " flag
+    read -p "CA certificate is exists,if you want to generate new ca certificateplease input y: " flag
     if [[ $flag = y ]];then
-        generate_certificate_ca() >/dev/null 2>&1 && echo "ca certificate completed"
+        generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
     else
-        echo "use old ca certificate"
+        echo "CA certificate no change"
     fi
 else
-    generate_certificate_ca() >/dev/null 2>&1 && echo "ca certificate completed"
+    generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
 fi
 
 if [ -e /data/work/etcd.pem ] || [ -e /data/work/etcd-key.pem ];then
     read -p "certificate_ca is exists, if you want to generate new ca certificate, please input y" flag
     if [ $flag = y ];then
-        generate_certificate_ctcd() ${etcds[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
+        generate_certificate_ctcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
     else
-        echo "use old etcd certificate"
+        echo "etcd certificate no change"
     fi
 else
-    generate_certificate_etcd() ${etcds[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
+    generate_certificate_etcd ${etcds_ip[*]} >/dev/null 2>&1 && echo "etcd certificate completed"
 fi
 
 
