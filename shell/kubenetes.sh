@@ -25,6 +25,11 @@ etcds_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e
 
 # 3.以ROOT用户运行此脚本
 
+# 4.设定好变量
+cluster_ips=193.169.0.0/16
+pod_ips=10.10.0.0/16
+cluster_DNS=193.169.0.2
+
 
 cfssl_install() {
     rm -rf /bin/cfssl /bin/cfssljson /bin/cfssl-certinfo
@@ -40,13 +45,13 @@ cfssl_check() {
     while [ true ]
     do
         if [ -x /bin/cfssl ] && [ -x /bin/cfssljson ] && [ -x /bin/cfssl-certinfo ];then
-            echo "cfssl is ok" && break
+            echo "[info] cfssl is ok" | tee -a /data/work/running.log && break
         else
             cfssl_install
             if [ -x /bin/cfssl ] && [ -x /bin/cfssljson ] && [ -x /bin/cfssl-certinfo ];then
-                echo "cfssl is ok" && break
+                echo "[info] cfssl is ok" | tee -a /data/work/running.log && break
             else
-                echo "cfssl install is fail, please check cfssl " && exit
+                echo "[error] cfssl install is fail, please check cfssl"  | tee -a /data/work/running.log && exit
             fi
         fi
     done
@@ -98,9 +103,9 @@ EOF
 EOF
     /bin/cfssl gencert -initca /data/work/ca-csr.json | /bin/cfssljson -bare /data/work/ca >/dev/null 2>&1 
     if [ $? -eq 0 ];then
-        echo "CA certificate is ok" $$ return 0
+        echo "[info] CA certificate is ok" | tee -a /data/work/running.log && return 0
     else
-        echo "please check CA certificate " && exit 1
+        echo "[error] please check CA certificate" | tee -a /data/work/running.log && exit 1
     fi
 }
 
@@ -135,13 +140,59 @@ EOF
     -config=/data/work/ca-config.json -profile=kubernetes /data/work/etcd-csr.json | \
     /bin/cfssljson -bare /data/work/etcd 
     if [ $? -eq 0 ];then
-        echo "etcd certificate is ok" 
+        echo "[info] etcd certificate is ok" | tee -a /data/work/running.log
         return 0
     else
-        echo "please check etcd_cert " 
+        echo "[error] please check etcd_cert " | tee -a /data/work/running.log
+    fi
+}
+
+generate_TLS_Bootstrapping() {
+    cat > /data/work/token.csv << EOF
+`head -c 16 /dev/urandom | od -An -t x | tr -d ' '`,kubelet-bootstrap,10001,"system:bootstrapper"
+EOF
+}
+
+generate_certificate_apiserver() {
+    cat > /data/work/kube-apiserver-csr.json <<EOF
+{
+    "CN": "kubernetes",
+    "hosts": [
+        "127.0.0.1",
+        "kubernetes",
+        "kubernetes.default",
+        "kubernetes.default.svc",
+        "kubernetes.default.svc.cluster",
+        "kubernetes.default.svc.cluster.local",
+        "193.169.0.1"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "CN",
+            "ST": "ShangHai",
+            "L": "ShangHai",
+            "O": "k8s",
+            "OU": "system"
+        }
+    ]
+}
+EOF
+    /bin/cfssl gencert -ca=/data/work/ca.pem -ca-key=/data/work/ca-key.pem \
+    -config=/data/work/ca-config.json -profile=kubernetes /data/work/kube-apiserver-csr.json | \
+    cfssljson -bare /data/work/kube-apiserver
+    if [ $? -eq 0 ];then
+        echo "[info] apiserver certificate is ok" | tee -a /data/work/running.log
+        return 0
+    else
+        echo "[error] please check apiserver_cert " | tee -a /data/work/running.log
         exit 1
     fi
 }
+
 
 Environment_init() {
     mkdir /data/work -p
@@ -175,12 +226,12 @@ get_CA_cert() {
     if [ -e /data/work/ca.pem ] || [ -e /data/work/ca-key.pem ];then
         read -p "CA certificate is exists,if you want to generate new ca certificateplease input y: " flag
         if [[ $flag = y ]];then
-            generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
+            generate_certificate_ca >/dev/null 2>&1 && echo "[info] CA certificate renew" | tee -a /data/work/running.log
         else
-            echo "CA certificate no change"
+            echo "[warning] CA certificate is no change" | tee -a /data/work/running.log
         fi
     else
-        generate_certificate_ca >/dev/null 2>&1 && echo "CA certificate completed"
+        generate_certificate_ca >/dev/null 2>&1 && echo "[info] CA certificate completed" | tee -a /data/work/running.log
     fi
 }
 
@@ -188,12 +239,25 @@ get_etcd_cert() {
     if [ -e /data/work/etcd.pem ] || [ -e /data/work/etcd-key.pem ];then
         read -p "certificate_ca is exists, if you want to generate new ca certificate, please input y: " flag
         if [ $flag = y ];then
-            generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
+            generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "[info] etcd certificate renew" | tee -a /data/work/running.log
         else
-            echo "etcd certificate no change"
+            echo "[warning] etcd certificate is no change" | tee -a /data/work/running.log
         fi
     else
-        generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "etcd certificate completed"
+        generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "[info] etcd certificate completed" | tee -a /data/work/running.log
+    fi
+}
+
+get_tls_bootstrapping() {
+    if [ -e /data/work/token.csv ];then
+        read -p "TLS Bootstrapping token is existed,if you want to generate new? please input y: " flag
+        if [ $ flag = y];then
+            generate_TLS_Bootstrapping >/dev/null 2>&1 && echo "[info] TLS Bootstrapping token is renew" | tee -a /data/work/running.log
+        else
+            echo "[warning] TLS Bootstrapping token no change" | tee -a /data/work/running.log
+        fi
+    else
+        generate_TLS_Bootstrapping >/dev/null 2>&1 && echo "[info] TLS Bootstrapping token is completed" | tee -a /data/work/running.log
     fi
 }
 
@@ -202,6 +266,8 @@ main() {
     cert_install
     get_CA_cert
     get_etcd_cert
+    get_tls_bootstrapping
+    # 却get_api_cert
 }
 
 main
