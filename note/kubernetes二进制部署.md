@@ -235,7 +235,7 @@ cat > /data/work/etcd-csr.json <<EOF
     ]
 }
 EOF
-# hosts如果为""则代表所有IP都可以通过
+# hosts如果为[]则代表所有IP都可以通过
 ```
 
 ```shell
