@@ -50,6 +50,8 @@ logrotate_acceslog.sh - 日志切割
 
 send_ssh_key.sh - 发送ssh公钥
 
+kubernetes.sh - kubernetes二进制部署脚本(开发中)
+
 # 经验笔记（整理中）
 
 ## note
