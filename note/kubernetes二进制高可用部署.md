@@ -334,7 +334,7 @@ EOF
 生成kubectl证书
 
 ```shell
-cfssl gencert -ca=/data/work/ca.pem -ca-key=/data/work/ca-key.pem -config=/data/work/ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare /data/work/admin
+cfssl gencert -ca=/data/work/ca.pem -ca-key=/data/work/ca-key.pem -config=/data/work/ca-config.json -profile=kubernetes /data/work/admin-csr.json | cfssljson -bare /data/work/admin
 ```
 
 创建kube-controller-manager证书配置文件
