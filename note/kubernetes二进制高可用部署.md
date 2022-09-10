@@ -509,14 +509,14 @@ Wants=network-online.target
 Type=notify
 EnvironmentFile=/etc/etcd/etcd.conf
 WorkingDirectory=/var/lib/etcd/
-ExecStart=/usr/local/bin/etcd \
---cert-file=/etc/etcd/ssl/etcd.pem \
---key-file=/etc/etcd/ssl/etcd-key.pem \
---trusted-ca-file=/etc/etcd/ssl/ca.pem \
---peer-cert-file=/etc/etcd/ssl/etcd.pem \
---peer-key-file=/etc/etcd/ssl/etcd-key.pem \
---peer-trusted-ca-file=/etc/etcd/ssl/ca.pem \
---client-cert-auth \
+ExecStart=/usr/local/bin/etcd \\
+--cert-file=/etc/etcd/ssl/etcd.pem \\
+--key-file=/etc/etcd/ssl/etcd-key.pem \\
+--trusted-ca-file=/etc/etcd/ssl/ca.pem \\
+--peer-cert-file=/etc/etcd/ssl/etcd.pem \\
+--peer-key-file=/etc/etcd/ssl/etcd-key.pem \\
+--peer-trusted-ca-file=/etc/etcd/ssl/ca.pem \\
+--client-cert-auth \\
 --peer-client-cert-auth
 Restart=on-failure
 RestartSec=5
