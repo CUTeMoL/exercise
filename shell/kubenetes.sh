@@ -31,7 +31,9 @@ virtual_ip=`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep v
 
 # 4.设定好集群信息相关变量
 etcd_version=v3.4.20
-etcd_url=http://150.158.93.164/files
+etcd_url=http://150.158.93.164/files/etcd/${etcd_version}
+kubernetes_version=v1.23.10
+kubernetes_url=http://150.158.93.164/files/kubernetes/${kubernetes_version}
 # 目前仅上传了etcdv3.4.20到150.158.93.164的服务器上之后会添加新版本
 cluster_ips=193.169.0.0/16
 pod_ips=10.10.0.0/16
@@ -110,7 +112,7 @@ EOF
 EOF
     /bin/cfssl gencert -initca /data/work/ca-csr.json | /bin/cfssljson -bare /data/work/ca >/dev/null 2>&1 
     if [ $? -eq 0 ];then
-        echo "`date \"+%F %T \"`[info] The CA certificate is ok" | tee -a /data/work/running.log && return 0
+        echo "`date \"+%F %T \"`[info] The CA certificate is ok" | tee -a /data/work/running.log
     else
         echo "`date \"+%F %T \"`[error] please check CA certificate" | tee -a /data/work/running.log && exit 1
     fi
@@ -148,7 +150,6 @@ EOF
     /bin/cfssljson -bare /data/work/etcd  >/dev/null 2>&1
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The etcd certificate is ok" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check etcd_cert " | tee -a /data/work/running.log
     fi
@@ -197,7 +198,6 @@ EOF
     /bin/cfssljson -bare /data/work/kube-apiserver >/dev/null 2>&1
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The apiserver certificate is ok" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check apiserver_cert " | tee -a /data/work/running.log
         exit 1
@@ -230,7 +230,6 @@ EOF
     /bin/cfssljson -bare /data/work/admin >/dev/null 2>&1
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The kubectl certificate is ok" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check kubectl_cert " | tee -a /data/work/running.log
         exit 1
@@ -269,7 +268,6 @@ EOF
     /bin/cfssljson -bare /data/work/kube-controller-manager
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The kube-controller-manager certificate is ok" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check kube-controller-manager_cert " | tee -a /data/work/running.log
         exit 1
@@ -308,7 +306,6 @@ EOF
     /bin/cfssljson -bare /data/work/kube-scheduler
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The kube-scheduler certificate is ok" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check kube-scheduler_cert " | tee -a /data/work/running.log
         exit 1
@@ -339,7 +336,6 @@ EOF
     -profile=kubernetes /data/work/kube-proxy-csr.json | /bin/cfssljson -bare /data/work/kube-proxy
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The kube-proxy certificate is ok" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check kube-proxy_cert " | tee -a /data/work/running.log
         exit 1
@@ -359,6 +355,21 @@ etcd_install() {
     do
         ssh $host "mkdir -p /etc/etcd/ssl"
         rsync -avz /data/work/etcd-${ETCD_VER}-linux-amd64/etcd* $host:/usr/local/bin/ >/dev/null 2>&1
+    done
+}
+
+kube_install() {
+    kubernetes_url=$1
+    download_url=${kubernetes_url}
+    shift
+    rm -rf /data/work/kubernetes-server-linux-amd64.tar.gz /data/work/kubernetes_url
+    wget ${kubernetes_url}/kubernetes-server-linux-amd64.tar.gz -P /data/work/ && \
+    tar -zxf /data/work/kubernetes-server-linux-amd64.tar.gz -C /data/work/ >/dev/null 2>&1
+    k8sdir=/data/work/kubernetes/server/bin
+    for host in $@
+    do
+        rsync -avz ${k8sdir}/kube-apiserver ${k8sdir}/kube-controller-manager ${k8sdir}/kube-scheduler ${k8sdir}/kubectl \
+        ${k8sdir}/kubelet ${k8sdir}/kube-proxy $host:/usr/local/bin/ >/dev/null 2>&1
     done
 }
 
@@ -409,6 +420,74 @@ EOF
     chmod +x /data/work/etcd.service
 }
 
+generate_apiserver_conf() {
+    cat > /data/work/kube-apiserver.service <<EOF
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+After=etcd.service
+Wants=etcd.service
+
+[Service]
+EnvironmentFile=/etc/kubernetes/kube-apiserver.conf
+ExecStart=/usr/local/bin/kube-apiserver \$KUBE_APISERVER_OPTS
+Restart=on-failure
+RestartSec=5
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+chmod +x /data/work/kube-apiserver.service
+    cat > /data/work/kube-apiserver.conf <<EOF
+KUBE_APISERVER_OPTS="--enable-admission-plugins=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
+--anonymous-auth=false \\
+--bind-address=host_ip \\
+--secure-port=6443 \\
+--advertise-address=host_ip \\
+--insecure-port=0 \\
+--authorization-mode=Node,RBAC \\
+--requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem \\
+--proxy-client-cert-file=/etc/kubernetes/ssl/kube-proxy.pem \\
+--proxy-client-key-file=/etc/kubernetes/ssl/kube-proxy-key.pem \\
+--requestheader-allowed-names=aggregator \\
+--requestheader-extra-headers-prefix=X-Remote-Extra- \\
+--requestheader-group-headers=X-Remote-Group \\
+--requestheader-username-headers=X-Remote-User \\
+--enable-aggregator-routing=true \\
+--runtime-config=api/all=true \\
+--enable-bootstrap-token-auth=true \\
+--service-cluster-ip-range=cluster_ips \\
+--token-auth-file=/etc/kubernetes/token.csv \\
+--service-node-port-range=30000-50000 \\
+--tls-cert-file=/etc/kubernetes/ssl/kube-apiserver.pem \\
+--tls-private-key-file=/etc/kubernetes/ssl/kube-apiserver-key.pem \\
+--client-ca-file=/etc/kubernetes/ssl/ca.pem \\
+--kubelet-client-certificate=/etc/kubernetes/ssl/kube-apiserver.pem \\
+--kubelet-client-key=/etc/kubernetes/ssl/kube-apiserver-key.pem \\
+--service-account-key-file=/etc/kubernetes/ssl/ca-key.pem \\
+--service-account-signing-key-file=/etc/kubernetes/ssl/ca-key.pem \\
+--service-account-issuer=https://kubernetes.default.svc.cluster.local \\
+--etcd-cafile=/etc/etcd/ssl/ca.pem \\
+--etcd-certfile=/etc/etcd/ssl/etcd.pem \\
+--etcd-keyfile=/etc/etcd/ssl/etcd-key.pem \\
+--etcd-servers=etcd_hosts \\
+--enable-swagger-ui=true \\
+--allow-privileged=true \\
+--apiserver-count=3 \\
+--audit-log-maxage=30 \\
+--audit-log-maxbackup=3 \\
+--audit-log-maxsize=100 \\
+--audit-log-path=/var/log/kube-apiserver-audit.log \\
+--event-ttl=1h \\
+--alsologtostderr=true \\
+--logtostderr=false \\
+--log-dir=/var/log/kubernetes \\
+--v=4"
+EOF
+    sed -e "s#host_ip#$2#g" -e "s#cluster_ips#$3#g" -e "/etcd-servers=/s#etcd_hosts#$4#g" /data/work/kube-apiserver.conf > /data/work/kube-apiserver-$1.conf
+}
 
 Environment_init() {
     mkdir /data/work -p
@@ -554,14 +633,21 @@ get_etcd() {
     etcd_install $@ >/dev/null 2>&1
     if [ $? -eq 0 ];then
         echo "`date \"+%F %T \"`[info] The etcd is installed" | tee -a /data/work/running.log
-        return 0
     else
         echo "`date \"+%F %T \"`[error] please check etcd " | tee -a /data/work/running.log
         exit 1
     fi
 }
 
-
+get_kubernetes() {
+    kube_install $@ >/dev/null 2>&1
+    if [ $? -eq 0 ];then
+        echo "`date \"+%F %T \"`[info] The kubernetes is installed" | tee -a /data/work/running.log
+    else
+        echo "`date \"+%F %T \"`[error] please check kubernetes " | tee -a /data/work/running.log
+        exit 1
+    fi
+}
 
 put_etcd_conf() {
     for host in $@
@@ -572,7 +658,6 @@ put_etcd_conf() {
         rsync -avz /data/work/etcd-${host}.conf $host:/etc/etcd/etcd.conf >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The $host etcd.conf is transfer completed" | tee -a /data/work/running.log
-            return 0
         else
             echo "`date \"+%F %T \"`[error] please check $host:/etc/etcd/etcd.conf" | tee -a /data/work/running.log
             exit 1
@@ -580,9 +665,33 @@ put_etcd_conf() {
         rsync -avz /data/work/etcd.service $host:/lib/systemd/system/ >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The $host etcd.service is transfer completed" | tee -a /data/work/running.log
-            return 0
         else
             echo "`date \"+%F %T \"`[error] please check $host:/lib/systemd/system/etcd.service" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+}
+
+put_apiserver_conf() {
+    cluster_ips=$1
+    shift
+    for host in $@
+    do
+        host_ipAddr=`ping $host -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o |awk 'NR==1{print $0}'`
+        etcd_cluster=`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "etcd[0-9]\{1,3\}" | awk '{print "https://"$1":2379"}'|awk 'BEGIN{RS="\n";ORS=","};{print $0}'| sed 's#,$##g'`
+        generate_apiserver_conf $host $host_ipAddr $cluster_ips $etcd_cluster
+        rsync -avz /data/work/kube-apiserver-${host}.conf $host:/etc/kubernetes/kube-apiserver.conf >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The $host kube-apiserver.conf is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check $host:/etc/kubernetes/kube-apiserver.conf" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kube-apiserver.service $host:/lib/systemd/system/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The $host kube-apiserver.service is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check $host:/lib/systemd/system/kube-apiserver.service" | tee -a /data/work/running.log
             exit 1
         fi
     done
@@ -591,8 +700,10 @@ put_etcd_conf() {
 update_etcd_cert() {
     for host in $@
     do
-        rsync -avz /data/work/ca*.pem $host:/etc/etcd/ssl/ || echo "`date \"+%F %T \"`[error] update $host etcd ca certificate is failed" | tee -a /data/work/running.log
-        rsync -avz /data/work/etcd*.pem $host:/etc/etcd/ssl/ || echo "`date \"+%F %T \"`[error] update $host etcd certificate is failed" | tee -a /data/work/running.log
+        rsync -avz /data/work/ca*.pem $host:/etc/etcd/ssl/ || \
+        echo "`date \"+%F %T \"`[error] update $host etcd ca certificate is failed" | tee -a /data/work/running.log
+        rsync -avz /data/work/etcd*.pem $host:/etc/etcd/ssl/ || \
+        echo "`date \"+%F %T \"`[error] update $host etcd certificate is failed" | tee -a /data/work/running.log
         echo "`date \"+%F %T \"`[info] update $host etcd certificate is completed" | tee -a /data/work/running.log
     done
 }
@@ -676,3 +787,5 @@ put_etcd_conf ${etcds[@]}
 update_etcd_cert ${etcds[@]}
 etcd_check ${etcds[@]}
 etcd_service_restart ${etcds[@]}
+get_kubernetes ${kubernetes_url} ${masters[@]}
+put_apiserver_conf ${cluster_ips} ${masters[@]}
