@@ -373,6 +373,13 @@ kube_install() {
     done
 }
 
+keepalived_install() {
+    for host in $@
+    do
+        ssh $host "apt install keepalived -y"
+    done
+}
+
 generate_etcd_conf() {
     cat > /data/work/etcd.conf <<EOF
 #[Member]
@@ -489,6 +496,76 @@ EOF
     sed -e "s#host_ip#$2#g" -e "s#cluster_ips#$3#g" -e "/etcd-servers=/s#etcd_hosts#$4#g" /data/work/kube-apiserver.conf > /data/work/kube-apiserver-$1.conf
 }
 
+generate_keepalived_conf() {
+    cat > /data/work/keepalived.conf <<EOF
+! Configuration File for keepalived
+global_defs {
+   notification_email {
+     acassen@firewall.loc
+     failover@firewall.loc
+     sysadmin@firewall.loc
+   }
+   notification_email_from Alexandre.Cassen@firewall.loc
+   smtp_server 192.168.200.1
+   smtp_connect_timeout 1
+   script_user root
+   enable_script_security
+   router_id LVS_DEVEL
+}
+vrrp_script check_service {
+   script  /etc/keepalived/check_service.sh
+   interval 3
+}
+vrrp_instance VI_1 {
+    state BACKUP
+    interface if_name
+    virtual_router_id 51
+    priority 80
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 123456
+    }
+    virtual_ipaddress {
+        virtual_ipAddr
+    }
+    unicast_src_ip host_ip
+    unicast_peer {
+    }
+    track_script {
+        check_service
+    }
+}
+EOF
+    masters_ip=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "k-m[0-9]\{1,3\}" | awk '{print $1}' `)
+    sed -e "s#if_name#$2#g" -e "s#host_ip#$3#g" -e "s#virtual_ipAddr#$4#g" /data/work/keepalived.conf > /data/work/keepalived-$1.conf
+    for peer_ip in ${masters_ip[@]}
+    do
+        if [ $peer_ip != $3 ];then
+            sed -i "/unicast_peer {/a\        $peer_ip" /data/work/keepalived-$1.conf
+        fi
+    done
+    cat > /data/work/check_service.sh <<EOF
+#!/bin/bash
+haproxy_status=\`ps -C haproxy --no-header | wc -l\`
+n=0
+while [ $n -lt 3 ]
+do
+    if [ \$haproxy_status -eq 0 ];then
+        let n=n+1
+        if [ n -eq 3 ]
+            service keepalived stop
+        fi
+        sleep 10
+    else
+        exit
+    fi
+done
+EOF
+    chmod +x /data/work/check_service.sh
+}
+
+
 Environment_init() {
     mkdir /data/work -p
     cat > /etc/modules-load.d/k8s.conf <<EOF
@@ -508,7 +585,7 @@ EOF
     for host in $@
     do
         /usr/bin/expect <<EOF
-            spawn ssh $host "mkdir -p /etc/kubernetes/ && /etc/kubernetes/ssl && /var/log/kubernetes"
+            spawn ssh $host "mkdir -p /etc/kubernetes/ /etc/kubernetes/ssl /var/log/kubernetes /etc/etcd/ssl"
             expect { 
                 "yes/no" { send "yes\r" }
             }
@@ -684,14 +761,39 @@ put_apiserver_conf() {
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The $host kube-apiserver.conf is transfer completed" | tee -a /data/work/running.log
         else
-            echo "`date \"+%F %T \"`[error] please check $host:/etc/kubernetes/kube-apiserver.conf" | tee -a /data/work/running.log
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kube-apiserver.conf" | tee -a /data/work/running.log
             exit 1
         fi
         rsync -avz /data/work/kube-apiserver.service $host:/lib/systemd/system/ >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The $host kube-apiserver.service is transfer completed" | tee -a /data/work/running.log
         else
-            echo "`date \"+%F %T \"`[error] please check $host:/lib/systemd/system/kube-apiserver.service" | tee -a /data/work/running.log
+            echo "`date \"+%F %T \"`[error] please check ${host}:/lib/systemd/system/kube-apiserver.service" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+}
+
+put_keepalived_conf() {
+    virtual_ip=$1
+    shift
+    for host in $@
+    do
+        if_name=`ssh $host "ifconfig" |grep -B1 -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}"|grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'|grep -e "^e"`
+        host_ipAddr=`ping $host -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o |awk 'NR==1{print $0}'`
+        generate_keepalived_conf $host ${if_name} ${host_ipAddr} ${virtual_ip}
+        rsync -avz /data/work/keepalived-${host}.conf /etc/keepalived/keepalived.conf >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The $host keepalived.conf is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/keepalived/keepalived.conf" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/check_service.sh $host:/etc/keepalived/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The $host check_service.sh is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/keepalived/check_service.sh" | tee -a /data/work/running.log
             exit 1
         fi
     done
@@ -700,11 +802,55 @@ put_apiserver_conf() {
 update_etcd_cert() {
     for host in $@
     do
-        rsync -avz /data/work/ca*.pem $host:/etc/etcd/ssl/ || \
-        echo "`date \"+%F %T \"`[error] update $host etcd ca certificate is failed" | tee -a /data/work/running.log
-        rsync -avz /data/work/etcd*.pem $host:/etc/etcd/ssl/ || \
-        echo "`date \"+%F %T \"`[error] update $host etcd certificate is failed" | tee -a /data/work/running.log
-        echo "`date \"+%F %T \"`[info] update $host etcd certificate is completed" | tee -a /data/work/running.log
+        rsync -avz /data/work/ca*.pem $host:/etc/etcd/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host etcd ca certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host etcd ca certificate is failed" | tee -a /data/work/running.log
+        fi
+        rsync -avz /data/work/etcd*.pem $host:/etc/etcd/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host etcd certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host etcd certificate is failed" | tee -a /data/work/running.log
+        fi
+    done
+}
+
+update_apiserver_cert() {
+    for host in $@
+    do
+        rsync -avz /data/work/ca*.pem $host:/etc/kubernetes/ssl/ >/dev/null 2>&1
+
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host apiserver ca certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host apiserver ca certificate is failed" | tee -a /data/work/running.log
+        fi
+        rsync -avz /data/work/kube-apiserver*.pem $host:/etc/kubernetes/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host apiserver certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host apiserver certificate is failed" | tee -a /data/work/running.log
+        fi
+        rsync -avz /data/work/token.csv $host:/etc/kubernetes/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host token.csv is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host token.csv is failed" | tee -a /data/work/running.log
+        fi
+        rsync -avz /data/work/ca*.pem $host:/etc/etcd/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host etcd(used by apiserver) ca certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host etcd(used by apiserver) ca certificate is failed" | tee -a /data/work/running.log
+        fi
+        rsync -avz /data/work/etcd*.pem $host:/etc/etcd/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update $host etcd(used by apiserver) certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update $host etcd(used by apiserver) certificate is failed" | tee -a /data/work/running.log
+        fi
     done
 }
 
@@ -736,6 +882,13 @@ etcd_service_restart() {
     for host in $@
     do
         ssh $host "systemctl daemon-reload && systemctl enable etcd && systemctl restart etcd"
+    done
+}
+
+apiserver_service_restart() {
+    for host in $@
+    do
+        ssh $host "systemctl daemon-reload && systemctl enable kube-apiserver && systemctl restart kube-apiserver"
     done
 }
 
@@ -789,3 +942,6 @@ etcd_check ${etcds[@]}
 etcd_service_restart ${etcds[@]}
 get_kubernetes ${kubernetes_url} ${masters[@]}
 put_apiserver_conf ${cluster_ips} ${masters[@]}
+update_apiserver_cert ${masters[@]}
+apiserver_service_restart ${masters[@]}
+put_keepalived_conf ${virtual_ip} ${masters[@]}
