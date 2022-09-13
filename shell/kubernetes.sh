@@ -623,6 +623,93 @@ EOF
     done
 }
 
+generate_kubectl_conf() {
+    if [! -e /data/work/ca.pem ];then
+        echo "`date \"+%F %T \"`[error]generate_kubectl_conf is failed. The ca certificate is no found" | tee -a /data/work/running.log
+    else
+        kubectl config set-cluster kubernetes \
+        --certificate-authority=/data/work/ca.pem \
+        --embed-certs=true \
+        --server=https://$1:8443 \
+        --kubeconfig=/data/work/kube.config
+        kubectl config set-credentials admin \
+        --client-certificate=/data/work/admin.pem \
+        --client-key=/data/work/admin-key.pem \
+        --embed-certs=true \
+        --kubeconfig=/data/work/kube.config
+        kubectl config set-context kubernetes \
+        --cluster=kubernetes \
+        --user=admin \
+        --kubeconfig=/data/work/kube.config
+        kubectl config use-context kubernetes \
+        --kubeconfig=/data/work/kube.config
+        echo "`date \"+%F %T \"`[info] generate_kubectl_conf is completed" | tee -a /data/work/running.log
+    fi
+}
+
+generate_kube_controller_manager() {
+    if [ ! -e /data/work/ca.pem ];then
+        echo "`date \"+%F %T \"`[error] generate_kube_controller_manager is failed. The ca certificate is no found" | tee -a /data/work/running.log
+    else
+        cat > /data/work/kube-controller-manager.service <<EOF
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/kubernetes/kubernetes
+[Service]
+EnvironmentFile=/etc/kubernetes/kube-controller-manager.conf
+ExecStart=/usr/local/bin/kube-controller-manager \$KUBE_CONTROLLER_MANAGER_OPTS
+
+
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=multi-user.target
+EOF
+        chmod +x /data/work/kube-controller-manager.service
+        cat > /data/work/kube-controller-manager.conf<<EOF
+KUBE_CONTROLLER_MANAGER_OPTS="--v=2 \\
+--log-dir=/var/log/kubernetes \\
+--alsologtostderr=true \\
+--logtostderr=false \\
+--secure-port=10257 \\
+--cluster-name=kubernetes \\
+--feature-gates=RotateKubeletServerCertificate=true \\
+--controllers=*,bootstrapsigner,tokencleaner \\
+--tls-cert-file=/etc/kubernetes/ssl/kube-controller-manager.pem \\
+--tls-private-key-file=/etc/kubernetes/ssl/kube-controller-manager-key.pem \\
+--use-service-account-credentials=true \\
+--leader-elect=true \\
+--kubeconfig=/etc/kubernetes/kube-controller-manager.kubeconfig \\
+--bind-address=127.0.0.1 \\
+--allocate-node-cidrs=true \\
+--cluster-cidr=$1 \\
+--service-cluster-ip-range=$2 \\
+--cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem \\
+--cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem \\
+--root-ca-file=/etc/kubernetes/ssl/ca.pem \\
+--service-account-private-key-file=/etc/kubernetes/ssl/ca-key.pem \\
+--cluster-signing-duration=87600h0m0s"
+EOF
+        kubectl config set-cluster kubernetes \
+        --certificate-authority=/data/work/ca.pem \
+        --embed-certs=true \
+        --server=https://$3:8443 \
+        --kubeconfig=/data/work/kube-controller-manager.kubeconfig
+        kubectl config set-credentials system:kube-controller-manager \
+        --client-certificate=/data/work/kube-controller-manager.pem \
+        --client-key=/data/work/kube-controller-manager-key.pem \
+        --embed-certs=true \
+        --kubeconfig=/data/work/kube-controller-manager.kubeconfig
+        kubectl config set-context system:kube-controller-manager \
+        --cluster=kubernetes \
+        --user=system:kube-controller-manager \
+        --kubeconfig=/data/work/kube-controller-manager.kubeconfig
+        kubectl config use-context system:kube-controller-manager \
+        --kubeconfig=/data/work/kube-controller-manager.kubeconfig
+        echo "`date \"+%F %T \"`[info] The generate_kube_controller_manager is completed" | tee -a /data/work/running.log
+    fi
+}
+
 Environment_init() {
     mkdir /data/work -p
     cat > /etc/modules-load.d/k8s.conf <<EOF
@@ -871,6 +958,50 @@ put_haproxy_conf() {
     done
 }
 
+put_kube_controller_manager_conf() {
+    generate_kube_controller_manager $1 $2 $3
+    shift 3
+    for host in $@
+    do
+        rsync -avz /data/work/kube-controller-manager.kubeconfig ${host}:/etc/kubernetes/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube-controller-manager.kubeconfig is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kube-controller-manager.kubeconfig" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kube-controller-manager.service ${host}:/lib/systemd/system/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube-controller-manager.service is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/lib/systemd/system/kube-controller-manager.service" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kube-controller-manager.conf ${host}:/etc/kubernetes/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube-controller-manager.conf is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kube-controller-manager.conf" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+}
+
+put_kubectl_conf() {
+    generate_kubectl_conf $1
+    shift
+    for host in $@
+    do
+        rsync -avz /data/work/kube.config ${host}:/root/.kube/config >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube.config is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/root/.kube/config" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+}
+
 update_etcd_cert() {
     for host in $@
     do
@@ -926,6 +1057,30 @@ update_apiserver_cert() {
     done
 }
 
+update_kubectl_cert() {
+    for host in $@
+    do
+        rsync -avz /data/work/admin*.pem ${host}:/etc/kubernetes/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update ${host} kubectl certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update ${host} kubectl certificate is failed" | tee -a /data/work/running.log
+        fi
+    done
+}
+
+update_kube_controller_manager_cert() {
+    for host in $@
+    do
+        rsync -avz /data/work/kube-controller-manager*.pem ${host}:/etc/kubernetes/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update ${host} kube-controller-manager certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update ${host} kube-controller-manager certificate is failed" | tee -a /data/work/running.log
+        fi
+    done
+}
+
 etcd_check() {
     if [ ! -e /usr/local/bin/etcdctl ];then
         apt install etcd-client -y
@@ -976,6 +1131,13 @@ haproxy_service_restart() {
     do
         ssh ${host} "systemctl daemon-reload && systemctl enable haproxy && systemctl restart haproxy"
     done
+}
+
+kubectl_create_clusterrolebinding() {
+    kubectl create clusterrolebinding kube-apiserver:kubelet-apis \
+    --clusterrole=system:kubelet-api-admin --user kubernetes
+    echo 'source <(kubectl completion bash)' >> ~/.bashrc
+    source ~/.bashrc
 }
 
 for host in ${etcds[@]}
@@ -1035,3 +1197,8 @@ put_keepalived_conf ${virtual_ip} ${masters[@]}
 keepalived_service_restart ${masters[@]}
 put_haproxy_conf ${masters[@]}
 haproxy_service_restart ${masters[@]}
+put_kubectl_conf ${virtual_ip} ${masters[@]}
+update_kubectl_cert ${masters[@]}
+kubectl_create_clusterrolebinding
+put_kube_controller_manager_conf ${pod_ips} ${cluster_ips} ${virtual_ip} ${masters[@]}
+update_kube_controller_manager_cert ${masters[@]}
