@@ -126,7 +126,7 @@ ${array[@]:1:2} 从1开始，获取后面的2个元素
 function function_name() {
     command1
     command2
-    return 0 # 函数中可以添加return，反应此函数的运行状态
+    return 0 # 函数中可以添加return，反应此函数的运行状态,return会退出函数
 }
 
 function $para ${array[@]} # 可以传递参数，参数可以是变量、数组
@@ -229,7 +229,7 @@ test -e file
 
 ## 六、条件判断
 
-### if else判断
+### if 、else判断
 
 ```shell
 if [   ];then
@@ -945,10 +945,21 @@ done
 
 ```shell
 history
--c    清除
+-c    # 清除
 history详细模式
 echo 'export HISTTIMEFORMAT="%F %T `whoami`" ' >> /etc/bashrc
 ```
+
+#### getconf
+
+```shell
+getconf
+-a   # 获取系统所有信息
+LONG_BIT   # 查看系统位数
+PAGE_SIZE   # 查看系统分页大小
+```
+
+
 
 ### 网络管理
 
@@ -1154,6 +1165,8 @@ ssh-keygen -P "" -f /$user/.ssh/id_rsa
 -f # 指定文件位置名称
 -t # 指定类型，默认rsa
 -b # bit，默认长度2048
+ssh-copy-id ${user}@${host}
+# 会将ssh-keygen生成的rsa公钥发送到、${user}/.ssh/authorized_keys中
 # 远程复制
 scp [option] root@$IP:/root/1.txt ./
 前 >> 后
