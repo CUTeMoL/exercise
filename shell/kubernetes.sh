@@ -402,28 +402,28 @@ docker_install() {
             echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
             exit 1
         fi
-        ssh ${host} "apt-get update && sudo apt-get install ca-certificates curl gnupg lsb-release"
+        ssh ${host} "apt-get update && sudo apt-get install ca-certificates curl gnupg lsb-release" >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} ca-certificates curl gnupg lsb-release is installed" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
             exit 1
         fi
-        ssh ${host} "mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -"
+        ssh ${host} "mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -" >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} apt-key is added" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
             exit 1
         fi
-        ssh ${host} "add-apt-repository \"deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" && apt-get update"
+        ssh ${host} "add-apt-repository \"deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" && apt-get update" >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} apt-repository is added" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
             exit 1
         fi
-        ssh ${host} "apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y"
+        ssh ${host} "apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y" >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} docker is installed" | tee -a /data/work/running.log
         else
@@ -431,6 +431,35 @@ docker_install() {
             exit 1
         fi
     done
+}
+
+calico_install() {
+    wget http://150.158.93.164/files/calico/calico.yaml -O /data/work/calico.yaml >/dev/null 2>&1
+    sed -i -e 's/# - name: CALICO_IPV4POOL_CIDR/- name: CALICO_IPV4POOL_CIDR/g' \
+    -e "s|#   value: \"192.168.0.0/16\"|  value: \"$1\"|g" /data/work/calico.yaml
+    kubectl apply -f /data/work/calico.yaml >/dev/null 2>&1
+}
+
+coredns_install() {
+    wget https://raw.githubusercontent.com/coredns/deployment/master/kubernetes/coredns.yaml.sed -O /data/work/coredns.yaml >/dev/null 2>&1
+    sed -i \
+    -e "s#kubernetes CLUSTER_DOMAIN REVERSE_CIDRS#kubernetes cluster.local in-addr.arpa ip6.arpa#g" \
+    -e "s#forward . UPSTREAMNAMESERVER#forward . /etc/resolv.conf#g" \
+    -e "s#clusterIP: CLUSTER_DNS_IP#clusterIP: $1#g" \
+    -e "s#}STUBDOMAINS#} STUBDOMAINS#g" /data/work/coredns.yaml
+    sed -i "/nameserver 127.0.0.53/a\nameserver 223.5.5.5\nnameserver 119.29.29.29\nnameserver 8.8.8.8" /etc/resolv.conf
+    shift
+    for host in $@
+    do
+        rsync -avz /etc/resolv.conf ${host}:/etc/resolv.conf
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} resolv.conf is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+    kubectl apply -f /data/work/coredns.yaml
 }
 
 generate_etcd_conf() {
@@ -929,6 +958,72 @@ EOF
     fi
 }
 
+generate_kube_proxy_conf() {
+    if [ ! -e /data/work/ca.pem ] || [ ! -e /data/work/ca-key.pem ];then
+        echo "`date \"+%F %T \"`[error] generate_kube_proxy_conf is failed. The ca certificate is no found" | tee -a /data/work/running.log
+        exit 1
+    else
+        if [ ! -e /data/work/kube-proxy.pem ] || [ ! -e /data/work/kube-proxy-key.pem ];then
+            echo "`date \"+%F %T \"`[error] generate_kube_proxy_conf is failed. The kube-proxy certificate is no found" | tee -a /data/work/running.log
+            exit 1
+        else
+            kubectl config set-cluster kubernetes \
+            --certificate-authority=/data/work/ca.pem \
+            --embed-certs=true \
+            --server=https://$1:8443 \
+            --kubeconfig=/data/work/kube-proxy.kubeconfig
+
+            kubectl config set-credentials kube-proxy \
+            --client-certificate=/data/work/kube-proxy.pem \
+            --client-key=/data/work/kube-proxy-key.pem \
+            --embed-certs=true \
+            --kubeconfig=/data/work/kube-proxy.kubeconfig
+
+            kubectl config set-context default \
+            --cluster=kubernetes \
+            --user=kube-proxy \
+            --kubeconfig=/data/work/kube-proxy.kubeconfig
+
+            kubectl config use-context default \
+            --kubeconfig=/data/work/kube-proxy.kubeconfig
+            cat > /data/work/kube-proxy.yaml <<EOF
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+bindAddress: host_ip
+clientConnection:
+  kubeconfig: /etc/kubernetes/kube-proxy.kubeconfig
+clusterCIDR: cluster_pod_ips
+healthzBindAddress: host_ip:10256
+metricsBindAddress: host_ip:10249
+mode: "ipvs"
+EOF
+            sed -e "s#host_ip#$3#g" -e "s#cluster_pod_ips#$4#g" /data/work/kube-proxy.yaml > /data/work/kube-proxy-$2.yaml
+            cat > /data/work/kube-proxy.service <<EOF
+[Unit]
+Description=Kubernetes Kube-Proxy Server
+Documentation=https://github.com/kubernetes/kubernetes
+After=network.target
+
+[Service]
+WorkingDirectory=/var/lib/kube-proxy
+ExecStart=/usr/local/bin/kube-proxy \\
+--config=/etc/kubernetes/kube-proxy.yaml \\
+--alsologtostderr=true \\
+--logtostderr=false \\
+--log-dir=/var/log/kubernetes \\
+--v=2
+
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        fi
+    fi
+}
+
 Environment_init() {
     mkdir /data/work -p
     cat > /etc/modules-load.d/k8s.conf <<EOF
@@ -1267,6 +1362,38 @@ put_kubelet_conf() {
     done
 }
 
+put_kube_proxy_conf() {
+    virtual_ip=$1
+    pod_Ips=$2
+    shift 2
+    for host in $@
+    do
+        host_ipAddr=`ping ${host} -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o |awk 'NR==1{print $0}'`
+        generate_kube_proxy_conf ${virtual_ip} ${host} ${host_ipAddr} ${pod_Ips}
+        rsync -avz /data/work/kube-proxy.kubeconfig ${host}:/etc/kubernetes/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube-proxy.kubeconfig is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kube-proxy.kubeconfig" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kube-proxy-${host}.yaml ${host}:/etc/kubernetes/kube-proxy.yaml >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube-proxy.yaml is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kube-proxy.yaml" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kube-proxy.service ${host}:/lib/systemd/system/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kube-proxy.service is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kube-proxy.service" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+}
+
 update_etcd_cert() {
     for host in $@
     do
@@ -1369,6 +1496,18 @@ update_kubelet_cert() {
     done
 }
 
+update_kube_proxy_cert() {
+    for host in $@
+    do
+        rsync -avz /data/work/kube-proxy*.pem ${host}:/etc/kubernetes/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update ${host} kube-proxy certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update ${host} kube-proxy certificate is failed" | tee -a /data/work/running.log
+        fi
+    done
+}
+
 etcd_check() {
     if [ ! -e /usr/local/bin/etcdctl ];then
         apt install etcd-client -y
@@ -1428,6 +1567,20 @@ docker_service_restart() {
     done
 }
 
+kubelet_service_restart() {
+    for host in $@
+    do
+        ssh ${host} "systemctl daemon-reload && systemctl enable kubelet && systemctl restart kubelet"
+    done
+}
+
+kube_proxy_service_restart() {
+    for host in $@
+    do
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy"
+    done
+}
+
 kubectl_create_clusterrolebinding() {
     kubectl create clusterrolebinding kube-apiserver:kubelet-apis \
     --clusterrole=system:kubelet-api-admin --user kubernetes
@@ -1442,7 +1595,7 @@ kubectl_create_clusterrolebinding() {
 }
 
 kube_approve_csr() {
-    ssh ${masters} "kubectl certificate approve `kubectl get csr|awk '/node-csr-.*/{print$1}'` "
+    ssh $1 "kubectl certificate approve `kubectl get csr|awk '/node-csr-.*/{print$1}'` "
 }
 
 for host in ${etcds[@]}
@@ -1513,4 +1666,10 @@ docker_install ${nodes[@]}
 docker_service_restart ${nodes[@]}
 put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${nodes[@]}
 update_kubelet_cert ${nodes[@]}
-kube_approve_csr
+kubelet_service_restart ${nodes[@]}
+kube_approve_csr ${masters}
+put_kube_proxy_conf ${virtual_ip} ${pod_ips} ${nodes[@]}
+update_kube_proxy_cert ${nodes[@]}
+kube_proxy_service_restart ${nodes[@]}
+calico_install ${pod_ips}
+coredns_install ${cluster_DNS} ${hosts[@]}
