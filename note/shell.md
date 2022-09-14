@@ -105,9 +105,9 @@ array1=(`cat /etc/passwd`)
 array2=(`ls /root`)
 array3=(harry amy jack "Miss Hou")
 array4=(1 2 3 4 "hello world" [10]=linux)
-    echo ${array4[2]}       3
-    echo ${array4[4]}       hello world
-    echo ${array4[10]}      linux
+echo ${array4[2]}       3
+echo ${array4[4]}       hello world
+echo ${array4[10]}      linux
 ```
 
 ### 使用数组
@@ -139,9 +139,9 @@ $((表达式))
 $[表达式]
 expr 表达式
 let 表达式
-    let n+=1  == let n=n+1
-    let n=i++   先赋值再运算
-    let n=++j   先运算再赋值
+let n+=1  == let n=n+1
+let n=i++   先赋值再运算
+let n=++j   先运算再赋值
 ```
 
 ## 五、条件判断
@@ -151,7 +151,7 @@ let 表达式
 用法
 
 ```shell
-test
+test [option] file
 -e   是否存在
 -f   是否为普通文件
 -d   是否为目录
@@ -270,10 +270,10 @@ esac
 循环中的标志
 
 ```shell
-continue直接跳到下一次循环
-break跳出循环，执行循环后的代码
-exit直接跳出程序
-shift参数向左移动默认1位
+continue 直接跳到下一次循环
+break 跳出循环，执行循环后的代码
+exit n 直接跳出程序 并返回n
+shift n 参数向左移动n位 默认1位
 ```
 
 ### for循环
