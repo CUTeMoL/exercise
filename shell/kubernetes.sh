@@ -377,11 +377,11 @@ kube_install() {
         rsync -avz ${k8sdir}/kube-apiserver ${k8sdir}/kube-controller-manager ${k8sdir}/kube-scheduler ${k8sdir}/kubectl \
         ${k8sdir}/kubelet ${k8sdir}/kube-proxy ${host}:/usr/local/bin/ >/dev/null 2>&1
         if [ $? -eq 0 ];then
-        echo "`date \"+%F %T \"`[info] The ${host} kubernetes is installed" | tee -a /data/work/running.log
-    else
-        echo "`date \"+%F %T \"`[error] please check ${host} kubernetes_file or network" | tee -a /data/work/running.log
-        exit 1
-    fi
+            echo "`date \"+%F %T \"`[info] The ${host} kubernetes is installed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} kubernetes_file or network" | tee -a /data/work/running.log
+            exit 1
+        fi
     done
 }
 
@@ -389,6 +389,47 @@ keepalived_install() {
     for host in $@
     do
         ssh ${host} "apt install keepalived -y"
+    done
+}
+
+docker_install() {
+    for host in $@
+    do
+        ssh ${host} "apt remove docker docker-engine docker.io containerd runc -y" >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} docker is removed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
+            exit 1
+        fi
+        ssh ${host} "apt-get update && sudo apt-get install ca-certificates curl gnupg lsb-release"
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} ca-certificates curl gnupg lsb-release is installed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
+            exit 1
+        fi
+        ssh ${host} "mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -"
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} apt-key is added" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
+            exit 1
+        fi
+        ssh ${host} "add-apt-repository \"deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" && apt-get update"
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} apt-repository is added" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
+            exit 1
+        fi
+        ssh ${host} "apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y"
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} docker is installed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
+            exit 1
+        fi
     done
 }
 
@@ -790,6 +831,103 @@ EOF
     fi
 }
 
+generate_kubelet_conf() {
+    if [ ! -e /data/work/ca.pem ] || [ ! -e /data/work/ca-key.pem ];then
+        echo "`date \"+%F %T \"`[error] generate_kubelet_conf is failed. The ca certificate is no found" | tee -a /data/work/running.log
+        exit 1
+    else
+        if [ ! -e /data/work/token.csv ];then
+            echo "`date \"+%F %T \"`[error] generate_kubelet_conf is failed. The token file is no found" | tee -a /data/work/running.log
+            exit 1
+        else
+            kubectl config set-cluster kubernetes \
+            --certificate-authority=/data/work/ca.pem \
+            --embed-certs=true \
+            --server=https://$1:8443 \
+            --kubeconfig=/data/work/kubelet-bootstrap.kubeconfig
+            kubectl config set-credentials kubelet-bootstrap \
+            --token=`awk -F , '{print $1}' /data/work/token.csv` \
+            --kubeconfig=/data/work/kubelet-bootstrap.kubeconfig
+            kubectl config set-context default \
+            --cluster=kubernetes \
+            --user=kubelet-bootstrap \
+            --kubeconfig=/data/work/kubelet-bootstrap.kubeconfig
+            kubectl config use-context default \
+            --kubeconfig=/data/work/kubelet-bootstrap.kubeconfig
+            cat > /data/work/kubelet.conf << EOF
+KUBELET_OPTS="--logtostderr=false \\
+--v=2 \\
+--log-dir=/var/log/kubernetes \\
+--network-plugin=cni \\
+--kubeconfig=/etc/kubernetes/kubelet.kubeconfig \\
+--bootstrap-kubeconfig=/etc/kubernetes/kubelet-bootstrap.kubeconfig \\
+--config=/etc/kubernetes/kubelet.yaml \\
+--cert-dir=/etc/kubernetes/ssl \\
+--alsologtostderr=true \
+--logtostderr=false \
+--pod-infra-container-image=docker.io/gotok8s/pause:3.7"
+EOF
+            cat > /data/work/kubelet.yaml <<EOF
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+address: "host_ip"
+port: 10250
+failSwapOn: false
+serializeImagePulls: false
+evictionHard:
+  memory.available:  "10%"
+  nodefs.available:  "10%"
+  nodefs.inodesFree: "10%"
+  imagefs.available: "10%"
+authentication:
+  x509:
+    clientCAFile: "/etc/kubernetes/ssl/ca.pem"
+  webhook:
+    enabled: true
+    cacheTTL: "2m"
+  anonymous:
+    enabled: false
+authorization:
+  mode: "Webhook"
+  webhook:
+    cacheAuthorizedTTL: "5m"
+    cacheUnauthorizedTTL: "30s"
+readOnlyPort: 10255
+cgroupDriver: "cgroupfs"
+hairpinMode: "promiscuous-bridge"
+serializeImagePulls: false
+featureGates: 
+  RotateKubeletServerCertificate: true
+serverTLSBootstrap: true
+clusterDomain: "cluster.local"
+clusterDNS: 
+  - "cluster_dns"
+EOF
+            sed -e "s#host_ip#$3#g" -e "s#cluster_dns#$4#g" /data/work/kubelet.yaml > /data/work/kubelet-$2.yaml
+            cat > /data/work/kubelet.service << EOF
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/kubernetes/kubernetes
+After=docker.service
+Requires=docker.service
+
+[Service]
+WorkingDirectory=/var/lib/kubelet
+EnvironmentFile=/etc/kubernetes/kubelet.conf
+ExecStart=/usr/local/bin/kubelet \$KUBELET_OPTS
+
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+            chmod +x /data/work/kubelet.service
+        fi
+    fi
+}
 
 Environment_init() {
     mkdir /data/work -p
@@ -1090,6 +1228,45 @@ put_kube_scheduler_conf() {
     done
 }
 
+put_kubelet_conf() {
+    virtual_ip=$1
+    cluster_dns=$2
+    shift 2
+    for host in $@
+    do
+        host_ipAddr=`ping ${host} -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o |awk 'NR==1{print $0}'`
+        generate_kubelet_conf ${virtual_ip} ${host} ${host_ipAddr} ${cluster_DNS}
+        rsync -avz /data/work/kubelet-bootstrap.kubeconfig ${host}:/etc/kubernetes/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kubelet-bootstrap.kubeconfig is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kubelet-bootstrap.kubeconfig" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kubelet.conf ${host}:/etc/kubernetes/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kubelet.conf is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kubelet.conf" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kubelet-${host}.yaml ${host}:/etc/kubernetes/kubelet.yaml >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kubelet.yaml is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kubelet.yaml" | tee -a /data/work/running.log
+            exit 1
+        fi
+        rsync -avz /data/work/kubelet.service ${host}:/lib/systemd/system/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] The ${host} kubelet.service is transfer completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] please check ${host}:/etc/kubernetes/kubelet.service" | tee -a /data/work/running.log
+            exit 1
+        fi
+    done
+}
+
 update_etcd_cert() {
     for host in $@
     do
@@ -1112,7 +1289,6 @@ update_apiserver_cert() {
     for host in $@
     do
         rsync -avz /data/work/ca*.pem ${host}:/etc/kubernetes/ssl/ >/dev/null 2>&1
-
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] update ${host} apiserver ca certificate is completed" | tee -a /data/work/running.log
         else
@@ -1181,6 +1357,18 @@ update_kube_scheduler_cert() {
     done
 }
 
+update_kubelet_cert() {
+    for host in $@
+    do
+        rsync -avz /data/work/ca*.pem ${host}:/etc/kubernetes/ssl/ >/dev/null 2>&1
+        if [ $? -eq 0 ];then
+            echo "`date \"+%F %T \"`[info] update ${host} kubelet ca certificate is completed" | tee -a /data/work/running.log
+        else
+            echo "`date \"+%F %T \"`[error] update ${host} kubelet ca certificate is failed" | tee -a /data/work/running.log
+        fi
+    done
+}
+
 etcd_check() {
     if [ ! -e /usr/local/bin/etcdctl ];then
         apt install etcd-client -y
@@ -1233,11 +1421,28 @@ haproxy_service_restart() {
     done
 }
 
+docker_service_restart() {
+    for host in $@
+    do
+        ssh ${host} "systemctl daemon-reload && systemctl enable docker && systemctl restart docker"
+    done
+}
+
 kubectl_create_clusterrolebinding() {
     kubectl create clusterrolebinding kube-apiserver:kubelet-apis \
     --clusterrole=system:kubelet-api-admin --user kubernetes
+    kubectl create clusterrolebinding cluster-system-anonymous \
+    --clusterrole=cluster-admin \
+    --user=kubelet-bootstrap
+    kubectl create clusterrolebinding kubelet-bootstrap \
+    --clusterrole=system:node-bootstrapper \
+    --user=kubelet-bootstrap
     echo 'source <(kubectl completion bash)' >> ~/.bashrc
     source ~/.bashrc
+}
+
+kube_approve_csr() {
+    ssh ${masters} "kubectl certificate approve `kubectl get csr|awk '/node-csr-.*/{print$1}'` "
 }
 
 for host in ${etcds[@]}
@@ -1304,3 +1509,8 @@ put_kube_controller_manager_conf ${pod_ips} ${cluster_ips} ${virtual_ip} ${maste
 update_kube_controller_manager_cert ${masters[@]}
 put_kube_scheduler_conf ${virtual_ip} ${masters[@]}
 update_kube_scheduler_cert ${masters[@]}
+docker_install ${nodes[@]}
+docker_service_restart ${nodes[@]}
+put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${nodes[@]}
+update_kubelet_cert ${nodes[@]}
+kube_approve_csr
