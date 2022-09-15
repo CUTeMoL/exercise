@@ -368,7 +368,7 @@ kube_install() {
     kubernetes_url=$1
     download_url=${kubernetes_url}
     shift
-    rm -rf /data/work/kubernetes-server-linux-amd64.tar.gz /data/work/kubernetes_url
+    rm -rf /data/work/kubernetes-server-linux-amd64.tar.gz /data/work/kubernetes
     wget ${kubernetes_url}/kubernetes-server-linux-amd64.tar.gz -P /data/work/ && \
     tar -zxf /data/work/kubernetes-server-linux-amd64.tar.gz -C /data/work/ >/dev/null 2>&1
     k8sdir=/data/work/kubernetes/server/bin
@@ -379,7 +379,7 @@ kube_install() {
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} kubernetes is installed" | tee -a /data/work/running.log
         else
-            echo "`date \"+%F %T \"`[error] please check ${host} kubernetes_file or network" | tee -a /data/work/running.log
+            echo "`date \"+%F %T \"`[error] please check ${host} /usr/local/bin/kubernetes_file or network" | tee -a /data/work/running.log
             exit 1
         fi
     done
@@ -477,6 +477,8 @@ ETCD_INITIAL_CLUSTER=""
 ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
 ETCD_INITIAL_CLUSTER_STATE="new"
 EOF
+    sed -e "s#etcd_name#$1#g" -e "s#host_ip#$2#g" /data/work/etcd.conf > /data/work/etcd-$1.conf
+    sed -i "/ETCD_INITIAL_CLUSTER=/s#\"\$#$3\"#g" /data/work/etcd-$1.conf
     cat  > /data/work/etcd.service <<EOF
 [Unit]
 Description=Etcd Server
@@ -504,8 +506,6 @@ LimitNOFILE=65536
 [Install]
 WantedBy=multi-user.target
 EOF
-    sed -e "s#etcd_name#$1#g" -e "s#host_ip#$2#g" /data/work/etcd.conf > /data/work/etcd-$1.conf
-    sed -i "/ETCD_INITIAL_CLUSTER=/s#\"\$#$3\"#g" /data/work/etcd-$1.conf
     chmod +x /data/work/etcd.service
 }
 
@@ -1074,20 +1074,20 @@ get_CA_cert() {
 get_etcd_cert() {
     if [ -e /data/work/etcd.pem ] || [ -e /data/work/etcd-key.pem ];then
         read -p "The certificate_ca already exists, if you want to generate new ca certificate, please input y: " flag
-        if [ $flag = y ];then
-            generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The etcd certificate is renew" | tee -a /data/work/running.log
+        if [[ $flag = y ]];then
+            generate_certificate_etcd $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The etcd certificate is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] The etcd certificate is no change" | tee -a /data/work/running.log
         fi
     else
-        generate_certificate_etcd ${etcds_ip[@]} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The etcd certificate is completed" | tee -a /data/work/running.log
+        generate_certificate_etcd $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The etcd certificate is completed" | tee -a /data/work/running.log
     fi
 }
 
 get_tls_bootstrapping() {
     if [ -e /data/work/token.csv ];then
         read -p "TLS Bootstrapping token already exists,if you want to generate new? please input y: " flag
-        if [ $ flag = y];then
+        if [[ $ flag = y ]];then
             generate_TLS_Bootstrapping >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] TLS Bootstrapping token is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] TLS Bootstrapping token no change" | tee -a /data/work/running.log
@@ -1100,20 +1100,20 @@ get_tls_bootstrapping() {
 get_apiserver_cert() {
     if [ -e /data/work/kube-apiserver.pem ] || [ -e /data/work/kube-apiserver-key.pem ];then
         read -p "The certificate_kube-apiserver already exists, if you want to generate new kube-apiserver certificate, please input y: " flag
-        if [ $flag = y ];then
-            generate_certificate_apiserver ${masters_ip[@]} ${cluster_ip} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-apiserver certificate is renew" | tee -a /data/work/running.log
+        if [[ $flag = y ]];then
+            generate_certificate_apiserver $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-apiserver certificate is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] The kube-apiserver certificate is no change" | tee -a /data/work/running.log
         fi
     else
-        generate_certificate_apiserver ${masters_ip[@]} ${cluster_ip} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-apiserver certificate is completed" | tee -a /data/work/running.log
+        generate_certificate_apiserver $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-apiserver certificate is completed" | tee -a /data/work/running.log
     fi
 }
 
 get_kubectl_cert() {
     if [ -e /data/work/admin.pem ] || [ -e /data/work/admin-key.pem ];then
         read -p "The certificate kuberctl already exists, if you want to generate new kubectl certificate, please input y: " flag
-        if [ $flag = y ];then
+        if [[ $flag = y ]];then
             generate_certificate_kubectl >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kubectl certificate is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] The kubectl certificate is no change" | tee -a /data/work/running.log
@@ -1126,33 +1126,33 @@ get_kubectl_cert() {
 get_kube_controller_manager_cert() {
     if [ -e /data/work/kube-controller-manager.pem ] || [ -e /data/work/kube-controller-manager-key.pem ];then
         read -p "The certificate kube-controller-manager already exists, if you want to generate new kube-controller-manager certificate, please input y: " flag
-        if [ $flag = y ];then
-            generate_certificate_kubecontrollermanager ${masters_ip[@]} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-controller-manager certificate is renew" | tee -a /data/work/running.log
+        if [[ $flag = y ]];then
+            generate_certificate_kubecontrollermanager $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-controller-manager certificate is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] The kube-controller-manager certificate is no change" | tee -a /data/work/running.log
         fi
     else
-        generate_certificate_kubecontrollermanager ${masters_ip[@]} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-controller-manager certificate is completed" | tee -a /data/work/running.log
+        generate_certificate_kubecontrollermanager $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-controller-manager certificate is completed" | tee -a /data/work/running.log
     fi
 }
 
 get_kube_scheduler_cert() {
     if [ -e /data/work/kube-scheduler.pem ] || [ -e /data/work/kube-scheduler-key.pem ];then
         read -p "The certificate kube-scheduler already exists, if you want to generate new kube-scheduler certificate, please input y: " flag
-        if [ $flag = y ];then
-            generate_certificate_kubescheduler ${masters_ip[@]} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-scheduler certificate is renew" | tee -a /data/work/running.log
+        if [[ $flag = y ]];then
+            generate_certificate_kubescheduler $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-scheduler certificate is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] The kube-scheduler certificate is no change" | tee -a /data/work/running.log
         fi
     else
-        generate_certificate_kubescheduler ${masters_ip[@]} >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-scheduler certificate is completed" | tee -a /data/work/running.log
+        generate_certificate_kubescheduler $@ >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-scheduler certificate is completed" | tee -a /data/work/running.log
     fi
 }
 
 get_kube_proxy_cert() {
     if [ -e /data/work/kube-proxy.pem ] || [ -e /data/work/kube-proxy-key.pem ];then
         read -p "The certificate kube-proxy already exists, if you want to generate new kube-proxy certificate, please input y: " flag
-        if [ $flag = y ];then
+        if [[ $flag = y ]];then
             generate_certificate_kube_proxy >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] The kube-proxy certificate is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] The kube-proxy certificate is no change" | tee -a /data/work/running.log
@@ -1167,7 +1167,7 @@ put_etcd_conf() {
     do
         host_ipAddr=`ping ${host} -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o |awk 'NR==1{print $0}'`
         etcd_inital_cluster=`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "etcd[0-9]\{1,3\}" | awk '{print $2"=https://"$1":2380"}'|awk 'BEGIN{RS="\n";ORS=","};{print $0}'| sed 's#,$##g'`
-        generate_etcd_conf ${host} ${host_ipAddr} $etcd_inital_cluster
+        generate_etcd_conf ${host} ${host_ipAddr} ${etcd_inital_cluster}
         rsync -avz /data/work/etcd-${host}.conf ${host}:/etc/etcd/etcd.conf >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} etcd.conf is transfer completed" | tee -a /data/work/running.log
@@ -1216,6 +1216,17 @@ put_keepalived_conf() {
     for host in $@
     do
         if_name=`ssh ${host} "ifconfig" |grep -B1 -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}"|grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'|grep -e "^e"`
+        if [ ${#if_name[*]} -ne 1 ];then
+            echo "`date \"+%F %T \"`[error] The ${host} interface is uncertain" | tee -a /data/work/running.log
+            while true
+            do
+                read -p "Please enter the ${host} interface name: " if_name
+                if_name_check=`ssh ${host} "ifconfig" | grep ${if_name} | grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'`
+                if [[ $if_name_check = $if_name ]];then
+                    break
+                fi
+            done
+        fi
         host_ipAddr=`ping ${host} -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o |awk 'NR==1{print $0}'`
         generate_keepalived_conf ${host} ${if_name} ${host_ipAddr} ${virtual_ip}
         rsync -avz /data/work/keepalived-${host}.conf ${host}:/etc/keepalived/keepalived.conf >/dev/null 2>&1
@@ -1231,6 +1242,7 @@ put_keepalived_conf() {
         else
             echo "`date \"+%F %T \"`[error] please check ${host}:/etc/keepalived/check_service.sh" | tee -a /data/work/running.log
             exit 1
+            
         fi
     done
 }
@@ -1634,18 +1646,18 @@ done
 Environment_init ${hosts[@]}
 cfssl_check
 get_CA_cert
-get_etcd_cert
+get_etcd_cert ${etcds_ip[@]}
 get_tls_bootstrapping
-get_apiserver_cert
+get_apiserver_cert ${hosts_ip[@]} ${cluster_ip}
 get_kubectl_cert
-get_kube_controller_manager_cert
-get_kube_scheduler_cert
+get_kube_controller_manager_cert ${masters_ip[@]}
+get_kube_scheduler_cert ${masters_ip[@]}
 get_kube_proxy_cert
 etcd_install ${etcd_version} ${etcd_url} ${etcds[@]}
 put_etcd_conf ${etcds[@]}
 update_etcd_cert ${etcds[@]}
-etcd_check ${etcds[@]}
 etcd_service_restart ${etcds[@]}
+etcd_check ${etcds[@]}
 kube_install ${kubernetes_url} ${masters[@]}
 put_apiserver_conf ${cluster_ips} ${masters[@]}
 update_apiserver_cert ${masters[@]}
