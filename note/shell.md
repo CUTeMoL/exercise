@@ -344,6 +344,7 @@ done
 ```shell
 /usr/bin/expect <<-END 
     spawn command
+    set timeout 3
     expect {
         "message" { send "command/$var\r";exp_continue }
         "message" { send "command/$var\r" }
@@ -352,11 +353,21 @@ done
 END
 ```
 
-/usr/bin/expect <<END  表示接下里要启用expect交互,直到遇见END
-spawn 启动一项程序
-expect "message" { send "command/$var\r" } 表示捕捉到某一条消息就执行某一些操作
-exp_continue 表示如果不存在就跳过这一步
-expect eof 表示此expect结束了
+`/usr/bin/expect <<END`  表示接下里要启用expect交互,直到遇见END
+
+`spawn` 启动一项程序
+
+`set timeout n`设置`expect`的等待时间`-1`永不超时
+
+`expect "message" { send "command/$var\r" }` 从进程接收信息,表示捕捉到某一条消息就执行某一些操作
+
+`send "command"`发送字符串
+
+`exp_continue` 表示如果不存在就跳过这一步
+
+`expect eof` 表示此expect结束了
+
+`interact`允许用户交互
 
 ## 九、常用命令
 
