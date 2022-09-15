@@ -1632,7 +1632,7 @@ EOF
 done
 
 Environment_init ${hosts[@]}
-cert_install
+cfssl_check
 get_CA_cert
 get_etcd_cert
 get_tls_bootstrapping
