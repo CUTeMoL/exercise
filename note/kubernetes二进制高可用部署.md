@@ -33,20 +33,25 @@
 #!/bin/bash
 [ -f /root/.ssh/id_rsa ] || ssh-keygen -P "" -f /root/.ssh/id_rsa
 touch /root/ip_up.txt && touch /root/ip_down.txt
-grep -v -e "^#" IP.txt|while read SERVER_IP SSHD_PORT LOGIN_NAME SSH_PASSWD
+SSHD_PORT=22
+LOGIN_NAME=root
+SSH_PASSWD=123456
+hosts=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-[a-zA-Z][0-9]\{1,3\}" `)
+etcds=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "etcd[0-9]\{1,3\}" `)
+for SERVER_IP in ${hosts[@]} ${etcd[@]}
 do
         ping -c1 $SERVER_IP
         if [ $? -eq 0 ];then
                 touch /root/ip_up.txt
                 echo "$SERVER_IP 连接成功 $(date +%F)" >> /root/ip_up.txt
-                /usr/bin/expect <<-END
+                /usr/bin/expect <<END
                 spawn ssh-copy-id -p $SSHD_PORT $LOGIN_NAME@$SERVER_IP
                 expect {
                         "yes/no" { send "yes\r";exp_continue }
                         "password:" { send "$SSH_PASSWD\r" }
                 }
                 expect eof
-                END
+END
                 echo "完成向$SERVER_IP发送公钥"
         else
                 touch /root/ip_down.txt
@@ -842,15 +847,15 @@ vrrp_instance VI_1 {
 }
 EOF
 # 检测脚本生成
-cat > /data/work/check_service.sh <<EOF
+    cat > /data/work/check_service.sh <<EOF
 #!/bin/bash
 haproxy_status=\`ps -C haproxy --no-header | wc -l\`
 n=0
-while [ $n -lt 3 ]
+while [ \$n -lt 3 ]
 do
     if [ \$haproxy_status -eq 0 ];then
         let n=n+1
-        if [ n -eq 3 ]
+        if [ \$n -eq 3 ];then
             service keepalived stop
         fi
         sleep 10

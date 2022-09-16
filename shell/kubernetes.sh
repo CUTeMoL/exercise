@@ -385,6 +385,7 @@ kube_install() {
     done
 }
 
+
 keepalived_install() {
     for host in $@
     do
@@ -392,17 +393,18 @@ keepalived_install() {
     done
 }
 
+haproxy_install() {
+    for host in $@
+    do
+        ssh ${host} "apt install haproxy -y"
+    done
+}
+
 docker_install() {
     for host in $@
     do
         ssh ${host} "apt remove docker docker-engine docker.io containerd runc -y" >/dev/null 2>&1
-        if [ $? -eq 0 ];then
-            echo "`date \"+%F %T \"`[info] The ${host} docker is removed" | tee -a /data/work/running.log
-        else
-            echo "`date \"+%F %T \"`[error] please check ${host} network" | tee -a /data/work/running.log
-            exit 1
-        fi
-        ssh ${host} "apt-get update && sudo apt-get install ca-certificates curl gnupg lsb-release" >/dev/null 2>&1
+        ssh ${host} "apt-get update && sudo apt-get install ca-certificates curl gnupg lsb-release -y" >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} ca-certificates curl gnupg lsb-release is installed" | tee -a /data/work/running.log
         else
@@ -441,7 +443,7 @@ calico_install() {
 }
 
 coredns_install() {
-    wget https://raw.githubusercontent.com/coredns/deployment/master/kubernetes/coredns.yaml.sed -O /data/work/coredns.yaml >/dev/null 2>&1
+    wget http://150.158.93.164/files/coredns/coredns.yaml -O /data/work/coredns.yaml >/dev/null 2>&1
     sed -i \
     -e "s#kubernetes CLUSTER_DOMAIN REVERSE_CIDRS#kubernetes cluster.local in-addr.arpa ip6.arpa#g" \
     -e "s#forward . UPSTREAMNAMESERVER#forward . /etc/resolv.conf#g" \
@@ -631,11 +633,11 @@ EOF
 #!/bin/bash
 haproxy_status=\`ps -C haproxy --no-header | wc -l\`
 n=0
-while [ $n -lt 3 ]
+while [ \$n -lt 3 ]
 do
     if [ \$haproxy_status -eq 0 ];then
         let n=n+1
-        if [ n -eq 3 ]
+        if [ \$n -eq 3 ];then
             service keepalived stop
         fi
         sleep 10
@@ -710,7 +712,7 @@ generate_kubectl_conf() {
         echo "`date \"+%F %T \"`[error]generate_kubectl_conf is failed. The ca certificate is no found" | tee -a /data/work/running.log
         exit 1
     else
-        if [ -e /data/work/admin.pem ] && [ ! -e /data/work/admin-key.pem ];then
+        if [ -e /data/work/admin.pem ] && [ -e /data/work/admin-key.pem ];then
             kubectl config set-cluster kubernetes \
             --certificate-authority=/data/work/ca.pem \
             --embed-certs=true \
@@ -1043,7 +1045,7 @@ EOF
     for host in $@
     do
         /usr/bin/expect <<EOF
-            spawn ssh ${host} "mkdir -p /etc/kubernetes/ /etc/kubernetes/ssl /var/log/kubernetes /etc/etcd/ssl"
+            spawn ssh ${host} "mkdir -p /etc/kubernetes/ /etc/kubernetes/ssl /var/log/kubernetes /etc/etcd/ssl /root/.kube/ /var/lib/kube-proxy"
             expect { 
                 "yes/no" { send "yes\r" }
             }
@@ -1087,7 +1089,7 @@ get_etcd_cert() {
 get_tls_bootstrapping() {
     if [ -e /data/work/token.csv ];then
         read -p "TLS Bootstrapping token already exists,if you want to generate new? please input y: " flag
-        if [[ $ flag = y ]];then
+        if [[ $flag = y ]];then
             generate_TLS_Bootstrapping >/dev/null 2>&1 && echo "`date \"+%F %T \"`[info] TLS Bootstrapping token is renew" | tee -a /data/work/running.log
         else
             echo "`date \"+%F %T \"`[warning] TLS Bootstrapping token no change" | tee -a /data/work/running.log
@@ -1547,7 +1549,7 @@ etcd_check() {
 etcd_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable etcd && systemctl restart etcd"
+        ssh ${host} "systemctl daemon-reload && systemctl enable etcd && systemctl restart etcd" &
     done
 }
 
@@ -1569,6 +1571,20 @@ haproxy_service_restart() {
     for host in $@
     do
         ssh ${host} "systemctl daemon-reload && systemctl enable haproxy && systemctl restart haproxy"
+    done
+}
+
+kube_controller_manager_service_restart() {
+    for host in $@
+    do
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-controller-manager && systemctl restart kube-controller-manager"
+    done
+}
+
+kube_scheduler_service_restart() {
+    for host in $@
+    do
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-scheduler && systemctl restart kube-scheduler"
     done
 }
 
@@ -1613,7 +1629,7 @@ kube_approve_csr() {
 for host in ${etcds[@]}
 do
     /usr/bin/expect <<EOF
-        spawn ssh ${host} "mkdir -p /etc/etcd/ssl /var/lib/etcd "
+        spawn ssh ${host} "mkdir -p /etc/etcd/ssl /var/lib/etcd /root/.kube/"
         expect { 
             "yes/no" { send "yes\r" }
         }
@@ -1635,7 +1651,7 @@ done
 for host in ${nodes[@]}
 do
     /usr/bin/expect <<EOF
-        spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl "
+        spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl /var/lib/kubelet/"
         expect { 
             "yes/no" { send "yes\r" }
         }
@@ -1648,7 +1664,7 @@ cfssl_check
 get_CA_cert
 get_etcd_cert ${etcds_ip[@]}
 get_tls_bootstrapping
-get_apiserver_cert ${hosts_ip[@]} ${cluster_ip}
+get_apiserver_cert ${hosts_ip[@]} ${cluster_ip} ${virtual_ip}
 get_kubectl_cert
 get_kube_controller_manager_cert ${masters_ip[@]}
 get_kube_scheduler_cert ${masters_ip[@]}
@@ -1657,14 +1673,15 @@ etcd_install ${etcd_version} ${etcd_url} ${etcds[@]}
 put_etcd_conf ${etcds[@]}
 update_etcd_cert ${etcds[@]}
 etcd_service_restart ${etcds[@]}
+kube_install ${kubernetes_url} ${hosts[@]}
 etcd_check ${etcds[@]}
-kube_install ${kubernetes_url} ${masters[@]}
 put_apiserver_conf ${cluster_ips} ${masters[@]}
 update_apiserver_cert ${masters[@]}
 apiserver_service_restart ${masters[@]}
 keepalived_install ${masters[@]}
 put_keepalived_conf ${virtual_ip} ${masters[@]}
 keepalived_service_restart ${masters[@]}
+haproxy_install ${masters[@]}
 put_haproxy_conf ${masters[@]}
 haproxy_service_restart ${masters[@]}
 put_kubectl_conf ${virtual_ip} ${masters[@]}
@@ -1672,16 +1689,19 @@ update_kubectl_cert ${masters[@]}
 kubectl_create_clusterrolebinding
 put_kube_controller_manager_conf ${pod_ips} ${cluster_ips} ${virtual_ip} ${masters[@]}
 update_kube_controller_manager_cert ${masters[@]}
+kube_controller_manager_service_restart ${masters[@]}
 put_kube_scheduler_conf ${virtual_ip} ${masters[@]}
 update_kube_scheduler_cert ${masters[@]}
+kube_scheduler_service_restart ${masters[@]}
 docker_install ${nodes[@]}
 docker_service_restart ${nodes[@]}
 put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${nodes[@]}
 update_kubelet_cert ${nodes[@]}
 kubelet_service_restart ${nodes[@]}
+sleep 10
 kube_approve_csr ${masters}
 put_kube_proxy_conf ${virtual_ip} ${pod_ips} ${nodes[@]}
-update_kube_proxy_cert ${nodes[@]}
+update_kube_proxy_cert ${hosts[@]}
 kube_proxy_service_restart ${nodes[@]}
 calico_install ${pod_ips}
 coredns_install ${cluster_DNS} ${hosts[@]}
