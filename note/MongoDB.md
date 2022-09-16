@@ -29,6 +29,12 @@ db.shutdownServer()
 
 ```shell
 /usr/local/mongosh/bin/mongo --host 192.168.51.43 -u root -p
+--host # 地址
+--port # 指定端口,默认27017
+-u # 用户
+-p # 密码
+--eval # 执行命令
+--quiet # 静默，不输出多余信息
 ```
 
 ### 管理命令
