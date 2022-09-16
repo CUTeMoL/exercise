@@ -52,6 +52,8 @@ send_ssh_key.sh - 发送ssh公钥
 
 kubernetes.sh - kubernetes二进制部署脚本(开发中)
 
+mysql_install.sh - mysql一键自动化安装
+
 # 经验笔记（整理中）
 
 ## note
