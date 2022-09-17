@@ -368,9 +368,11 @@ kube_install() {
     kubernetes_url=$1
     download_url=${kubernetes_url}
     shift
-    rm -rf /data/work/kubernetes-server-linux-amd64.tar.gz /data/work/kubernetes
-    wget ${kubernetes_url}/kubernetes-server-linux-amd64.tar.gz -P /data/work/ && \
-    tar -zxf /data/work/kubernetes-server-linux-amd64.tar.gz -C /data/work/ >/dev/null 2>&1
+    if [ ! -e /data/work/kubernetes-server-linux-amd64.tar.gz ] || [ ! -e /data/work/kubernetes ];then
+        rm -rf /data/work/kubernetes-server-linux-amd64.tar.gz /data/work/kubernetes
+        wget ${kubernetes_url}/kubernetes-server-linux-amd64.tar.gz -P /data/work/ && \
+        tar -zxf /data/work/kubernetes-server-linux-amd64.tar.gz -C /data/work/ >/dev/null 2>&1
+    fi
     k8sdir=/data/work/kubernetes/server/bin
     for host in $@
     do
@@ -642,7 +644,7 @@ do
         fi
         sleep 10
     else
-        exit
+        break
     fi
 done
 EOF
@@ -1556,70 +1558,73 @@ etcd_service_restart() {
 apiserver_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-apiserver && systemctl restart kube-apiserver"
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-apiserver && systemctl restart kube-apiserver" &
     done
 }
 
 keepalived_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable keepalived && systemctl restart keepalived"
+        ssh ${host} "systemctl daemon-reload && systemctl enable keepalived && systemctl restart keepalived" &
     done
 }
 
 haproxy_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable haproxy && systemctl restart haproxy"
+        ssh ${host} "systemctl daemon-reload && systemctl enable haproxy && systemctl restart haproxy" &
     done
 }
 
 kube_controller_manager_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-controller-manager && systemctl restart kube-controller-manager"
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-controller-manager && systemctl restart kube-controller-manager" &
     done
 }
 
 kube_scheduler_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-scheduler && systemctl restart kube-scheduler"
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-scheduler && systemctl restart kube-scheduler" &
     done
 }
 
 docker_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable docker && systemctl restart docker"
+        ssh ${host} "systemctl daemon-reload && systemctl enable docker && systemctl restart docker" &
     done
 }
 
 kubelet_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kubelet && systemctl restart kubelet"
+        ssh ${host} "systemctl daemon-reload && systemctl enable kubelet && systemctl restart kubelet" &
     done
 }
 
 kube_proxy_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy"
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy" &
     done
 }
 
 kubectl_create_clusterrolebinding() {
     kubectl create clusterrolebinding kube-apiserver:kubelet-apis \
     --clusterrole=system:kubelet-api-admin --user kubernetes
+    echo 'source <(kubectl completion bash)' >> ~/.bashrc
+    source ~/.bashrc
+}
+
+kubelet_create_clusterrolebinding() {
     kubectl create clusterrolebinding cluster-system-anonymous \
     --clusterrole=cluster-admin \
     --user=kubelet-bootstrap
     kubectl create clusterrolebinding kubelet-bootstrap \
     --clusterrole=system:node-bootstrapper \
     --user=kubelet-bootstrap
-    echo 'source <(kubectl completion bash)' >> ~/.bashrc
-    source ~/.bashrc
 }
 
 kube_approve_csr() {
@@ -1674,7 +1679,7 @@ put_etcd_conf ${etcds[@]}
 update_etcd_cert ${etcds[@]}
 etcd_service_restart ${etcds[@]}
 kube_install ${kubernetes_url} ${hosts[@]}
-etcd_check ${etcds[@]}
+etcd_check ${etcds_ip[@]}
 put_apiserver_conf ${cluster_ips} ${masters[@]}
 update_apiserver_cert ${masters[@]}
 apiserver_service_restart ${masters[@]}
@@ -1698,6 +1703,7 @@ docker_service_restart ${nodes[@]}
 put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${nodes[@]}
 update_kubelet_cert ${nodes[@]}
 kubelet_service_restart ${nodes[@]}
+kubelet_create_clusterrolebinding
 sleep 10
 kube_approve_csr ${masters}
 put_kube_proxy_conf ${virtual_ip} ${pod_ips} ${nodes[@]}

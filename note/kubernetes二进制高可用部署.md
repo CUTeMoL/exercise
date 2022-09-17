@@ -31,6 +31,7 @@
 
 ```shell
 #!/bin/bash
+apt install expect -y
 [ -f /root/.ssh/id_rsa ] || ssh-keygen -P "" -f /root/.ssh/id_rsa
 touch /root/ip_up.txt && touch /root/ip_down.txt
 SSHD_PORT=22
@@ -38,7 +39,27 @@ LOGIN_NAME=root
 SSH_PASSWD=123456
 hosts=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-[a-zA-Z][0-9]\{1,3\}" `)
 etcds=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "etcd[0-9]\{1,3\}" `)
-for SERVER_IP in ${hosts[@]} ${etcd[@]}
+for SERVER_IP in ${hosts[@]}
+do
+        ping -c1 $SERVER_IP
+        if [ $? -eq 0 ];then
+                touch /root/ip_up.txt
+                echo "$SERVER_IP 连接成功 $(date +%F)" >> /root/ip_up.txt
+                /usr/bin/expect <<END
+                spawn ssh-copy-id -p $SSHD_PORT $LOGIN_NAME@$SERVER_IP
+                expect {
+                        "yes/no" { send "yes\r";exp_continue }
+                        "password:" { send "$SSH_PASSWD\r" }
+                }
+                expect eof
+END
+                echo "完成向$SERVER_IP发送公钥"
+        else
+                touch /root/ip_down.txt
+                echo "$SERVER_IP 无法连接 $(date +%F)" >> ip_down.txt
+        fi
+done
+for SERVER_IP in ${etcds[@]}
 do
         ping -c1 $SERVER_IP
         if [ $? -eq 0 ];then
@@ -860,7 +881,7 @@ do
         fi
         sleep 10
     else
-        exit
+        break
     fi
 done
 EOF
