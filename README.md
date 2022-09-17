@@ -50,7 +50,7 @@ logrotate_acceslog.sh - 日志切割
 
 send_ssh_key.sh - 发送ssh公钥
 
-kubernetes.sh - kubernetes一键二进制部署脚本，附带集群证书更新功能，添加新节点功能
+kubernetes_manager.sh - kubernetes一键二进制部署脚本，附带集群证书更新功能，添加新节点功能
 
 mysql_install.sh - mysql一键自动化安装
 
