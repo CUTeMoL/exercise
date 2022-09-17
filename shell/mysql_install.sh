@@ -44,7 +44,7 @@ install_mysql() {
     mkdir -p ${base_dir}/mysql-files
     chown mysql:mysql ${base_dir}/mysql-files
     chmod 750 ${base_dir}/mysql-files
-    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=/usr/local//mysql_${version} --datadir=${data_dir} >> /root/mysql-init.log
+    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=/usr/local//mysql_${version} --datadir=${data_dir}
     ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
     cat > ${base_dir}/my.cnf <<EOF
 [mysqld]
@@ -56,6 +56,8 @@ character_set_server=utf8mb4
 collation_server=utf8mb4_general_ci
 server_id=${server_id}
 log-bin=${data_dir}/binlog
+EOF
+    cat > /etc/my.cnf <<EOF
 [client]
 port=3306
 socket=/tmp/mysql_${mysql_port}.sock
@@ -70,7 +72,7 @@ EOF
         if [ -e /lib/x86_64-linux-gnu/libtinfo.so.6.2 ];then
             ln -s /lib/x86_64-linux-gnu/libtinfo.so.6.2 /lib/x86_64-linux-gnu/libtinfo.so.5
         else
-            echo "[error] please ln -s /lib/x86_64-linux-gnu/libtinfo.so.version /lib/x86_64-linux-gnu/libtinfo.so.5"
+            echo "[error] please ln -s /lib/x86_64-linux-gnu/libtinfo.so.{version} /lib/x86_64-linux-gnu/libtinfo.so.5"
         fi
     fi
 }
