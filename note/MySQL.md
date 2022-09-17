@@ -290,7 +290,7 @@ transaction_write_set_extraction=XXHASH64 # 并行复制算法
 
 #### undo log ####
 innodb_undo_directory=/data/undospace/ # undo独立表空间的存放目录,通常放在.ibd文件中，如果关闭独立表空间，则放在共享表空间ibdata1
-innodb_undo_logs=128 # 回滚段为128KB
+# innodb_undo_logs=128 # 回滚段为128KB
 innodb_undo_tablespaces=4 # 指定有4个undo log文件
 innodb_max_undo_log_size=4G # undolog大小
 
