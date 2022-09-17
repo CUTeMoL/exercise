@@ -1551,35 +1551,35 @@ etcd_check() {
 etcd_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable etcd && systemctl restart etcd" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable etcd && systemctl restart etcd" & >/dev/null 2>&1
     done
 }
 
 apiserver_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-apiserver && systemctl restart kube-apiserver" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-apiserver && systemctl restart kube-apiserver" & >/dev/null 2>&1
     done
 }
 
 keepalived_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable keepalived && systemctl restart keepalived" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable keepalived && systemctl restart keepalived" & >/dev/null 2>&1
     done
 }
 
 haproxy_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable haproxy && systemctl restart haproxy" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable haproxy && systemctl restart haproxy" & >/dev/null 2>&1
     done
 }
 
 kube_controller_manager_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-controller-manager && systemctl restart kube-controller-manager" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-controller-manager && systemctl restart kube-controller-manager" & >/dev/null 2>&1
     done
 }
 
@@ -1628,14 +1628,20 @@ kubelet_create_clusterrolebinding_bootstrap() {
 }
 
 kube_approve_csr() {
-    ssh $1 "kubectl certificate approve `kubectl get csr|awk '/node-csr-.*/{print$1}'` "
-    ssh $1 "kubectl certificate approve `kubectl get csr|awk '/csr-.*/{print$1}'` "
+    for node_csr_request in `kubectl get csr|awk '/node-csr-.*/{print$1}'`
+    do
+        ssh $1 "kubectl certificate approve ${node_csr_request} " >/dev/null 2>&1
+    done
+    for csr_request in `kubectl get csr|awk '/csr-.*/{print$1}'`
+    do
+        ssh $1 "kubectl certificate approve ${csr_request} " >/dev/null 2>&1
+    done
 }
 
 test_connection_etcds() {
     for host in $@
     do
-        /usr/bin/expect <<EOF
+        /usr/bin/expect >/dev/null 2>&1 <<EOF
             spawn ssh ${host} "mkdir -p /etc/etcd/ssl /var/lib/etcd /root/.kube/"
             expect { 
                 "yes/no" { send "yes\r" }
@@ -1647,7 +1653,7 @@ EOF
 test_connection_masters() {
     for host in $@
     do
-        /usr/bin/expect <<EOF
+        /usr/bin/expect >/dev/null 2>&1 <<EOF
             spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl "
             expect { 
                 "yes/no" { send "yes\r" }
@@ -1660,7 +1666,7 @@ EOF
 test_connection_nodes() {
     for host in $@
     do
-        /usr/bin/expect <<EOF
+        /usr/bin/expect >/dev/null 2>&1 <<EOF
             spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl /var/lib/kubelet/"
             expect { 
                 "yes/no" { send "yes\r" }
