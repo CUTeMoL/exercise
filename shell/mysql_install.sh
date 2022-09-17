@@ -16,16 +16,16 @@ init_environment() {
     fi
     `id mysql`  >/dev/null 2>&1
     if [ $? -ne 0 ];then
-        useradd -r -s /sbin/nologin -M mysql
+        useradd -r -s /sbin/nologin -M mysql  >/dev/null 2>&1
     fi
     mkdir -p /data/work ${data_dir}
     chown -R mysql:mysql /`echo ${data_dir} | awk -F "/" '{print $2}'`
-    apt install libaio1 -y
+    apt install libaio1 -y  >/dev/null 2>&1
 }
 
 download_mysql() {
     version=$1
-    download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
+    download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.xz  >/dev/null 2>&1
     if [ ! -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ];then
         wget ${download_url} -O /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
     else
@@ -61,6 +61,29 @@ log_timestamps=SYSTEM
 transaction_isolation=READ-COMMITTED
 open_files_limit=65535
 innodb_open_files=65535
+skip_name_resolve=1
+back_log=500
+max_connections=2048
+innodb_io_capacity=4000
+innodb_io_capacity_max=8000
+sort_buffer_size=4M
+join_buffer_size=4M
+tmp_table_size=32M
+max_heap_table_size=32M
+read_buffer_size=8M
+bulk_insert_buffer_size=64M
+myisam_sort_buffer_size=128M
+key_buffer_size=2048M
+
+# redolog
+innodb_log_file_size=4G
+innodb_log_buffer_size=32M
+
+# undolog
+innodb_undo_directory=${data_dir}/undospace/
+innodb_undo_tablespaces=4
+innodb_max_undo_log_size=4G
+
 # binlog
 binlog_format=row
 sync_binlog=1
@@ -86,6 +109,9 @@ port=3306
 socket=/tmp/mysql_${mysql_port}.sock
 prompt="\u@\h: \R:\m[\d]> "
 EOF
+    mkdir ${data_dir}/undospace/
+    mv ${data_dir}/undo_00* ${data_dir}/undospace/
+    chown -R mysql:mysql ${data_dir}/undospace
     cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld_${mysql_port}
     sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
     -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld_${mysql_port}
