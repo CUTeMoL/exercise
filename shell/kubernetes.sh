@@ -391,14 +391,14 @@ kube_install() {
 keepalived_install() {
     for host in $@
     do
-        ssh ${host} "apt install keepalived -y"
+        ssh ${host} "apt install keepalived -y" >/dev/null 2>&1
     done
 }
 
 haproxy_install() {
     for host in $@
     do
-        ssh ${host} "apt install haproxy -y"
+        ssh ${host} "apt install haproxy -y" >/dev/null 2>&1
     done
 }
 
@@ -455,7 +455,7 @@ coredns_install() {
     shift
     for host in $@
     do
-        rsync -avz /etc/resolv.conf ${host}:/etc/resolv.conf
+        rsync -avz /etc/resolv.conf ${host}:/etc/resolv.conf >/dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "`date \"+%F %T \"`[info] The ${host} resolv.conf is transfer completed" | tee -a /data/work/running.log
         else
@@ -1586,39 +1586,39 @@ kube_controller_manager_service_restart() {
 kube_scheduler_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-scheduler && systemctl restart kube-scheduler" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-scheduler && systemctl restart kube-scheduler" & >/dev/null 2>&1
     done
 }
 
 docker_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable docker && systemctl restart docker" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable docker && systemctl restart docker" & >/dev/null 2>&1
     done
 }
 
 kubelet_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kubelet && systemctl restart kubelet" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable kubelet && systemctl restart kubelet" & >/dev/null 2>&1
     done
 }
 
 kube_proxy_service_restart() {
     for host in $@
     do
-        ssh ${host} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy" &
+        ssh ${host} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy" & >/dev/null 2>&1
     done
 }
 
-kubectl_create_clusterrolebinding() {
+kubectl_create_clusterrolebinding_admin() {
     kubectl create clusterrolebinding kube-apiserver:kubelet-apis \
     --clusterrole=system:kubelet-api-admin --user kubernetes
     echo 'source <(kubectl completion bash)' >> ~/.bashrc
     source ~/.bashrc
 }
 
-kubelet_create_clusterrolebinding() {
+kubelet_create_clusterrolebinding_bootstrap() {
     kubectl create clusterrolebinding cluster-system-anonymous \
     --clusterrole=cluster-admin \
     --user=kubelet-bootstrap
@@ -1629,117 +1629,152 @@ kubelet_create_clusterrolebinding() {
 
 kube_approve_csr() {
     ssh $1 "kubectl certificate approve `kubectl get csr|awk '/node-csr-.*/{print$1}'` "
+    ssh $1 "kubectl certificate approve `kubectl get csr|awk '/csr-.*/{print$1}'` "
 }
 
-for host in ${etcds[@]}
-do
-    /usr/bin/expect <<EOF
-        spawn ssh ${host} "mkdir -p /etc/etcd/ssl /var/lib/etcd /root/.kube/"
-        expect { 
-            "yes/no" { send "yes\r" }
-        }
-        expect eof
+test_connection_etcds() {
+    for host in $@
+    do
+        /usr/bin/expect <<EOF
+            spawn ssh ${host} "mkdir -p /etc/etcd/ssl /var/lib/etcd /root/.kube/"
+            expect { 
+                "yes/no" { send "yes\r" }
+            }
+            expect eof
 EOF
-done
-
-for host in ${masters[@]}
-do
-    /usr/bin/expect <<EOF
-        spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl "
-        expect { 
-            "yes/no" { send "yes\r" }
-        }
-        expect eof
+    done
+}
+test_connection_masters() {
+    for host in $@
+    do
+        /usr/bin/expect <<EOF
+            spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl "
+            expect { 
+                "yes/no" { send "yes\r" }
+            }
+            expect eof
 EOF
-done
+    done
+}
 
-for host in ${nodes[@]}
-do
-    /usr/bin/expect <<EOF
-        spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl /var/lib/kubelet/"
-        expect { 
-            "yes/no" { send "yes\r" }
-        }
-        expect eof
+test_connection_nodes() {
+    for host in $@
+    do
+        /usr/bin/expect <<EOF
+            spawn ssh ${host} "mkdir -p /etc/kubernetes/ssl /var/lib/kubelet/"
+            expect { 
+                "yes/no" { send "yes\r" }
+            }
+            expect eof
 EOF
+    done
+}
+
+help_info() {
+    echo -e "
+欢迎使用林大师K8S集群管理工具,请输入序号使用对应的功能
+\t0 kubernetes cluster install
+\t1 update all certificate
+\t2 check cluster hosts
+\t3 check cluster configuration
+\tq exit"
+}
+
+
+while true
+do
+    help_info
+    read action
+    case $action in
+        1)
+            get_CA_cert
+            get_etcd_cert ${etcds_ip[@]}
+            get_tls_bootstrapping
+            get_apiserver_cert ${hosts_ip[@]} ${cluster_ip} ${virtual_ip}
+            get_kubectl_cert
+            get_kube_controller_manager_cert ${masters_ip[@]}
+            get_kube_scheduler_cert ${masters_ip[@]}
+            get_kube_proxy_cert
+            update_etcd_cert ${etcds[@]}
+            update_apiserver_cert ${masters[@]}
+            update_kubectl_cert ${masters[@]}
+            update_kube_controller_manager_cert ${masters[@]}
+            update_kube_scheduler_cert ${masters[@]}
+            update_kubelet_cert ${nodes[@]}
+            update_kube_proxy_cert ${hosts[@]}
+            echo "completed.please check /data/work/running.log"
+        ;;
+        0)
+            test_connection_etcds ${etcds[@]}
+            test_connection_masters ${masters[@]}
+            test_connection_nodes ${nodes[@]}
+            Environment_init ${hosts[@]}
+            cfssl_check
+            get_CA_cert
+            get_etcd_cert ${etcds_ip[@]}
+            get_tls_bootstrapping
+            get_apiserver_cert ${hosts_ip[@]} ${cluster_ip} ${virtual_ip}
+            get_kubectl_cert
+            get_kube_controller_manager_cert ${masters_ip[@]}
+            get_kube_scheduler_cert ${masters_ip[@]}
+            get_kube_proxy_cert
+            etcd_install ${etcd_version} ${etcd_url} ${etcds[@]}
+            put_etcd_conf ${etcds[@]}
+            update_etcd_cert ${etcds[@]}
+            etcd_service_restart ${etcds[@]}
+            kube_install ${kubernetes_url} ${hosts[@]}
+            etcd_check ${etcds_ip[@]}
+            put_apiserver_conf ${cluster_ips} ${masters[@]}
+            update_apiserver_cert ${masters[@]}
+            apiserver_service_restart ${masters[@]}
+            keepalived_install ${masters[@]}
+            put_keepalived_conf ${virtual_ip} ${masters[@]}
+            keepalived_service_restart ${masters[@]}
+            haproxy_install ${masters[@]}
+            put_haproxy_conf ${masters[@]}
+            haproxy_service_restart ${masters[@]}
+            put_kubectl_conf ${virtual_ip} ${masters[@]}
+            update_kubectl_cert ${masters[@]}
+            kubectl_create_clusterrolebinding_admin
+            put_kube_controller_manager_conf ${pod_ips} ${cluster_ips} ${virtual_ip} ${masters[@]}
+            update_kube_controller_manager_cert ${masters[@]}
+            kube_controller_manager_service_restart ${masters[@]}
+            put_kube_scheduler_conf ${virtual_ip} ${masters[@]}
+            update_kube_scheduler_cert ${masters[@]}
+            kube_scheduler_service_restart ${masters[@]}
+            docker_install ${nodes[@]}
+            docker_service_restart ${nodes[@]}
+            put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${nodes[@]}
+            update_kubelet_cert ${nodes[@]}
+            kubelet_service_restart ${nodes[@]}
+            put_kube_proxy_conf ${virtual_ip} ${pod_ips} ${nodes[@]}
+            update_kube_proxy_cert ${hosts[@]}
+            kube_proxy_service_restart ${nodes[@]}
+            kubelet_create_clusterrolebinding_bootstrap
+            sleep 10
+            kube_approve_csr ${masters}
+            calico_install ${pod_ips}
+            coredns_install ${cluster_DNS} ${hosts[@]}
+        ;;
+        2)
+            grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -e "[0-9]\{1,3\}\.\{1,3\}[0-9]\{1,3\}" | awk '{print "hostname: "$2" ipaddress: "$1}'
+        ;;
+        3)
+            echo "cluster services ip range is ${cluster_ips}"
+            echo "cluster pods ip range is ${pod_ips}"
+            echo "cluster ip is ${cluster_ip}"
+            echo "cluster dns is ${cluster_DNS}"
+            read -p "please input y to confirm the configuration: " confirm_cluster
+            if [[ ${confirm_cluster} != y ]];then
+                echo "please exit to modify script $0"
+                break
+            fi
+        ;;
+        q)
+            break
+        ;;
+        *)
+            help_info
+        ;;
+    esac
 done
-
-read -p "action: \
-    1 全集群证书更新\
-    2 " action
-case action in
-    1)
-        get_CA_cert
-        get_etcd_cert ${etcds_ip[@]}
-
-        get_tls_bootstrapping
-        get_apiserver_cert ${hosts_ip[@]} ${cluster_ip} ${virtual_ip}
-        get_kubectl_cert
-        get_kube_controller_manager_cert ${masters_ip[@]}
-        get_kube_scheduler_cert ${masters_ip[@]}
-        get_kube_proxy_cert
-        update_etcd_cert ${etcds[@]}
-        update_apiserver_cert ${masters[@]}
-        update_kubectl_cert ${masters[@]}
-        update_kube_controller_manager_cert ${masters[@]}
-        update_kube_scheduler_cert ${masters[@]}
-        update_kubelet_cert ${nodes[@]}
-    ;;
-    value2|v2)
-        command2
-    ;;
-    value3|v3)
-        command3
-    ;;
-    *)
-        command4
-    ;;
-esac
-
-Environment_init ${hosts[@]}
-cfssl_check
-get_CA_cert
-get_etcd_cert ${etcds_ip[@]}
-get_tls_bootstrapping
-get_apiserver_cert ${hosts_ip[@]} ${cluster_ip} ${virtual_ip}
-get_kubectl_cert
-get_kube_controller_manager_cert ${masters_ip[@]}
-get_kube_scheduler_cert ${masters_ip[@]}
-get_kube_proxy_cert
-etcd_install ${etcd_version} ${etcd_url} ${etcds[@]}
-put_etcd_conf ${etcds[@]}
-update_etcd_cert ${etcds[@]}
-etcd_service_restart ${etcds[@]}
-kube_install ${kubernetes_url} ${hosts[@]}
-etcd_check ${etcds_ip[@]}
-put_apiserver_conf ${cluster_ips} ${masters[@]}
-update_apiserver_cert ${masters[@]}
-apiserver_service_restart ${masters[@]}
-keepalived_install ${masters[@]}
-put_keepalived_conf ${virtual_ip} ${masters[@]}
-keepalived_service_restart ${masters[@]}
-haproxy_install ${masters[@]}
-put_haproxy_conf ${masters[@]}
-haproxy_service_restart ${masters[@]}
-put_kubectl_conf ${virtual_ip} ${masters[@]}
-update_kubectl_cert ${masters[@]}
-kubectl_create_clusterrolebinding
-put_kube_controller_manager_conf ${pod_ips} ${cluster_ips} ${virtual_ip} ${masters[@]}
-update_kube_controller_manager_cert ${masters[@]}
-kube_controller_manager_service_restart ${masters[@]}
-put_kube_scheduler_conf ${virtual_ip} ${masters[@]}
-update_kube_scheduler_cert ${masters[@]}
-kube_scheduler_service_restart ${masters[@]}
-docker_install ${nodes[@]}
-docker_service_restart ${nodes[@]}
-put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${nodes[@]}
-update_kubelet_cert ${nodes[@]}
-kubelet_service_restart ${nodes[@]}
-kubelet_create_clusterrolebinding
-sleep 10
-kube_approve_csr ${masters}
-put_kube_proxy_conf ${virtual_ip} ${pod_ips} ${nodes[@]}
-update_kube_proxy_cert ${hosts[@]}
-kube_proxy_service_restart ${nodes[@]}
-calico_install ${pod_ips}
-coredns_install ${cluster_DNS} ${hosts[@]}
