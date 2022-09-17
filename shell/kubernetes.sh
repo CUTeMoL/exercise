@@ -1,19 +1,19 @@
 #!/bin/bash
-# 基于UBUNTU-20.04
+# 基于Ubuntu 20.04.4 LTS
 # 要求
-# 1.编辑好/etc/hosts,此脚本集群(除etcd外)的前缀要有k,用m表示master节点,用n表示node节点,例如
+# 1.编辑好/etc/hosts,此脚本集群的前缀用k来表示K8S集群,用k-m表示master节点,用k-n表示node节点,用etcd表示etcd节点,例如↓
 # 127.0.0.1 localhost
 # 192.168.1.101 k-m1
-# 192.168.1.101 etcd1
 # 192.168.1.102 k-m2
-# 192.168.1.102 etcd2
 # 192.168.1.103 k-m3
+# 192.168.1.101 etcd1
+# 192.168.1.102 etcd2
 # 192.168.1.103 etcd3
 # 192.168.1.104 k-n1
 # 192.168.1.105 k-n2
 # 192.168.1.106 k-n3
 # 192.168.1.107 virtual_ip
-# 如果想自定义集群名称,那么可以根据实际情况编写能获取到主机名称和ip地址的数组
+# 如果存在不同的命名方式,自定义集群名称,那需要修改获取主机名称的变量，根据实际情况编写能获取到主机名称和ip地址的数组
 hosts=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-[a-zA-Z][0-9]\{1,3\}" `)
 masters=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-m[0-9]\{1,3\}" `)
 nodes=(`grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o -e "k-n[0-9]\{1,3\}" `)
@@ -34,7 +34,7 @@ etcd_version=v3.4.20
 etcd_url=http://150.158.93.164/files/etcd/${etcd_version}
 kubernetes_version=v1.23.10
 kubernetes_url=http://150.158.93.164/files/kubernetes/${kubernetes_version}
-# 目前仅上传了etcdv3.4.20到150.158.93.164的服务器上之后会添加新版本
+# 目前仅上传了etcdv3.4.20和kubernetesv1.23.10到150.158.93.164的服务器上,之后不一定会添加新版本
 cluster_ips=193.169.0.0/16
 pod_ips=10.10.0.0/16
 cluster_ip=193.169.0.1
@@ -1663,6 +1663,38 @@ do
         expect eof
 EOF
 done
+
+read -p "action: \
+    1 全集群证书更新\
+    2 " action
+case action in
+    1)
+        get_CA_cert
+        get_etcd_cert ${etcds_ip[@]}
+
+        get_tls_bootstrapping
+        get_apiserver_cert ${hosts_ip[@]} ${cluster_ip} ${virtual_ip}
+        get_kubectl_cert
+        get_kube_controller_manager_cert ${masters_ip[@]}
+        get_kube_scheduler_cert ${masters_ip[@]}
+        get_kube_proxy_cert
+        update_etcd_cert ${etcds[@]}
+        update_apiserver_cert ${masters[@]}
+        update_kubectl_cert ${masters[@]}
+        update_kube_controller_manager_cert ${masters[@]}
+        update_kube_scheduler_cert ${masters[@]}
+        update_kubelet_cert ${nodes[@]}
+    ;;
+    value2|v2)
+        command2
+    ;;
+    value3|v3)
+        command3
+    ;;
+    *)
+        command4
+    ;;
+esac
 
 Environment_init ${hosts[@]}
 cfssl_check
