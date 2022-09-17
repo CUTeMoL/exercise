@@ -3137,9 +3137,9 @@ install plugin validate_password soname 'validate_password.so';
 ## 二十四、免密登录
 
 ```shell
-mysql_config_editor set --login-path=my3306 --user=root --socket=/tmp/mysql3306.sock --password
+mysql_config_editor set --login-path=root_3306 --user=root --socket=/tmp/mysql_3306.sock --password
 mysql_config_editor print --all
-mysql --login-path=my3306
+mysql --login-path=root_3306
 ```
 
 ## 二十五、MySQL实用命令行用法
