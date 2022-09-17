@@ -2119,6 +2119,7 @@ vm.swappiness=10 # 使用SWAP内存前可用内存剩余百分比，0不使用sw
 
 ```shell
 chkconfig --add service_name # 加入自启动
+chkconfig --del service_name # 删除自启动
 chkconfig --list service_name # 查看运行级别
 chkconfig --levels 245 service_name off # 设置245下服务不自动启动
 ```
