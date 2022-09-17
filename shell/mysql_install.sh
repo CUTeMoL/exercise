@@ -44,7 +44,7 @@ install_mysql() {
     mkdir -p ${base_dir}/mysql-files
     chown mysql:mysql ${base_dir}/mysql-files
     chmod 750 ${base_dir}/mysql-files
-    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=/usr/local//mysql_${version} --datadir=${data_dir}
+    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql_${version} --datadir=${data_dir}
     ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
     cat > ${base_dir}/my.cnf <<EOF
 [mysqld]
