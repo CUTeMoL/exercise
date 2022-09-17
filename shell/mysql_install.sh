@@ -1,8 +1,8 @@
 #!/bin/bash
 # 修改以下变量
 download_mysql_version=8.0.28 # 要安装的版本
-mysql_default_port=3306 # 端口
-mysql_data_dir=/mysqld/data_${mysql_default_port} # 数据目录
+mysql_listen_port=3306 # 端口
+mysql_data_dir=/mysqld/data_${mysql_listen_port} # 数据目录
 mysql_base_dir=/usr/local/mysql_${download_mysql_version} # 安装目录
 serverid=10 # 集群id
 
@@ -48,6 +48,7 @@ install_mysql() {
     ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
     cat > ${base_dir}/my.cnf <<EOF
 [mysqld]
+# base
 basedir=${base_dir}
 datadir=${data_dir}
 port=${mysql_port}
@@ -56,16 +57,39 @@ character_set_server=utf8mb4
 collation_server=utf8mb4_general_ci
 server_id=${server_id}
 log-bin=${data_dir}/binlog
+log_timestamps=SYSTEM
+transaction_isolation=READ-COMMITTED
+open_files_limit=65535
+innodb_open_files=65535
+# binlog
+binlog_format=row
+sync_binlog=1
+innodb_flush_log_at_trx_commit=1 
+binlog_rows_query_log_events=1 
+binlog_cache_size=64K
+max_binlog_cache_size=2G
+max_binlog_size=1024M
+expire_logs_days=10
+relay_log_recovery=1
+relay_log_info_repository=TABLE
+master_info_repository=TABLE
+slave_parallel_type=logical_clock
+slave_parallel_workers=8 
+gtid_mode=on
+log_slave_updates=1
+enforce-gtid-consistency=1
+relay_log_purge=1
 EOF
     cat > /etc/my.cnf <<EOF
 [client]
 port=3306
 socket=/tmp/mysql_${mysql_port}.sock
+prompt="\u@\h: \R:\m[\d]> "
 EOF
-    cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld.server
+    cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld_${mysql_port}
     sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
-    -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld.server
-    chmod +x /etc/init.d/mysqld.server
+    -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld_${mysql_port}
+    chmod +x /etc/init.d/mysqld_${mysql_port}
     systemctl daemon-reload
     echo "export PATH=\"\$PATH:${base_dir}/bin\"" >> /etc/profile
     if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
@@ -78,17 +102,19 @@ EOF
 }
 
 mysql_auto_start() {
-    update-rc.d -f mysqld.server defaults
+    mysql_port=$1
+    update-rc.d -f mysqld_${mysql_port} defaults
 }
 
 mysql_auto_start_disable() {
-    update-rc.d -f mysqld.server remove
+    mysql_port=$1
+    update-rc.d -f mysqld_${mysql_port} remove
 }
 
 
 init_environment ${mysql_data_dir} ${mysql_base_dir}
 download_mysql ${download_mysql_version}
-install_mysql ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_default_port} ${serverid}
+install_mysql ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid}
 source /etc/profile
-mysql_auto_start
+mysql_auto_start ${mysql_listen_port}
 

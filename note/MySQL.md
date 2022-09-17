@@ -6,96 +6,192 @@
 
 ```shell
 #!/bin/bash
-yum install libncurses* -y
-rm -rf /etc/my.cnf
-`id mysql` &>>/dev/null
-if [ $? -ne 0 ];then
-   useradd -r -s /sbin/nologin -M mysql
-fi
-mkdir -p /mysqld/data
-chown -R mysql:mysql /mysqld
-cd /usr/local
-tar -zxvf mysql-5.7.35-linux-glibc2.12-x86_64.tar.gz
-ln -s mysql-5.7.35-linux-glibc2.12-x86_64 mysql
-cd mysql
-mkdir mysql-files
-chown mysql:mysql mysql-files
-chmod 750 mysql-files
-bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/mysqld/data
-bin/mysql_ssl_rsa_setup --datadir=/mysqld/data
-cp support-files/mysql.server /etc/init.d/mysqld.server
-sed -i "47s#datadir=#datadir=/mysqld/data#g" /etc/init.d/mysqld.server
-echo "[mysqld]
-basedir=/usr/local/mysql
-datadir=/mysqld/data
-port=3306
-socket=/tmp/mysql.sock
+# 修改以下变量
+download_mysql_version=8.0.28 # 要安装的版本
+mysql_default_port=3306 # 端口
+mysql_data_dir=/mysqld/data_${mysql_default_port} # 数据目录
+mysql_base_dir=/usr/local/mysql_${download_mysql_version} # 安装目录
+serverid=10 # 集群id
+
+init_environment() {
+    data_dir=$1
+    base_dir=$2
+    rm -rf /etc/my.cnf /etc/mysql
+    if [ -e ${base_dir}/bin ] || [ -e ${data_dir}/mysql ];then
+        echo "mysql already exists. please check ${base_dir} and ${data_dir}" && exit
+    fi
+    `id mysql`  >/dev/null 2>&1
+    if [ $? -ne 0 ];then
+        useradd -r -s /sbin/nologin -M mysql
+    fi
+    mkdir -p /data/work ${data_dir}
+    chown -R mysql:mysql /`echo ${data_dir} | awk -F "/" '{print $2}'`
+    yum install libncurses* -y
+}
+
+download_mysql() {
+    version=$1
+    download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
+    if [ ! -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ];then
+        wget ${download_url} -O /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
+    else
+        echo "mysql-${version}-linux-glibc2.12-x86_64.tar.xz already exists"
+    fi
+}
+
+install_mysql() {
+    version=$1
+    data_dir=$2
+    base_dir=$3
+    mysql_port=$4
+    server_id=$5
+    tar -xf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz -C /data/work/
+    mv /data/work/mysql-${version}-linux-glibc2.12-x86_64 ${base_dir}
+    mkdir -p ${base_dir}/mysql-files
+    chown mysql:mysql ${base_dir}/mysql-files
+    chmod 750 ${base_dir}/mysql-files
+    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql_${version} --datadir=${data_dir}
+    ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
+    cat > ${base_dir}/my.cnf <<EOF
+[mysqld]
+basedir=${base_dir}
+datadir=${data_dir}
+port=${mysql_port}
+socket=/tmp/mysql_${mysql_port}.sock
 character_set_server=utf8mb4
 collation_server=utf8mb4_general_ci
-transaction_isolation=READ-COMMITTED
-server_id=10
-log-bin=/mysqld/data/binlog
-binlog_format=row
-user=mysql
+server_id=${server_id}
+log-bin=${data_dir}/binlog
+EOF
+    cat > /etc/my.cnf <<EOF
 [client]
 port=3306
-socket=/tmp/mysql.sock" >> /usr/local/mysql/my.cnf
-chkconfig --add mysqld.server
-echo 'export PATH="$PATH:/usr/local/mysql/bin"' >> /etc/profile
+socket=/tmp/mysql_${mysql_port}.sock
+EOF
+    cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld.server
+    sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
+    -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld.server
+    chmod +x /etc/init.d/mysqld.server
+    systemctl daemon-reload
+    echo "export PATH=\"\$PATH:${base_dir}/bin\"" >> /etc/profile
+    if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
+        if [ -e /lib/x86_64-linux-gnu/libtinfo.so.6.2 ];then
+            ln -s /lib/x86_64-linux-gnu/libtinfo.so.6.2 /lib/x86_64-linux-gnu/libtinfo.so.5
+        else
+            echo "[error] please ln -s /lib/x86_64-linux-gnu/libtinfo.so.{version} /lib/x86_64-linux-gnu/libtinfo.so.5"
+        fi
+    fi
+}
+
+mysql_auto_start() {
+    chkconfig --add mysqld.server
+}
+
+mysql_auto_start_disable() {
+    chkconfig --del mysqld.server
+}
+
+init_environment ${mysql_data_dir} ${mysql_base_dir}
+download_mysql ${download_mysql_version}
+install_mysql ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_default_port} ${serverid}
 source /etc/profile
-service mysqld.server start
+mysql_auto_start
 ```
 
 ### ubuntu:
 
 ```shell
 #!/bin/bash
-# 下载mysql
-wget https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.29-linux-glibc2.12-x86_64.tar.xz -O /usr/local/mysql-8.0.29-linux-glibc2.12-x86_64.tar.xz
-apt-get install libaio1
-# 安装环境配置
-rm -rf /etc/my.cnf
-`id mysql` &>>/dev/null
-if [ $? -ne 0 ];then
-   useradd -r -s /sbin/nologin -M mysql
-fi
-mkdir -p /mysqld/data
-chown -R mysql:mysql /mysqld
-cd /usr/local
-tar -xvf /usr/local/mysql-8.0.29-linux-glibc2.12-x86_64.tar.xz
-ln -s mysql-8.0.29-linux-glibc2.12-x86_64 mysql
-cd mysql
-mkdir mysql-files
-chown mysql:mysql mysql-files
-chmod 750 mysql-files
-# 初始化安装
-bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/mysqld/data >> /root/mysql-init.log
-bin/mysql_ssl_rsa_setup --datadir=/mysqld/data
-# 配置数据库
-echo "[mysqld]
-basedir=/usr/local/mysql
-datadir=/mysqld/data
-port=3306
-socket=/tmp/mysql.sock
+# 修改以下变量
+download_mysql_version=8.0.28 # 要安装的版本
+mysql_default_port=3306 # 端口
+mysql_data_dir=/mysqld/data_${mysql_default_port} # 数据目录
+mysql_base_dir=/usr/local/mysql_${download_mysql_version} # 安装目录
+serverid=10 # 集群id
+
+init_environment() {
+    data_dir=$1
+    base_dir=$2
+    rm -rf /etc/my.cnf /etc/mysql
+    if [ -e ${base_dir}/bin ] || [ -e ${data_dir}/mysql ];then
+        echo "mysql already exists. please check ${base_dir} and ${data_dir}" && exit
+    fi
+    `id mysql`  >/dev/null 2>&1
+    if [ $? -ne 0 ];then
+        useradd -r -s /sbin/nologin -M mysql
+    fi
+    mkdir -p /data/work ${data_dir}
+    chown -R mysql:mysql /`echo ${data_dir} | awk -F "/" '{print $2}'`
+    apt install libaio1 -y
+}
+
+download_mysql() {
+    version=$1
+    download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
+    if [ ! -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ];then
+        wget ${download_url} -O /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
+    else
+        echo "mysql-${version}-linux-glibc2.12-x86_64.tar.xz already exists"
+    fi
+}
+
+install_mysql() {
+    version=$1
+    data_dir=$2
+    base_dir=$3
+    mysql_port=$4
+    server_id=$5
+    tar -xf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz -C /data/work/
+    mv /data/work/mysql-${version}-linux-glibc2.12-x86_64 ${base_dir}
+    mkdir -p ${base_dir}/mysql-files
+    chown mysql:mysql ${base_dir}/mysql-files
+    chmod 750 ${base_dir}/mysql-files
+    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql_${version} --datadir=${data_dir}
+    ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
+    cat > ${base_dir}/my.cnf <<EOF
+[mysqld]
+basedir=${base_dir}
+datadir=${data_dir}
+port=${mysql_port}
+socket=/tmp/mysql_${mysql_port}.sock
 character_set_server=utf8mb4
 collation_server=utf8mb4_general_ci
-server_id=10
-log-bin=/mysqld/data/binlog
+server_id=${server_id}
+log-bin=${data_dir}/binlog
+EOF
+    cat > /etc/my.cnf <<EOF
 [client]
 port=3306
-socket=/tmp/mysql.sock" >> /usr/local/mysql/my.cnf
-# 服务添加mysql
-cp support-files/mysql.server /etc/init.d/mysqld.server
-sed -i "47s#datadir=#datadir=/mysqld/data#g" /etc/init.d/mysqld.server
-chmod +x /etc/init.d/mysqld.server
-systemctl daemon-reload
-# 添加路径
-echo 'export PATH="$PATH:/usr/local/mysql/bin"' >> /etc/profile
-ln -s /lib/x86_64-linux-gnu/libtinfo.so.6.2 /lib/x86_64-linux-gnu/libtinfo.so.5
+socket=/tmp/mysql_${mysql_port}.sock
+EOF
+    cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld.server
+    sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
+    -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld.server
+    chmod +x /etc/init.d/mysqld.server
+    systemctl daemon-reload
+    echo "export PATH=\"\$PATH:${base_dir}/bin\"" >> /etc/profile
+    if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
+        if [ -e /lib/x86_64-linux-gnu/libtinfo.so.6.2 ];then
+            ln -s /lib/x86_64-linux-gnu/libtinfo.so.6.2 /lib/x86_64-linux-gnu/libtinfo.so.5
+        else
+            echo "[error] please ln -s /lib/x86_64-linux-gnu/libtinfo.so.{version} /lib/x86_64-linux-gnu/libtinfo.so.5"
+        fi
+    fi
+}
+
+mysql_auto_start() {
+    update-rc.d -f mysqld.server defaults
+}
+
+mysql_auto_start_disable() {
+    update-rc.d -f mysqld.server remove
+}
+
+init_environment ${mysql_data_dir} ${mysql_base_dir}
+download_mysql ${download_mysql_version}
+install_mysql ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_default_port} ${serverid}
 source /etc/profile
-# 开机自启动
-update-rc.d -f mysqld.server defaults
-service mysqld.server start
+mysql_auto_start
 ```
 
 ### 多实例:
@@ -113,7 +209,6 @@ port=3307
 datadir=/mysql_3307/data
 socket=/tmp/mysql_3307.sock
 log_error=/mysqld_3307/data/error.log
-innodb_buffer_pool_size=32M
 ```
 
 2.
@@ -608,9 +703,9 @@ mvcc多版本并发控制靠undo实现，读正在更新（尚未commit）的操
 相关变量
 
 ```shell
-innodb_undo_directory = /data/undospace/ –undo独立表空间的存放目录,通常放在.ibd文件中，如果关闭独立表空间，则放在共享表空间ibdata1
-innodb_undo_logs = 128 # 回滚段为128KB
-innodb_undo_tablespaces = 4 # 指定有4个undo log文件
+innodb_undo_directory=/data/undospace/ –undo独立表空间的存放目录,通常放在.ibd文件中，如果关闭独立表空间，则放在共享表空间ibdata1
+innodb_undo_logs=128 # 回滚段为128KB
+innodb_undo_tablespaces=4 # 指定有4个undo log文件
 innodb_max_undo_log_size=4G # undolog大小
 ```
 
@@ -2232,7 +2327,7 @@ mysqldump --single-transaction --master-data=1 -R --triggers -E -B database_name
 一步备份并压缩
 
 ```shell
-mysqldump --single-transaction --master-data=1 -R --triggers -E -B database_name | gzip -c > name_backup.tgz
+mysqldump -uroot -p --single-transaction --master-data=1 -R --triggers -E -B database_name | gzip -c > name_backup.tgz
 ```
 
 gzip -c 压缩并输出到标准输出
@@ -2240,7 +2335,7 @@ gzip -c 压缩并输出到标准输出
 一步备份压缩并传到另一台服务器
 
 ```shell
-mysqldump --single-transaction --master-data=1 -R --triggers -E -B database_name | gzip -c | ssh root@IP 'cat > /tmp/name_backup.tgz'
+mysqldump -uroot -p --single-transaction --master-data=1 -R --triggers -E -B database_name | gzip -c | ssh root@IP 'cat > /tmp/name_backup.tgz'
 ```
 
 解压并恢复
