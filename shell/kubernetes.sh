@@ -1677,6 +1677,7 @@ help_info() {
 \t1 update all certificate
 \t2 check cluster hosts
 \t3 check cluster configuration
+\t4 add a new node
 \tq exit"
 }
 
@@ -1766,7 +1767,30 @@ do
             echo "cluster dns is ${cluster_DNS}"
             read -p "please input y to confirm the configuration: " confirm_cluster
             if [[ ${confirm_cluster} != y ]];then
-                echo "please exit to modify script $0"
+                echo "will exit.please modify script $0"
+                break
+            fi
+        ;;
+        4)
+            read -p "please input node hostname: " node_hostname
+            grep -v "^#" /etc/hosts |grep -v "localhost" | grep -v "^$" | grep -o "${node_hostname}"
+            if [ $? -eq 0 ];then
+                Environment_init ${node_hostname}
+                test_connection_nodes ${node_hostname}
+                kube_install ${kubernetes_url} ${node_hostname}
+                docker_install ${node_hostname}
+                docker_service_restart ${node_hostname}
+                put_kubelet_conf ${virtual_ip} ${cluster_DNS} ${node_hostname}
+                update_kubelet_cert ${node_hostname}
+                update_kubelet_cert ${node_hostname}
+                kubelet_service_restart ${node_hostname}
+                put_kube_proxy_conf ${virtual_ip} ${pod_ips} ${node_hostname}
+                update_kube_proxy_cert ${node_hostname}
+                kube_proxy_service_restart ${node_hostname}
+                kube_approve_csr ${masters}
+                rsync -avz /etc/resolv.conf ${node_hostname}:/etc/resolv.conf >/dev/null 2>&1
+            else
+                echo "please input ${node_hostname} to /etc/hosts"
                 break
             fi
         ;;
