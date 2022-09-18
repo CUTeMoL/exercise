@@ -22,7 +22,7 @@ slave_socket=/tmp/mysql_${slave_listen_port}.sock
 slave_base_dir=/usr/local/mysql_${slave_listen_port} # 定义程序目录
 slave_data_dir=/mysqld/data_${slave_listen_port} # 定义数据目录
 
-gtid_flag=`${slave_base_dir}/bin/mysql -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "show variables like \"gtid_mode\";" -s -N | awk '/gtid_mode/{print $2}'` >/dev/null 2>&1
+gtid_flag=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "show variables like \"gtid_mode\";" -s -N | awk '/gtid_mode/{print $2}'` >/dev/null 2>&1
 
 gtid_replica() {
     master_ipaddress=$1
@@ -70,7 +70,8 @@ check_replica() {
             echo "${io_error}" | grep -o -e "Authentication plugin 'caching_sha2_password' reported error"
             if [[ $? = 0 ]];then
                 ${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p${replica_passwd} -e "show databases;" >/dev/null 2>&1
-                break
+                io_error=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "show slave status\G" -s | grep "Last_IO_Error:"` >/dev/null 2>&1
+                echo "${io_error}"
             fi
         fi
         if [[ ${slave_io_status} = Yes ]] && [[ ${slave_sql_status} = No ]];then
@@ -92,6 +93,7 @@ check_replica() {
         if [[ ${slave_io_status} = Yes ]] && [[ ${slave_sql_status} = Yes ]];then
             echo "Replication is running" && break
         fi
+        sleep 5
     done
 }
 
