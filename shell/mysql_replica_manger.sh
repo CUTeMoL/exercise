@@ -18,10 +18,10 @@ replica_passwd=123456
 slave_listen_port=3306
 slave_login_user=root
 slave_login_passwd=123456
-slave_socket=/tmp/mysql_${slave_listen_port}.sock
 slave_base_dir=/usr/local/mysql_${slave_listen_port} # 定义程序目录
 slave_data_dir=/mysqld/data_${slave_listen_port} # 定义数据目录
 
+slave_socket=`ps -ef | grep -e "--port=${slave_listen_port}" | grep -v "grep"| grep -o -e "--socket=.*\.sock"`
 gtid_flag=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "show variables like \"gtid_mode\";" -s -N | awk '/gtid_mode/{print $2}'` >/dev/null 2>&1
 
 gtid_replica() {
@@ -102,6 +102,7 @@ help_info() {
 Welcome to Master Lin's mysql management tool. Please input the number to use these functions.
 \t1  mysql replica from master
 \t2  check and repair mysql replication error
+\t3  
 \tq  exit"
 }
 
@@ -120,6 +121,9 @@ do
         ;;
         2)
             check_replica ${slave_base_dir} ${master_ipaddress} ${master_listen_port} ${replica_user} ${replica_passwd} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
+        ;;
+        3)
+            
         ;;
         q)
             break
