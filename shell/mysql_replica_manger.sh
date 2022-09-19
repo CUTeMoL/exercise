@@ -169,5 +169,6 @@ do
             help_info
         ;;
     esac
+    help_info
 done
 echo "exit"
