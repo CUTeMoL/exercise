@@ -71,6 +71,7 @@ install_mysql() {
     cat > ${base_dir}/my.cnf <<EOF
 [mysqld]
 # base
+mysqlx=OFF
 basedir=${base_dir}
 datadir=${data_dir}
 port=${mysql_port}
