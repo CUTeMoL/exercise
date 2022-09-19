@@ -1,5 +1,5 @@
 #!/bin/bash
-# 基于mysql8.0.28-glibc版本
+# 基于mysql8.0.28-glibc版本、gtid模式
 # 先免密登录mysql,或者要在脚本中的mysql命令行中使用-u -p 添加用户密码，只是这样会不够安全
 # 推荐使用mysql_config_editor set --login-path=root_3306 --user=root --socket=/tmp/mysql_3306.sock --password来设置免密登录(仅使用此命令免密的用户有效)
 # 之后就可以使用mysql --login-path=root_3306来登录实例
@@ -8,20 +8,24 @@
 # 然后在从库主机上运行此脚本
 # 根据情况修改变量
 
+# slave info
+# 多实例时可以将以下变量存入${slave_data_dir}/replica.info,然后source replica.info来读取
+slave_listen_port=3306 # 监听端口
+slave_login_user=root # 定义在从库操作主从同步或修复主从同步时的用户
+slave_login_passwd=123456 # 定义在从库操作主从同步或修复主从同步时的用户密码
+slave_base_dir=/usr/local/mysql_${slave_listen_port} # 定义程序目录
+slave_data_dir=/mysqld/data_${slave_listen_port} # 定义数据目录
+slave_socket=`ps -ef | grep -e "--port=${slave_listen_port}" | grep -v "grep"| grep -o -e "--socket=.*\.sock"` # 通过监听端口获取socket
+
 # master info
+# 多实例时可以将以下变量存入${slave_data_dir}/master.info的文件然后使用source master.info来获取
 master_ipaddress=192.168.1.121
 master_listen_port=3306
 replica_user=replica
 replica_passwd=123456
 
-# slave info
-slave_listen_port=3306
-slave_login_user=root
-slave_login_passwd=123456
-slave_base_dir=/usr/local/mysql_${slave_listen_port} # 定义程序目录
-slave_data_dir=/mysqld/data_${slave_listen_port} # 定义数据目录
-
-slave_socket=`ps -ef | grep -e "--port=${slave_listen_port}" | grep -v "grep"| grep -o -e "--socket=.*\.sock"`
+# replica set
+# 校验GTID是否开启,普通模式的复制,还需要定位binlog,暂时不想做
 gtid_flag=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "show variables like \"gtid_mode\";" -s -N | awk '/gtid_mode/{print $2}'` >/dev/null 2>&1
 
 gtid_replica() {
@@ -135,7 +139,9 @@ do
             fi
         ;;
         2)
-            check_replica ${slave_base_dir} ${master_ipaddress} ${master_listen_port} ${replica_user} ${replica_passwd} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
+            if [[ ${gtid_flag} = ON ]];then
+                check_replica ${slave_base_dir} ${master_ipaddress} ${master_listen_port} ${replica_user} ${replica_passwd} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
+            fi
         ;;
         3)
             replica_info ${master_ipaddress} ${master_listen_port} ${replica_user} ${slave_listen_port}
@@ -148,3 +154,4 @@ do
         ;;
     esac
 done
+echo "exit"
