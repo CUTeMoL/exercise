@@ -3278,3 +3278,24 @@ mysql --login-path=root_3306
 `warnings`、`\W`每条语句都显示警告
 
 `nowarning`、`\w`不显示警告
+
+## 二十六、常见错误
+
+### 主从同步
+
+`Slave_IO_Running: Connecting` `Slave_SQL_Running:Yes`
+
+| `Last_IO_Error`                                              | 原因                                                         | 处理                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Authentication plugin 'caching_sha2_password' reported error | 8.0.26之后的版本出现，在从库连接主库的时候使用的是不被 caching_sha2_password认可的RSA公钥，所以主库MySQL拒绝了数据库连接的请求 | `${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p`使用`--get-server-public-key`登录一次主库即可 |
+|                                                              |                                                              | `CREATE USER 'replica'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'XXXX';`不使用密码插件`caching_sha2_password`即可 |
+|                                                              |                                                              |                                                              |
+
+`Slave_IO_Running: Yes` `Slave_SQL_Running:No`
+
+| `Last_SQL_Error`                                             | 原因                                                         | 处理                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile | grep -A15 "0d90d68e-3775-11ed-b19a-000c29afe996:9"`来查找出错的原因，然后根据情况解决，删除从库上冲突的数据，重新同步 |
+|                                                              |                                                              | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
+|                                                              |                                                              | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步 |
+
