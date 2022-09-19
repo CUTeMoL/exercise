@@ -204,9 +204,9 @@ Welcome to Master Lin's mysql management tool. Please input the number to use th
 \tq  exit"
 }
 
-if [ -e /etc/issue ] &&  [ ! -e /etc/redhat-release ];then
+if [ -e /etc/issue ] && [ ! -e /etc/redhat-release ];then
     os_version=`awk '1{print$1}' /etc/issue`
-elif [ -e /etc/redhat-release ];then
+elif [ -e /etc/issue ] && [ -e /etc/redhat-release ];then
     os_version=`awk '1{print$1}' /etc/redhat-release`
 else
     echo "This system is not supported" && break
@@ -234,7 +234,6 @@ please check configuration \
 check_configuration ${os_version} ${download_mysql_version}  ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid}
 while true
 do
-
     help_info
     read action
     case ${action} in

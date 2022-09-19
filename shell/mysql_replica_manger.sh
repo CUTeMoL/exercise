@@ -97,18 +97,33 @@ check_replica() {
     done
 }
 
+replica_info() {
+    master_ipaddress=$1
+    master_listen_port=$2
+    replica_user=$3
+    slave_listen_port=$4
+    echo "master.info ${replica_user}@${master_ipaddress}:${master_listen_port}"
+    echo "slave.infog port: ${slave_listen_port}"
+    read -p "Do you confirm these configuration(y/n): " action
+    if [[ ${action} != y ]];then
+        echo "please modify $0 configuration." && break
+    fi
+}
+
 help_info() {
     echo -e "
 Welcome to Master Lin's mysql management tool. Please input the number to use these functions.
 \t1  mysql replica from master
 \t2  check and repair mysql replication error
-\t3  
+\t3  check replica info
 \tq  exit"
 }
 
+
+replica_info ${master_ipaddress} ${master_listen_port} ${replica_user} ${slave_listen_port}
+help_info
 while true
 do
-    help_info
     read action
     case ${action} in 
         1)
@@ -123,7 +138,7 @@ do
             check_replica ${slave_base_dir} ${master_ipaddress} ${master_listen_port} ${replica_user} ${replica_passwd} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
         ;;
         3)
-            
+            replica_info ${master_ipaddress} ${master_listen_port} ${replica_user} ${slave_listen_port}
         ;;
         q)
             break
