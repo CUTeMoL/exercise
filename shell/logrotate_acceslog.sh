@@ -7,8 +7,14 @@ LOG_FILE_BASENAME=access.log
 LOG_MONTH_DIR=$LOG_DIR/$(date -d "yesterday" +"%Y-%m")
 #定义昨天
 YESTERDAY_TIME=$(date -d "yesterday" +%F)
+
 for LOG_FILE in LOG_FILE_BASENAME;do
     [ ! -d $LOG_MONTH_DIR ] && mkdir -p $LOG_MONTH_DIR
     mv $LOG_DIR/$LOG_FILE_BASENAME $LOG_MONTH_DIR/${LOG_FILE_BASENAME}_${YESTERDAY_TIME}
 done
+if [ -e ${LOG_FILE_BASENAME} ];then
+    [ ! -d $LOG_MONTH_DIR ] && mkdir -p $LOG_MONTH_DIR
+    mv ${LOG_DIR}/${LOG_FILE_BASENAME} ${LOG_MONTH_DIR}/${LOG_FILE_BASENAME}_${YESTERDAY_TIME}
+fi
+
 kill -USR1 $(cat /usr/local/nginx/logs/nginx.pid)
