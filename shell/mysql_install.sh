@@ -168,6 +168,8 @@ EOF
         if [ ! -e /lib64/libtinfo.so.5 ];then
             if [ -e /lib64/libtinfo.so.5.9 ];then
                 ln -s /lib64/libtinfo.so.5.9 /lib64/libtinfo.so.5
+            else
+                echo "[error] please ln -s /lib64/libtinfo.so.{version} /lib64/libtinfo.so.5"
             fi
         fi
     fi
