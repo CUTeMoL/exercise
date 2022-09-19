@@ -19,4 +19,7 @@ awk 'BEGIN{FS="|"};{print $6}' /usr/local/nginx/logs/access.log |sort |uniq -c |
 #最终版
 BEGIN_TIME='17022022170000'
 END_TIME='17022022180000'
-awk 'BEGIN{FS="|"};{print $1"\t"$3}' /usr/local/nginx/logs/access.log |sed 's/\//-/g'|sed 's#:#-#g'|sed 's#Feb#02#g'|awk '{print $1"\t"$2}'|sed 's/-//g'|awk -v BEGIN_TIME=$BEGIN_TIME 'BEGIN_TIME<=$2{print $0}'|awk -v END_TIME=$END_TIME 'END_TIME>$2{print $1}'|sort |uniq -c|sort -nr
+awk 'BEGIN{FS="|"};{print $1"\t"$3}' /usr/local/nginx/logs/access.log |\
+sed 's/\//-/g'|sed 's#:#-#g'|sed 's#Feb#02#g'|awk '{print $1"\t"$2}'|sed 's/-//g'|\
+awk -v BEGIN_TIME=$BEGIN_TIME 'BEGIN_TIME<=$2{print $0}'|\
+awk -v END_TIME=$END_TIME 'END_TIME>$2{print $1}'|sort |uniq -c|sort -nr
