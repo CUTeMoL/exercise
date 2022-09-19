@@ -71,7 +71,8 @@ check_replica() {
             if [[ $? = 0 ]];then
                 ${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p${replica_passwd} -e "show databases;" >/dev/null 2>&1
                 io_error=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "show slave status\G" -s | grep "Last_IO_Error:"` >/dev/null 2>&1
-                echo "${io_error}"
+                sleep 5
+                echo "${io_error}" && echo "repair failed,please check it." && exit
             fi
         fi
         if [[ ${slave_io_status} = Yes ]] && [[ ${slave_sql_status} = No ]];then
@@ -93,7 +94,6 @@ check_replica() {
         if [[ ${slave_io_status} = Yes ]] && [[ ${slave_sql_status} = Yes ]];then
             echo "Replication is running" && break
         fi
-        sleep 5
     done
 }
 
