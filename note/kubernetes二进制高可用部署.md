@@ -736,7 +736,7 @@ KUBE_APISERVER_OPTS="--enable-admission-plugins=NodeRestriction \
 --requestheader-extra-headers-prefix=X-Remote-Extra- \
 --requestheader-group-headers=X-Remote-Group \
 --requestheader-username-headers=X-Remote-User \
---enable-aggregator-routing=true
+--enable-aggregator-routing=true \
 --runtime-config=api/all=true \
 --enable-bootstrap-token-auth \
 --service-cluster-ip-range=193.169.0.0/16 \
@@ -867,6 +867,7 @@ vrrp_instance VI_1 {
     }
 }
 EOF
+# unicast_peer 需要去掉本地IP
 # 检测脚本生成
     cat > /data/work/check_service.sh <<EOF
 #!/bin/bash

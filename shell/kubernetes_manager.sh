@@ -1638,7 +1638,15 @@ kube_approve_csr() {
     done
 }
 
-test_connection_etcds() {
+creata_ssh_key() {
+    [ -f /root/.ssh/id_rsa ] || ssh-keygen -P "" -f /root/.ssh/id_rsa
+    for host in $@
+    do
+        ssh-copy-id $host
+    done
+}
+
+mkdir_etcds() {
     for host in $@
     do
         /usr/bin/expect >/dev/null 2>&1 <<EOF
@@ -1650,7 +1658,7 @@ test_connection_etcds() {
 EOF
     done
 }
-test_connection_masters() {
+mkdir_masters() {
     for host in $@
     do
         /usr/bin/expect >/dev/null 2>&1 <<EOF
@@ -1663,7 +1671,7 @@ EOF
     done
 }
 
-test_connection_nodes() {
+mkdir_nodes() {
     for host in $@
     do
         /usr/bin/expect >/dev/null 2>&1 <<EOF
@@ -1687,7 +1695,7 @@ help_info() {
 \tq exit"
 }
 
-
+creata_ssh_key ${etcds[@]} ${hosts[@]}
 while true
 do
     help_info
@@ -1712,9 +1720,9 @@ do
             echo "completed.please check /data/work/running.log"
         ;;
         0)
-            test_connection_etcds ${etcds[@]}
-            test_connection_masters ${masters[@]}
-            test_connection_nodes ${nodes[@]}
+            mkdir_etcds ${etcds[@]}
+            mkdir_masters ${masters[@]}
+            mkdir_nodes ${nodes[@]}
             Environment_init ${hosts[@]}
             cfssl_check
             get_CA_cert
