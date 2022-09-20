@@ -1,6 +1,6 @@
 # KVM
 
-## 物理机迁移云平台
+## 物理机迁移虚拟机
 
 ### linux
 
@@ -25,7 +25,7 @@ nc -l 18888|pigz -d > /vmcluster/machine-name/machine-disk.raw
 物理机上
 
 ```shell
-dd if=/dev/vd bs=10M | pigz|nc 150.158.93.164 18888
+dd if=/dev/vd${disk_id} bs=4M | pigz|nc 150.158.93.164 18888
 ```
 
 ### windows
