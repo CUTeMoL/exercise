@@ -1695,7 +1695,7 @@ help_info() {
 \tq exit"
 }
 
-creata_ssh_key ${etcds[@]} ${hosts[@]}
+
 while true
 do
     help_info
