@@ -1,15 +1,15 @@
 #!/bin/bash
-# 基于mysql8.0.28-glibc版本、gtid模式
+# 基于mysql8.0.28-glibc版本、gtid主从模式
 # 最好可以先免密登录mysql,或者要在脚本中的mysql命令行中使用-u -p 添加用户密码，只是这样会不够安全
 # 推荐使用mysql_config_editor set --login-path=root_3306 --user=root --socket=/tmp/mysql_3306.sock --password来设置免密登录
-# 之后就可以使用mysql --login-path=root_3306来登录实例(仅使用此命令免密的用户有效，安全性较高)
+# 之后就可以使用mysql --login-path=root_3306来登录实例(仅使用此命令免密的用户有效，安全性较高,可以省很多事)
 
 # 先在主库创建好同步用的用户
 # 然后在从库主机上运行此脚本
 # 根据情况修改变量
 
 # slave info
-# 多实例时可以将以下变量存入${slave_data_dir}/replica_slave.info,然后source replica.info来读取
+# 多实例时可以将以下变量存入自定义的文件中比如: ${slave_data_dir}/replica_slave.info,然后source ${slave_data_dir}/replica_slave.info来读取
 slave_listen_port=3306 # 监听端口
 slave_login_user=root # 定义在从库操作主从同步或修复主从同步时的用户
 slave_login_passwd=123456 # 定义在从库操作主从同步或修复主从同步时的用户密码
@@ -18,10 +18,11 @@ slave_data_dir=/mysqld/data_${slave_listen_port} # 定义数据目录
 slave_socket=`ps -ef | grep -e "--port=${slave_listen_port}" | grep -v "grep"| grep -o -e "--socket=.*\.sock" | awk -F "=" '{print $2}'` # 通过监听端口获取socket
 
 # master info
-# 多实例时可以将以下变量存入${slave_data_dir}/reolica_master.info的文件然后使用source master.info来获取
+# 多实例时可以将以下变量存入自定义的文件中比如: ${slave_data_dir}/reolica_master.info的文件然后使用source ${slave_data_dir}/reolica_master.info来获取
+# 或者直接读取master.info(需要开启master_info_repository=FILE,不推荐)
 master_ipaddress=192.168.1.121
 master_listen_port=3306
-replica_user=replica
+replica_user=replica # 在主库具有复制权限的账户
 replica_passwd=123456
 
 # replica set
@@ -50,7 +51,7 @@ start_replica() {
     slave_login_user=$2
     slave_login_passwd=$3
     slave_socket=$4
-    ${slave_base_dir}/bin/mysql -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "start slave;" >/dev/null 2>&1
+    ${slave_base_dir}/bin/mysql -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "stop slave;start slave;" >/dev/null 2>&1
 }
 
 check_replica() {
@@ -77,11 +78,11 @@ check_replica() {
             echo "${io_error}"
             echo "${io_error}" | grep -o -e "Authentication plugin 'caching_sha2_password' reported error"
             if [[ $? = 0 ]];then
-                ${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p${replica_passwd} \
+                ${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -P${master_listen_port} -p${replica_passwd} \
                 -e "show databases;" >/dev/null 2>&1
                 ${slave_base_dir}/bin/mysql -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} -e "stop slave;start slave;" >/dev/null 2>&1
-                io_error=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} \
-                -e "show slave status\G" -s | grep "Last_IO_Error:"` >/dev/null 2>&1
+                # io_error=`${slave_base_dir}/bin/mysql --get-server-public-key -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} \
+                # -e "show slave status\G" -s | grep "Last_IO_Error:"` >/dev/null 2>&1
             fi
         fi
         if [[ ${slave_io_status} = Yes ]] && [[ ${slave_sql_status} = No ]];then
@@ -100,12 +101,12 @@ check_replica() {
                     ${slave_base_dir}/bin/mysql -S ${slave_socket} -u${slave_login_user} -p${slave_login_passwd} \
                     -e "start slave;" >/dev/null 2>&1
                 else
-                    echo "please use mysqlbinglog binlog.file | grep -A15 \"${sql_error_id}\" on master host"
+                    echo "please use < mysqlbinglog binlog_file | grep \"${sql_error_id}\" > on master host find error event"
                 fi
             fi
         fi
         if [[ ${slave_io_status} = Yes ]] && [[ ${slave_sql_status} = Yes ]];then
-            echo "Replication is running" && break
+            echo "Replica from ${master_ipaddress}:${master_listen_port} is running..." && break
         fi
     done
 }
@@ -116,7 +117,7 @@ replica_info() {
     replica_user=$3
     slave_listen_port=$4
     echo "master.info ${replica_user}@${master_ipaddress}:${master_listen_port}"
-    echo "slave.infog port: ${slave_listen_port}"
+    echo "slave.info localhost:${slave_listen_port}"
     read -p "Do you confirm these configuration(y/n): " action
     if [[ ${action} != y ]];then
         echo "please modify $0 configuration." && exit
@@ -160,7 +161,6 @@ do
         ;;
         3)
             replica_info ${master_ipaddress} ${master_listen_port} ${replica_user} ${slave_listen_port}
-            help_info
         ;;
         q)
             break
