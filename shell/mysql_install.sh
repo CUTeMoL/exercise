@@ -1,6 +1,7 @@
 #!/bin/bash
-# 修改以下变量
 
+# 基于mysqld 8.0以上版本
+# 修改以下变量
 download_mysql_version=8.0.28 # 要安装的版本
 mysql_listen_port=3306 # 端口
 mysql_data_dir=/mysqld/data_${mysql_listen_port} # 数据目录
@@ -197,6 +198,7 @@ mysql_auto_start_disable() {
 }
 
 
+
 help_info() {
     echo -e "
 Welcome to Master Lin's mysql management tool. Please input the number to use these functions.
@@ -253,9 +255,6 @@ do
         ;;
         4)
             check_configuration ${os_version} ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid}
-        ;;
-        5)
-            data_dir_init ${mysql_base_dir} ${mysql_data_dir} 
         ;;
         q)
             break
