@@ -1224,7 +1224,7 @@ put_keepalived_conf() {
             echo "`date \"+%F %T \"`[error] The ${host} interface is uncertain" | tee -a /data/work/running.log
             while true
             do
-                read -p "Please enter the ${host} interface name: " if_name
+                read -p "Please enter the ${host} interface name(used by keepalived configuration): " if_name
                 if_name_check=`ssh ${host} "ifconfig" | grep ${if_name} | grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'`
                 if [[ $if_name_check = $if_name ]];then
                     break

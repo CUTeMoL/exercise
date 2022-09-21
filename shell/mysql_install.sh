@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# 基于mysqld 8.0以上版本
+# 适用于mysqld 5.7/8.0
 # 修改以下变量
 download_mysql_version=8.0.28 # 要安装的版本
-mysql_listen_port=3306 # 端口
+mysql_listen_port=3306 # 此实例监听的端口
 mysql_data_dir=/mysqld/data_${mysql_listen_port} # 数据目录
 mysql_base_dir=/usr/local/mysql_${mysql_listen_port} # 安装目录
 serverid=10 # 集群id
+root_passwd=123456 # 安装完成后将root密码修改为此字符
 
 init_environment() {
     data_dir=$1
@@ -26,7 +27,7 @@ init_environment() {
             rm -rf /etc/my.cnf /etc/mysql && echo "/etc/my.cnf or /etc/mysql already deleted"
         fi
     fi
-    if [ -e ${base_dir} ] || [ -e ${data_dir} ];then
+    if [ -e ${base_dir} ] || [ -e ${data_dir}/mysql ];then
         echo "mysql already exists. please check ${base_dir} and ${data_dir}" && exit
     fi
     id mysql >/dev/null 2>&1
@@ -66,7 +67,7 @@ install_mysql() {
     mysql_port=$4
     server_id=$5
     os_version=$6
-    if [ -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ] && [[ ${version} = 8.0 ]];then
+    if [ -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ] && [[ ${version:0:3} = 8.0 ]];then
         tar -xf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz -C /data/work/
     elif [ -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.gz ];then
         tar -zxf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.gz -C /data/work/
@@ -165,12 +166,13 @@ EOF
     else
         echo "/etc/my.cnf or /etc/mysql already exists,please check them."
     fi
-    ${base_dir}/bin/mysqld --defaults-file=${base_dir}/my.cnf --initialize --user=mysql --basedir=${base_dir} --datadir=${data_dir}
+    ${base_dir}/bin/mysqld --defaults-file=${base_dir}/my.cnf --initialize --user=mysql --basedir=${base_dir} --datadir=${data_dir} 2>&1 | tee -a /tmp/my_install_${mysql_port}.log
     ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
-    mkdir ${data_dir}/undospace/
     if [ -e ${data_dir}/undo_001 ];then
+        mkdir ${data_dir}/undospace/ -p
         mv ${data_dir}/undo_00* ${data_dir}/undospace/
     elif [ -e ${data_dir}/undo001 ];then
+        mkdir ${data_dir}/undospace/ -p
         mv ${data_dir}/undo00* ${data_dir}/undospace/
     fi
     chown -R mysql:mysql ${data_dir}
@@ -185,22 +187,26 @@ EOF
     fi
     if [[ ${os_version} = Ubuntu ]];then
         if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
-            if [ -e /lib/x86_64-linux-gnu/libtinfo.so.6.2 ];then
-                ln -s /lib/x86_64-linux-gnu/libtinfo.so.6.2 /lib/x86_64-linux-gnu/libtinfo.so.5
-                ln -s /lib/x86_64-linux-gnu/libncurses.so.6.2 /lib/x86_64-linux-gnu/libncurses.so.5
+            if [ -e /lib/x86_64-linux-gnu/libtinfo.so.6 ];then
+                ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+                ln -s /lib/x86_64-linux-gnu/libncurses.so.6 /lib/x86_64-linux-gnu/libncurses.so.5
             else
                 echo "[error] please ln -s /lib/x86_64-linux-gnu/libtinfo.so.{version} /lib/x86_64-linux-gnu/libtinfo.so.5"
             fi
         fi
     else
         if [ ! -e /lib64/libtinfo.so.5 ];then
-            if [ -e /lib64/libtinfo.so.5.9 ];then
-                ln -s /lib64/libtinfo.so.5.9 /lib64/libtinfo.so.5
-                ln -s /lib64/libncurses.so.6.2 /lib64/libncurses.so.5
+            if [ -e /lib64/libtinfo.so.6 ];then
+                ln -s /lib64/libtinfo.so.6 /lib64/libtinfo.so.5
+                ln -s /lib64/libncurses.so.6 /lib64/libncurses.so.5
             else
                 echo "[error] please ln -s /lib64/libtinfo.so.{version} /lib64/libtinfo.so.5"
             fi
         fi
+    fi
+    service mysqld_${mysql_port} start
+    if [ $0 -ne 0 ];then
+        echo "[error] please check ${data_dir}/`hostname`.err"
     fi
 }
 
@@ -258,10 +264,24 @@ please check configuration \
 \n  server_id: ${server_id}"
     read -p "Do you confirm these configuration(y/n): " action
     if [[ ${action} != y ]];then
-        echo "please modify $0 configuration." && exit
+        echo "[warning] please modify $0 configuration." && exit
     fi
 }
-check_configuration ${os_version} ${download_mysql_version}  ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid}
+
+change_random_passwd() {
+    mysql_port=$1
+    root_passwd=$2
+    grep "root@localhost:" /tmp/my_install_${mysql_port}.log
+    if [ $? -eq 0 ];then 
+        random_passwd=`awk '/root@localhost:/{print $NF}' /tmp/my_install_${mysql_port}.log`
+        ${mysql_base_dir}/bin/mysql --connect-expired-password -S /tmp/mysql_${mysql_port}.sock -p${random_passwd} \
+        -e "ALTER USER 'root'@localhost IDENTIFIED BY \"${root_passwd}\";"
+    else
+        echo "[error] please check /tmp/my_install_${mysql_listen_port}.log"
+    fi
+}
+
+check_configuration ${os_version} ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid}
 while true
 do
     help_info
@@ -271,6 +291,7 @@ do
             init_environment ${mysql_data_dir} ${mysql_base_dir} ${os_version} 
             download_mysql ${download_mysql_version}
             install_mysql ${download_mysql_version} ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid} ${os_version} 
+            change_random_passwd ${mysql_listen_port} ${root_passwd}
         ;;
         2)
             mysql_auto_start ${mysql_listen_port} ${os_version} 
