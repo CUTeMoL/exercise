@@ -26,7 +26,7 @@ init_environment() {
             rm -rf /etc/my.cnf /etc/mysql && echo "/etc/my.cnf or /etc/mysql already deleted"
         fi
     fi
-    if [ -e ${base_dir}/bin ] || [ -e ${data_dir}/mysql ];then
+    if [ -e ${base_dir} ] || [ -e ${data_dir} ];then
         echo "mysql already exists. please check ${base_dir} and ${data_dir}" && exit
     fi
     id mysql >/dev/null 2>&1
@@ -39,14 +39,23 @@ init_environment() {
 
 download_mysql() {
     version=$1
-    download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.xz >/dev/null 2>&1
-    if [ ! -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ];then
+    if [[ ${version:0:3} = 8.0 ]];then
+        download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.xz >/dev/null 2>&1
+    else
+        download_url=https://cdn.mysql.com/archives/mysql-${version:0:3}/mysql-${version}-linux-glibc2.12-x86_64.tar.gz >/dev/null 2>&1
+    fi
+    if [ ! -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ] && [[ ${version:0:3} = 8.0 ]];then
         wget ${download_url} -O /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz
         if [ $? -ne 0 ];then
             echo "download mysql-${version}-linux-glibc2.12-x86_64.tar.xz is failed" && exit
         fi
+    elif [ ! -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.gz ];then
+        wget ${download_url} -O /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.gz
+        if [ $? -ne 0 ];then
+            echo "download mysql-${version}-linux-glibc2.12-x86_64.tar.gz is failed" && exit
+        fi
     else
-        echo "mysql-${version}-linux-glibc2.12-x86_64.tar.xz already exists"
+        echo "mysql-${version}-linux-glibc2.12-x86_64.tar.gz already exists"
     fi
 }
 
@@ -57,11 +66,14 @@ install_mysql() {
     mysql_port=$4
     server_id=$5
     os_version=$6
-    if [ -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ];then
+    if [ -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz ] && [[ ${version} = 8.0 ]];then
         tar -xf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz -C /data/work/
+    elif [ -e /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.gz ];then
+        tar -zxf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.gz -C /data/work/
     else
-        download_mysql ${version} && \
-        tar -xf /data/work/mysql-${version}-linux-glibc2.12-x86_64.tar.xz -C /data/work/
+        download_mysql ${version}
+        echo "Downloading mysql-${version}-glibc-install package,when download is completed,please run this script again."
+        exit
     fi
     mv /data/work/mysql-${version}-linux-glibc2.12-x86_64 ${base_dir}
     mkdir -p ${base_dir}/mysql-files
@@ -197,8 +209,6 @@ mysql_auto_start_disable() {
     fi
 }
 
-
-
 help_info() {
     echo -e "
 Welcome to Master Lin's mysql management tool. Please input the number to use these functions.
@@ -233,7 +243,7 @@ please check configuration \
 \n  server_id: ${server_id}"
     read -p "Do you confirm these configuration(y/n): " action
     if [[ ${action} != y ]];then
-        echo "please modify $0 configuration." && break
+        echo "please modify $0 configuration." && exit
     fi
 }
 check_configuration ${os_version} ${download_mysql_version}  ${mysql_data_dir} ${mysql_base_dir} ${mysql_listen_port} ${serverid}
