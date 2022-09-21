@@ -79,12 +79,9 @@ install_mysql() {
     mkdir -p ${base_dir}/mysql-files
     chown mysql:mysql ${base_dir}/mysql-files
     chmod 750 ${base_dir}/mysql-files
-    ${base_dir}/bin/mysqld --initialize --user=mysql --basedir=${base_dir} --datadir=${data_dir}
-    ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
     cat > ${base_dir}/my.cnf <<EOF
 [mysqld]
 # base
-mysqlx=OFF
 basedir=${base_dir}
 datadir=${data_dir}
 port=${mysql_port}
@@ -128,39 +125,55 @@ binlog_rows_query_log_events=1
 binlog_cache_size=64K
 max_binlog_cache_size=2G
 max_binlog_size=1024M
-# expire_logs_days=10
-binlog_expire_logs_seconds=864000
 relay_log_recovery=1
-# relay_log_info_repository=TABLE
-# master_info_repository=TABLE
-# slave_parallel_type=logical_clock
-replica_parallel_type=LOGICAL_CLOCK
-# slave_parallel_workers=8 
-replica_parallel_workers=8
+relay_log_info_repository=TABLE
+master_info_repository=TABLE
 gtid_mode=on
-# log_slave_updates=1
-log_replica_updates=1
 enforce-gtid-consistency=1
 relay_log_purge=1
+
+[mysqld-5.7]
+# replica
+expire_logs_days=10
+slave_parallel_type=logical_clock
+slave_parallel_workers=8 
+log_slave_updates=1
+
+[mysqld-8.0]
+# base
+mysqlx=OFF
+
+# replica
+binlog_expire_logs_seconds=864000
+replica_parallel_type=LOGICAL_CLOCK
+replica_parallel_workers=8
+log_replica_updates=1
 EOF
+    chown -R mysql:mysql ${base_dir}/my.cnf
     if [ ! -e /etc/my.cnf ] && [ ! -e /etc/mysql ];then
         cat > /etc/my.cnf <<EOF
 [mysql]
 port=3306
 socket=/tmp/mysql_${mysql_port}.sock
 prompt="mysql>\u@\h:[\d]# "
+
 [mysqladmin]
 port=3306
 socket=/tmp/mysql_${mysql_port}.sock
 EOF
+    chown -R mysql:mysql /etc/my.cnf
     else
         echo "/etc/my.cnf or /etc/mysql already exists,please check them."
     fi
+    ${base_dir}/bin/mysqld --defaults-file=${base_dir}/my.cnf --initialize --user=mysql --basedir=${base_dir} --datadir=${data_dir}
+    ${base_dir}/bin/mysql_ssl_rsa_setup --datadir=${data_dir}
     mkdir ${data_dir}/undospace/
     if [ -e ${data_dir}/undo_001 ];then
         mv ${data_dir}/undo_00* ${data_dir}/undospace/
+    elif [ -e ${data_dir}/undo001 ];then
+        mv ${data_dir}/undo00* ${data_dir}/undospace/
     fi
-    chown -R mysql:mysql ${data_dir}/undospace
+    chown -R mysql:mysql ${data_dir}
     cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld_${mysql_port}
     sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
     -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld_${mysql_port}
@@ -174,6 +187,7 @@ EOF
         if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
             if [ -e /lib/x86_64-linux-gnu/libtinfo.so.6.2 ];then
                 ln -s /lib/x86_64-linux-gnu/libtinfo.so.6.2 /lib/x86_64-linux-gnu/libtinfo.so.5
+                ln -s /lib/x86_64-linux-gnu/libncurses.so.6.2 /lib/x86_64-linux-gnu/libncurses.so.5
             else
                 echo "[error] please ln -s /lib/x86_64-linux-gnu/libtinfo.so.{version} /lib/x86_64-linux-gnu/libtinfo.so.5"
             fi
@@ -182,6 +196,7 @@ EOF
         if [ ! -e /lib64/libtinfo.so.5 ];then
             if [ -e /lib64/libtinfo.so.5.9 ];then
                 ln -s /lib64/libtinfo.so.5.9 /lib64/libtinfo.so.5
+                ln -s /lib64/libncurses.so.6.2 /lib64/libncurses.so.5
             else
                 echo "[error] please ln -s /lib64/libtinfo.so.{version} /lib64/libtinfo.so.5"
             fi
