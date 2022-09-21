@@ -52,7 +52,7 @@ send_ssh_key.sh - 发送ssh公钥
 
 kubernetes_manager.sh - kubernetes一键二进制部署脚本，附带集群证书更新功能，添加新节点功能
 
-mysql_install.sh - mysql一键自动化安装
+mysql_install.sh - mysql[5.7|8.0]版本一键自动化安装,适用于centos以及Ubuntu系统
 
 mysql_replica_manager.sh - 主从同步工具,可以修复一些常见的主从同步错误
 
