@@ -56,6 +56,8 @@ mysql_install.sh - mysql[5.7|8.0]版本一键自动化安装,适用于centos以�
 
 mysql_replica_manager.sh - 主从同步工具,可以修复一些常见的主从同步错误
 
+mysql_backup.sh - mysql[5.7|8.0]定时全库备份脚本
+
 # 经验笔记（整理中）
 
 ## note
