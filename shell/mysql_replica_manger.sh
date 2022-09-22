@@ -146,7 +146,8 @@ do
                 ${slave_base_dir} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
                 start_replica ${slave_base_dir} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
                 sleep 10
-                check_replica ${slave_base_dir} ${master_ipaddress} ${master_listen_port} ${replica_user} ${replica_passwd} 
+                check_replica ${slave_base_dir} ${master_ipaddress} ${master_listen_port} \
+                ${replica_user} ${replica_passwd} ${slave_login_user} ${slave_login_passwd} ${slave_socket}
             else
                 echo "Only GTID is supported"
             fi
