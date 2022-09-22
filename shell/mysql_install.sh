@@ -205,7 +205,7 @@ EOF
         fi
     fi
     service mysqld_${mysql_port} start
-    if [ $0 -ne 0 ];then
+    if [ $? -ne 0 ];then
         echo "[error] please check ${data_dir}/`hostname`.err"
     fi
 }
