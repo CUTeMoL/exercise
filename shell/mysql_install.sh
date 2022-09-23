@@ -108,6 +108,7 @@ read_buffer_size=8M
 bulk_insert_buffer_size=64M
 myisam_sort_buffer_size=128M
 key_buffer_size=2048M
+max_allowed_packet=64M
 
 # redolog
 innodb_log_file_size=4G

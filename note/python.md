@@ -196,6 +196,7 @@ and if as assert break class continue def del elif else except finally for from 
 
 ```python
 #!/usr/bin/python                # 声明类型,指明解释器命令路径
+#!/usr/bin/env python3           # 虚拟环境的解释器的声明
 #-*- coding: utf-8 -*-            # 指定字符格式为utf-8（可以打印中文）,python3不用再指定了
 ```
 
@@ -453,26 +454,26 @@ print("hello"
 
 格式化输出:
 
-| 操作符 | 说明  |
-| --- | --- |
-| %s  | 字符串 |
-| %d  | 整数  |
-| %f  | 浮点数 |
-| %%  | 输出% |
+| 操作符 | 说明             |
+| ------ | ---------------- |
+| %s     | 字符串           |
+| %d     | 整数(向下取整数) |
+| %f     | 浮点数(四舍五入) |
+| %%     | 输出%            |
 
 保留小数点后两位: 
 
 ```python
-print("%.2f %d %s %%" % (2.031478, 2000.977, 234.87))    # 输出2.03 2000 234.87 %
+print("%.2f %d %s %%" % (2.0991478, 2000.977, 234.87))    # 输出2.10 2000 234.87 %
 ```
 
 格式化输出2:
 
 ```python
-  print({}{}.format(v1,v2))
+print("{}{}".format(v1,v2))
 ```
 
-​    {}可以写顺序0 - +∞决定使用format()中的具体变量
+{}可以写顺序0 - +∞决定使用format()中的具体变量
 
 ```python
 name = input("input your name:")
@@ -744,7 +745,7 @@ print(abc.__len__()) # 使用字符串的__len__()方法来算字符串的长度
 ```python
 # 用enumerate()来打印行号
 with open("G:/linux/vmware许可证.txt", "r", encoding='utf8') as f:
-    for line, text in  enumerate(f.readlines()):
+    for line, text in enumerate(f.readlines()):
         print(line+1, text)
 ```
 
