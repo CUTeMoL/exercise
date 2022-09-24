@@ -726,8 +726,6 @@ ls # 列出目录
 alias ll='ls -alhF --time-style="+%Y-%m-%d %H:%M"'
 ```
 
-
-
 #### basename
 
 ```shell
