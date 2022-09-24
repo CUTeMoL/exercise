@@ -711,18 +711,33 @@ abcdefg    "%.5s"    abcde
 
 ### 文件处理类
 
+#### ls
+
+```shell
+ls # 列出目录
+-l # 详细信息
+-h # 高可读
+-t # 按建立时间
+-a # 显示隐藏
+--hide=PATTERN # 隐藏
+-F # *为可执行文件,/为目录
+--full-time # 完整实际格式相当于--time-style=full-iso
+--time-style="+%Y-%m-%d %H:%M" # 定制时间显示格式
+alias ll='ls -alhF --time-style="+%Y-%m-%d %H:%M"'
+```
+
+
+
 #### basename
 
-```
-basename
-取出名字
+```shell
+basename # 取出名字
 ```
 
 #### dirname
 
-```
-dirname
-取出目录名
+```shell
+dirname # 取出目录名
 ```
 
 #### find
