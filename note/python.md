@@ -143,10 +143,6 @@ pycharm建立项目
 
 不可以作为变量
 
-```python
-and if as assert break class continue def del elif else except finally for from  False global import in is lambda nonlocal not None or pass raise return try True while with yield
-```
-
 | 保留字     | 说明                                                         |
 | ---------- | ------------------------------------------------------------ |
 | `and`      | 和                                                           |
