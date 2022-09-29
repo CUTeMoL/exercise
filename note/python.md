@@ -444,10 +444,8 @@ print(list(f"{x}*{y}="+str(x*y) for x in range(1, 10) for y in range(x, 10) if x
 ```python
 generator_expr = (f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10))
 for i in generator_expr:
-    print(i)
+    print(i) # 遍历时才计算来获取结果
 ```
-
-
 
 ### 元组tuple:
 
