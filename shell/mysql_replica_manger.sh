@@ -15,7 +15,7 @@ slave_login_user=root # 定义在从库操作主从同步或修复主从同步�
 slave_login_passwd=123456 # 定义在从库操作主从同步或修复主从同步时的用户密码
 slave_base_dir=/usr/local/mysql_${slave_listen_port} # 定义程序目录
 slave_data_dir=/mysqld/data_${slave_listen_port} # 定义数据目录
-slave_socket=`ps -ef | grep -e "--port=${slave_listen_port}" | grep -v "grep"| grep -o -e "--socket=.*\.sock" | awk -F "=" '{print $2}'` # 通过监听端口获取socket
+slave_socket=`ps -ef | grep -e "--port=${slave_listen_port}" | grep -v "grep"| grep -o -e "--socket=.*\.sock" | awk -F "=" '{print $2}' | awk 'NR==1{print $1}'` # 通过监听端口获取socket
 
 # master info
 # 多实例时可以将以下变量存入自定义的文件中比如: ${slave_data_dir}/reolica_master.info的文件然后使用source ${slave_data_dir}/reolica_master.info来获取
