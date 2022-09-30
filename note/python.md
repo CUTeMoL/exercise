@@ -355,7 +355,7 @@ print(str1[1:-1:2])    # 结果为bd68(-1代表最后一个数但不包括终点
 print(str1[::-1])    # 结果为09876edcba
 ```
 
-​    字符操作:
+字符操作:
 
 ```python
 abc="hello,nice to meet you"
@@ -430,22 +430,6 @@ print(list1[num1:num2:num3])   #num1起点(默认0),num2终点但不包括,num3�
 
   列表可以嵌套
 
-#### 生成器
-
-可以通过for循环生成一个`generator object`,通过`[generator object]`或`list(generator object)`来获取列表
-
-```python
-print([f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10)])
-print(list(f"{x}*{y}="+str(x*y) for x in range(1, 10) for y in range(x, 10) if x != y ))
-```
-
-如果是使用`(generator object)`则是一个生成器,保留算法而不存储结果,节省内存
-
-```python
-generator_expr = (f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10))
-for i in generator_expr:
-    print(i) # 遍历时才计算来获取结果
-```
 
 ### 元组tuple:
 
@@ -963,7 +947,13 @@ people("zhangsan", "man", 25, salary=20000, department="IT")
 
   `return`返回元组,可以赋值给对应个数的变量
 
-函数嵌套:
+### generator函数返回值yield:
+
+  `generator`的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行。
+
+  如果死循环那就无法得到`return`的值
+
+### 函数嵌套:
 
   被嵌套的函数也要先定义才能调用，不能在调用后定义
 
@@ -2385,3 +2375,23 @@ class Man(People):
         method1()
         return codes|info
 ```
+
+## 十八、生成器
+
+可以通过for循环生成一个`generator object`,通过`[generator object]`或`list(generator object)`来获取列表
+
+```python
+print([f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10)])
+print(list(f"{x}*{y}="+str(x*y) for x in range(1, 10) for y in range(x, 10) if x != y ))
+```
+
+如果是使用`(generator object)`则是一个生成器,保留算法而不存储结果,节省内存
+
+```python
+generator_expr = (f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10))
+for i in generator_expr:
+    print(i) # 遍历时才计算来获取结果
+```
+
+## 十九、迭代器
+
