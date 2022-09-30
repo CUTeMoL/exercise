@@ -2557,7 +2557,7 @@ innobackupex --apply-log ./
 4.重命名数据目录的名字为mysql数据库目录
 
 ```shell
-mv ../databak /$datadir
+mv ./databak /$datadir
 ```
 
 5.
