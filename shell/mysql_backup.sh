@@ -6,7 +6,7 @@ mysql_basedir=`ps -ef | grep -e "port=${mysql_port}" | grep -v "grep" | grep -o 
 mysqldump_version=`${mysql_basedir}/bin/mysqldump --version|grep -o -e "[0-9]\.[0-9].[0-9]\{1,3\}"`
 passwd=123456
 
-alldatabase_backup() {
+mysqldump_alldatabase_backup() {
     mysql_port=$1
     mysql_socket=$2
     mysql_basedir=$3
@@ -36,4 +36,4 @@ alldatabase_backup() {
         echo "This version is not supported" && exit 1
     fi
 }
-alldatabase_backup ${mysql_port} ${mysql_socket} ${mysql_basedir} ${mysql_datadir} ${mysqldump_version} ${passwd}
+mysqldump_alldatabase_backup ${mysql_port} ${mysql_socket} ${mysql_basedir} ${mysql_datadir} ${mysqldump_version} ${passwd}
