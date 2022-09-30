@@ -740,6 +740,19 @@ for i in range(1,10):
 
 ## 十一、函数
 
+一组代码的集合
+
+函数名代表函数本身,如果赋值给某一变量那么,变量本身也可以当作函数使用
+
+```python
+print(abs) # <built-in function abs>
+f = abs
+print(f) # <built-in function abs>
+print(f(-10)) # 10
+```
+
+函数加上`()`代表调用这个函数
+
 ### 常用函数:
 
 | 常用函数                                          | 说明                                                         |
@@ -750,6 +763,7 @@ for i in range(1,10):
 | `zip(list1, list2)`                               | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
 | `lambda var: expression`                          | 传入变量`var`返回`expression`的结果,可以嵌入其他函数中使用   |
 | `sorted(object, key=lambda x:x[1], reverse=True)` | 对`object`进行排序,`key`代表需要排序的字段(传入对象第二层是元组或列表时用的到),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
+| `iter(object)`                                    | 将`Iterable`转为`Iterator`                                   |
 
 ```python
 a = ['a', 'b', 'c', 'd']
@@ -2395,3 +2409,22 @@ for i in generator_expr:
 
 ## 十九、迭代器
 
+### `Iterable`
+
+可迭代对象,指可以用于`for`循环遍历的对象
+
+一类是`list`,`tuple`,`dict`,`set`,`str`等数据类型
+
+另一类是`generator`,包括生成器和带`yield`的`generator function`
+
+### `Iterator`
+
+迭代器,指可以被`next(object)`函数调用并返回下一个值,直到最后抛出`StopIteration`错误
+
+生成器是`Iterator`,但是`list`,`tuple`,`dict`,`set`,`str`等数据类型不是
+
+可以通过`iter(object)`函数使一个`Iterable`转为`Iterator`
+
+### 区别
+
+`Iterator`是是一组仅存储计算公式的对象,有需要时才计算出下一个值,可以用于表示一个无限大的数据,而数据类型是有明确的范围的
