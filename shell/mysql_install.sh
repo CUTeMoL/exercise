@@ -168,6 +168,9 @@ port=3306
 socket=/tmp/mysql_${mysql_port}.sock
 prompt="mysql>\u@\h:[\d]# "
 
+[mysqldump]
+max_allowed_packet=64M
+
 [mysqladmin]
 port=3306
 socket=/tmp/mysql_${mysql_port}.sock
