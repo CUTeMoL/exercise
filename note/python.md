@@ -965,6 +965,46 @@ people("zhangsan", "man", 25, salary=20000, department="IT")
 
   `return`返回元组,可以赋值给对应个数的变量
 
+  `return`可以返回函数(如果是内部自定义函数,每次返回来的函数都不同,即使传入的是相同的参数,因为每次调用函数,都会重新在内部自定义一个新的函数)
+
+```python
+def lazy_sum(*args):
+    def sum():
+        ax = 0
+        for n in args:
+            ax = ax + n
+        return ax
+    return sum
+f = lazy_sum(1, 2, 3, 4, 5) # 虽然已经传参,但是此时因为返回的是变量名,所以赋值的是函数,此时f也是函数名,需要调用才得到结果
+print(f) # 返回的是这个函数(没有计算)
+print(f()) # 返回计算后的结果
+
+def count():
+    fs = []
+    for i in range(1, 4):
+        def f():
+             return i*i # 返回的时i*i,而不是1*1,2*2,3*3
+        fs.append(f)
+    return fs # 此时i=3了
+
+f1, f2, f3 = count() # 调用函数,f1,f2,f3 = f,且i=3
+print(f1(), f2(), f3()) # 返回 9 9 9,因为是先返回函数,都返回完成后才计算,由于变量i是在count这层函数定义的,f这层函数计算时i已经变成最后的3了
+
+def count():
+    def f(j):
+        def g():
+            return j*j # 此时return的j*j不是变量j,而是1*1,2*2,3*3
+        return g # 返回函数名g
+    fs = []
+    for i in range(1, 4):
+        fs.append(f(i)) # f(i)立刻被执行，因此i的当前值被传入f(),返回g
+    return fs
+f1, f2, f3 = count()
+print(f1(), f2(), f3()) # 返回1 4 9,因为f(j)是赋值数字给j,对于函数g而言return的是常量,而不是变量
+```
+
+
+
 ### generator函数返回值yield:
 
   `generator`的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行。
