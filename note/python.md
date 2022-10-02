@@ -762,10 +762,14 @@ print(f(-10)) # 10
 | `eval(str)`                                       | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典 |
 | `zip(list1, list2)`                               | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
 | `lambda var: expression`                          | 传入变量`var`返回`expression`的结果,可以嵌入其他函数中使用   |
-| `sorted(object, key=lambda x:x[1], reverse=True)` | 对`object`进行排序,`key`代表需要排序的字段(传入对象第二层是元组或列表时用的到),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
+| `sorted(object, key=lambda x:x[1], reverse=True)` | 对`object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
 | `iter(object)`                                    | 将`Iterable`转为`Iterator`                                   |
+| `map(function, Iterable)`                         | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator` |
+| `filter(function, Iterable)`                      | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素 |
+| `reduce(function, Iterable)`                      | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算 |
 
 ```python
+print(sorted([36, 5, -12, 9, -21], key=abs))
 a = ['a', 'b', 'c', 'd']
 b = ['1', '2', '3', '4']
 list(zip(a, b)) # [('a', '1'), ('b', '2'), ('c', '3'), ('d', '4')]
