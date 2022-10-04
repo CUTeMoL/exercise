@@ -2364,7 +2364,7 @@ finally:
 print("捕获到异常执行，没捕获到不执行")
 ```
 
-  如果发生异常，但异常都没有被捕捉到，就会报异常，并终止程序运行；如果捕捉到，会报你自 定义的错误，并继续可以执行下面的代码 
+如果发生异常，但异常都没有被捕捉到，就会报异常，并终止程序运行；如果捕捉到，会报你自定义的错误，并继续可以执行下面的代码 
 
 ## 十五、类
 
@@ -2461,6 +2461,41 @@ class Man(People):
         method1()
         return codes|info
 ```
+
+多态
+
+```python
+class Animal(object):   #编写Animal类
+    def run(self):
+        print("Animal is running...")
+
+class Dog(Animal):  #Dog类继承Amimal类，没有run方法
+    pass
+
+class Cat(Animal):  #Cat类继承Animal类，有自己的run方法
+    def run(self):
+        print('Cat is running...')
+    pass
+
+class Car(object):  #Car类不继承，有自己的run方法
+    def run(self):
+        print('Car is running...')
+
+class Stone(object):  #Stone类不继承，也没有run方法
+    pass
+
+def run_twice(animal):
+    animal.run()
+    animal.run() # 只要由相同的方法,就可以看作是animal,哪怕没有继承
+
+run_twice(Animal())
+run_twice(Dog())
+run_twice(Cat())
+run_twice(Car())
+run_twice(Stone()) # 只有没定义run()的类报错
+```
+
+
 
 ## 十八、生成器
 
