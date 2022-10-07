@@ -2386,6 +2386,16 @@ class ClassName(object):
         return "print(object)时输出的内容"
     def __del__(self):
         print("销毁完对象，会输出此内容")
+    @property
+    def property_name3(self):
+        return self._property_name3
+    @property_name3.setter
+    def property_name3(self, value):
+        if type(value) != int:
+            raise ValueError("must be an int")
+        if value <= 0 or value >= 100:
+            raise ValueError("must be between 0-100")
+        self._property_name3 = value
 ```
 
 | 概念                                | 功能                                                         |
@@ -2396,6 +2406,8 @@ class ClassName(object):
 | `def __init__(self, property_name)` | 初始化函数,创建一个实例时,必须要指定的属性,`self`表示实例自身 |
 | `ClassName`                         | 自定义类名,单词首字母大写                                    |
 | `def method(self, args)`            | 方法函数,提供给内外部调用,可以用此方法获取私有属性           |
+| `@property`                         | 代表下面的方法是返回属性(只有`@property`时属性只读)          |
+| `@property_name.setter`             | 代表下面的方法是设置属性(和`@property`配合可以用于读取设置私有属性和限制属性的类型范围) |
 
 ## 十六、面向对象
 
