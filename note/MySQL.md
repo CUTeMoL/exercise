@@ -3421,7 +3421,9 @@ mysql --login-path=root_3306
 
 ### 主从同步
 
-`Slave_IO_Running: Connecting` `Slave_SQL_Running:Yes`
+`Slave_IO_Running: Connecting`
+
+`Slave_SQL_Running:Yes`
 
 | `Last_IO_Error`                                              | 原因                                                         | 处理                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -3429,11 +3431,14 @@ mysql --login-path=root_3306
 |                                                              |                                                              | `CREATE USER 'replica'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'XXXX';`不使用密码插件`caching_sha2_password`即可 |
 |                                                              |                                                              |                                                              |
 
-`Slave_IO_Running: Yes` `Slave_SQL_Running:No`
+`Slave_IO_Running: Yes`
+
+`Slave_SQL_Running:No`
 
 | `Last_SQL_Error`                                             | 原因                                                         | 处理                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile|grep -A15 "0d90d68e-3775-11ed-b19a-000c29afe996:9"`来查找出错的原因，然后根据情况解决，删除从库上冲突的数据，重新同步 |
+| Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile | grep -A15 "0d90d68e-3775-11ed-b19a-000c29afe996:9"`来查找出错的原因，然后根据情况解决，删除从库上冲突的数据，重新同步 |
 |                                                              |                                                              | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
 |                                                              |                                                              | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步 |
+|                                                              | 主从库字符集不一致                                           | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集 |
 
