@@ -2413,6 +2413,45 @@ class ClassName(object):
         if self.a > 100000: # 退出循环的条件
             raise StopIteration()
         return self.a # 返回下一个值
+    def __getitem__(self, n):
+        if isinstance(n, int): # n是索引
+            a, b = 1, 1
+            for x in range(n):
+                a, b = b, a + b
+            return a
+        if isinstance(n, slice): # n是切片
+            start = n.start
+            stop = n.stop
+            if start is None:
+                start = 0
+            a, b = 1, 1
+            L = []
+            for x in range(stop):
+                if x >= start:
+                    L.append(a)
+                a, b = b, a + b
+            return L
+    def __getattr__(self, attr):
+        if attr=='score':
+            return 9
+
+class Chain(object):
+    def __init__(self, path=''):
+        self.__path = path
+    def __getattr__(self, path):
+        return Chain('%s/%s' % (self.__path, path))
+    def __call__(self, path):
+        return Chain('%s/%s' % (self.__path, path))
+    def __str__(self):
+        return self.__path
+    __repr__ = __str__
+
+print(Chain().users('michael').repos) # /users/michael/repos
+# 分步拆解↓
+urls = Chain()    # 初始化一个实例
+urls = urls.users    # 查找实例的一个属性
+urls = urls('michael')    # 调用一个函数
+urls = urls.repos    # 还是实例的属性
 ```
 
 | 概念                                | 功能                                                         |
@@ -2429,6 +2468,9 @@ class ClassName(object):
 | `__repr__`                          | 同`__str__`,调试级别                                         |
 | `__iter__`                          | 定义可迭代对象,`self`即自身                                  |
 | `__next__`                          | 定义`next()`的计算方式                                       |
+| `__getitem__`                       | 定义获取指定下标元素的方法                                   |
+| `__getattr__`                       | 动态返回属性                                                 |
+| `__call__`                          | 令实例本身可调用                                             |
 
 ## 十六、面向对象
 
