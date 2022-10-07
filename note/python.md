@@ -2372,6 +2372,7 @@ print("捕获到异常执行，没捕获到不执行")
 
 ```python
 class ClassName(object):
+    __slots__ = ('property_name0', 'property_name1', 'property_name2')
     property_name0 = "class_var_value"
     def __init__(self, property_name1, property_name2):
         self.property_name1 =  property_name1
@@ -2387,27 +2388,14 @@ class ClassName(object):
         print("销毁完对象，会输出此内容")
 ```
 
-类变量: 由类全局指定的对象变量属性
-
-构造函数: \__init__(self, property_name)
-
-  类通过构造函数，强制定义一个对象必须指定的属性property_name
-
-  self代表实例(对象)本身
-
-​    self.property_name1是实例变量，参数最终传递到此处
-
-​    self.\__property_name2是私有属性，不可被类外部调用
-
-  property_name类似函数的形参,等待实参传参
-
-名称ClassName: 类名，单词首字母大写
-
-属性property: 一组参数数据property_name1
-
-方法method: 操作的方式或行为 
-
-  可以用创建方法print(method())的方式打印私有属性
+| 概念                                | 功能                                                         |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `property_name`                     | 实例属性,由类全局指定时,如果实例没有指定该属性时,默认的属性值 |
+| `__property_name`                   | 双下划线表示私有属性                                         |
+| `__slots__`                         | 限制可以添加的属性                                           |
+| `def __init__(self, property_name)` | 初始化函数,创建一个实例时,必须要指定的属性,`self`表示实例自身 |
+| `ClassName`                         | 自定义类名,单词首字母大写                                    |
+| `def method(self, args)`            | 方法函数,提供给内外部调用,可以用此方法获取私有属性           |
 
 ## 十六、面向对象
 
