@@ -766,7 +766,11 @@ print(f(-10)) # 10
 | 常用函数                                          | 说明                                                         |
 | ------------------------------------------------- | ------------------------------------------------------------ |
 | `range(start,end,step)`                           | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1 |
+| `len(object)`                                     | 长度                                                         |
 | `max(object, key=lambda x:x[1])`                  | 选出最大值                                                   |
+| `type(object)`                                    | 判断`object`类型                                             |
+| `isinstance(object, (int, float))`                | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`  |
+| `enumerate(object, n)`                            | 枚举，打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n` |
 | `eval(str)`                                       | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典 |
 | `zip(list1, list2)`                               | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
 | `lambda var: expression`                          | 传入变量`var`返回`expression`的结果,可以嵌入其他函数中使用   |
@@ -775,9 +779,20 @@ print(f(-10)) # 10
 | `map(funcname, Iterable)`                         | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator` |
 | `filter(funcname, Iterable)`                      | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素 |
 | `functools.reduce(funcname, Iterable)`            | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算 |
+| `dir(object)`                                     | 获取一个对象的所有属性                                       |
+| `hasattr(object, "property")`                     | 判断对象是否有属性`property`,返回`True`和`False`             |
+| `getattr(object, "property", 404)`                | 获取一个属性,不存在则返回自定义的参数                        |
+| `setattr(object, "property", "value")`            | 设置一个属性                                                 |
 
 ```python
+print(len(abc)) # 调用len()函数来算长度
+print(abc.__len__()) # 使用字符串的__len__()方法来算字符串的长度
+# 用enumerate()来打印行号
+with open("G:/tmp/oui.txt", "r", encoding='utf8') as f:
+    for line, text in enumerate(f.readlines(), 1):
+        print(line, text)
 print(sorted([36, 5, -12, 9, -21], key=abs))
+# zip打包列表
 a = ['a', 'b', 'c', 'd']
 b = ['1', '2', '3', '4']
 list(zip(a, b)) # [('a', '1'), ('b', '2'), ('c', '3'), ('d', '4')]
@@ -788,37 +803,30 @@ dict(zip(a, b)) # {'a': '1', 'b': '2', 'c': '3', 'd': '4'}
 
 ### 判断字符用的函数:
 
-| 函数                              | 作用                                                         |
-| --------------------------------- | ------------------------------------------------------------ |
-| `str0.isnumeric()`                | 检测`str0`是否只由数字组成，数字可以是： Unicode 数字，全角数字（双字节），罗马数字，汉字数字。 |
-| `str1.isdigit()`                  | 判断`str1`是否为纯数字（浮点数不行）                         |
-| `str2.islower()`                  | 判断`str2`是否为小写                                         |
-| `str3.isupper()`                  | 判断`str3`是否为大写                                         |
-| `str4.isalnum()`                  | 判断`str4`是否为数字字母混合                                 |
-| `str5.isalpha()`                  | 判断`str5`是否为字母                                         |
-| `str6.isspace()`                  | 判断`str6`是否全为空格                                       |
-| `str7.count(str8)`                | 判断`str7`中`str8`的出现次数                                 |
-| `str9.endswith(str10)`            | 判断`str9`是否以`str10`结尾                                  |
-| `str11.startswith(str12)`         | 判断`str11`是否以`str12`开头                                 |
-| `str13.find(str14)`               | 找出`str14`在`str13`中的第1个下标，找不到会返回-1            |
-| `str15.rfind(str16)`              | 找出`str16`在`str15`的最后下标，找不到会返回-1               |
-| `str17.index(str18)`              | 与find类似,找出`str18`在`str17`中的第1个下标,区别是找不到会有异常（报错） |
-| `str19.rindex(str20)`             | 与rfind类似,找出`str20`在`str119`的最后下标区别是找不到会有异常（报错） |
-| `str21.isdecimal()`               | 如果`str21`是否只包含十进制字符返回`True`，否则返回`False`   |
-| `type(str22)`                     | 判断`str22`类型                                              |
-| `isinstance(str23, (int, float))` | 判断类型是否为int或float,若为int或float则返回True，其实type也能完成类似功能 |
-| `enumerate(str24, n)`             | 枚举，打印`str21`的[下标]和[元素\|字符],可以自定义起始[下标]为`n` |
+| 函数                      | 作用                                                         |
+| ------------------------- | ------------------------------------------------------------ |
+| `str0.isnumeric()`        | 检测`str0`是否只由数字组成，数字可以是： Unicode 数字，全角数字（双字节），罗马数字，汉字数字。 |
+| `str1.isdigit()`          | 判断`str1`是否为纯数字（浮点数不行）                         |
+| `str2.islower()`          | 判断`str2`是否为小写                                         |
+| `str3.isupper()`          | 判断`str3`是否为大写                                         |
+| `str4.isalnum()`          | 判断`str4`是否为数字字母混合                                 |
+| `str5.isalpha()`          | 判断`str5`是否为字母                                         |
+| `str6.isspace()`          | 判断`str6`是否全为空格                                       |
+| `str7.count(str8)`        | 判断`str7`中`str8`的出现次数                                 |
+| `str9.endswith(str10)`    | 判断`str9`是否以`str10`结尾                                  |
+| `str11.startswith(str12)` | 判断`str11`是否以`str12`开头                                 |
+| `str13.find(str14)`       | 找出`str14`在`str13`中的第1个下标，找不到会返回-1            |
+| `str15.rfind(str16)`      | 找出`str16`在`str15`的最后下标，找不到会返回-1               |
+| `str17.index(str18)`      | 与find类似,找出`str18`在`str17`中的第1个下标,区别是找不到会有异常（报错） |
+| `str19.rindex(str20)`     | 与rfind类似,找出`str20`在`str119`的最后下标区别是找不到会有异常（报错） |
+| `str21.isdecimal()`       | 如果`str21`是否只包含十进制字符返回`True`，否则返回`False`   |
+|                           |                                                              |
+|                           |                                                              |
+|                           |                                                              |
 
 ```python
 print(len(abc)) # 调用len()函数来算长度
 print(abc.__len__()) # 使用字符串的__len__()方法来算字符串的长度
-```
-
-```python
-# 用enumerate()来打印行号
-with open("G:/tmp/oui.txt", "r", encoding='utf8') as f:
-    for line, text in enumerate(f.readlines(), 1):
-        print(line, text)
 ```
 
 ### 字符操作函数:
@@ -2396,6 +2404,15 @@ class ClassName(object):
         if value <= 0 or value >= 100:
             raise ValueError("must be between 0-100")
         self._property_name3 = value
+    def __str__(self):
+        return f"{self.__name__} is a {ClassName.__name__} object"
+    def __iter__(self):
+        return self
+    def __next__(self):
+        self.a, self.b = self.b, self.a + self.b # 计算下一个值
+        if self.a > 100000: # 退出循环的条件
+            raise StopIteration()
+        return self.a # 返回下一个值
 ```
 
 | 概念                                | 功能                                                         |
@@ -2408,6 +2425,10 @@ class ClassName(object):
 | `def method(self, args)`            | 方法函数,提供给内外部调用,可以用此方法获取私有属性           |
 | `@property`                         | 代表下面的方法是返回属性(只有`@property`时属性只读)          |
 | `@property_name.setter`             | 代表下面的方法是设置属性(和`@property`配合可以用于读取设置私有属性和限制属性的类型范围) |
+| `__str__`                           | 返回类的信息,可以自定义                                      |
+| `__repr__`                          | 同`__str__`,调试级别                                         |
+| `__iter__`                          | 定义可迭代对象,`self`即自身                                  |
+| `__next__`                          | 定义`next()`的计算方式                                       |
 
 ## 十六、面向对象
 
