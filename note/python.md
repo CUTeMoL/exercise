@@ -1027,6 +1027,22 @@ print(f1(), f2(), f3()) # 返回1 4 9,因为f(j)是赋值数字给j,对于函数
 
   如果死循环那就无法得到`return`的值
 
+```python
+def fib(max):
+    n, a, b ,sum = 0, 0, 1, 0
+    while n <= max:
+        yield sum
+        sum = a + b
+        a = b
+        b = sum
+        n = n + 1
+
+for i in fib(10):
+    print(i)
+```
+
+
+
 ### 函数嵌套:
 
   被嵌套的函数也要先定义才能调用，不能在调用后定义
