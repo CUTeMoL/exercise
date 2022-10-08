@@ -1025,7 +1025,7 @@ print(f1(), f2(), f3()) # 返回1 4 9,因为f(j)是赋值数字给j,对于函数
 
   `generator`的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行。
 
-  如果死循环那就无法得到`return`的值
+  如果使用循环来调用`generator`的函数,那就无法得到`return`的值,除非使用`next()`以及异常捕获`StopIteration`,返回值包含在`StopIteration`的`value`中
 
 ```python
 def fib(max):
@@ -1036,9 +1036,18 @@ def fib(max):
         a = b
         b = sum
         n = n + 1
-
+    return "done"
 for i in fib(10):
     print(i)
+
+g = fib(10)
+while True:
+    try:
+        x = next(g)
+        print('g:', x)
+    except StopIteration as e:
+        print('Generator return value:', e.value)
+        break
 ```
 
 
