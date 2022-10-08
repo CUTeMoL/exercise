@@ -157,7 +157,7 @@ pycharm建立项目
 | `elif`     | 如果                                                         |
 | `else`     | 如果未匹配表达式                                             |
 | `as`       | 重命名                                                       |
-| `assert`   |                                                              |
+| `assert`   | 断言                                                         |
 | `class`    | 声明类                                                       |
 | `def`      | 声明函数                                                     |
 | `global`   | 函数全局声明变量                                             |
@@ -170,12 +170,12 @@ pycharm建立项目
 | `break`    | 跳出循环                                                     |
 | `continue` | 跳出本次循环                                                 |
 | `for`      | 遍历循环                                                     |
-| `from`     | 导入模块中的类和对象(需要声明引用的类和函数,声明后可以直接使用类和函数) |
-| `import`   | 导入模块中的类和对象(不需要声明引用模块的类和函数,但是在使用时需要模块名) |
+| `from`     | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
+| `import`   | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
 | `lambda`   | 轻量级函数,通常嵌入其他函数中使用                            |
 | `nonlocal` | 重新定义函数外部变量                                         |
 | `pass`     | 空代码跳过                                                   |
-| `raise`    |                                                              |
+| `raise`    | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
 | `with`     | 文件开启                                                     |
 | `yield`    | 函数返回生成器对象                                           |
 
@@ -1730,7 +1730,36 @@ for name, member in Month.__members__.items():
     print(name, '=>', member, ',', member.value)
 ```
 
+### logging:
 
+| 日志级别   | 数值 |
+| ---------- | ---- |
+| `CRITICAL` | 50   |
+| `ERROR`    | 40   |
+| `WARNING`  | 30   |
+| `INFO`     | 20   |
+| `DEBUG`    | 10   |
+| `NOTSET`   | 0    |
+
+### io:
+
+| 函数         | 功能                         |
+| ------------ | ---------------------------- |
+| `StringIO()` | 在内存中初始化一个字符串     |
+| `write()`    | 写入数据,会覆盖初始化的内容  |
+| `getvalue()` | 获取数据                     |
+| `BytesIO`    | 在内存中初始化一个二进制数据 |
+|              |                              |
+|              |                              |
+
+```python
+import io
+string = io.StringIO('ni hao\nwo shi lxw')
+string.write('line 2')
+string.write(' ')
+string.write('hello world\n')
+print(string.getvalue())
+```
 
 ### 第三方模块pycurl:
 
@@ -2308,9 +2337,11 @@ else:
 |     |     |     |
 |     |     |     |
 
-## 十三、文件IO操作
+## 十三、IO操作
 
-### 需要关闭的文件操作方式:
+### 文件读写
+
+#### 需要关闭的文件操作方式:
 
 ```python
 file = open("dir/file", mode="access mode", encoding='utf8', errors='ignore')
@@ -2319,13 +2350,13 @@ file.close()
 # 关闭文件
 ```
 
-### 不需要关闭的文件操作方式:
+#### 不需要关闭的文件操作方式:
 
 ```python
 with open("dir/file", "access mode", encoding='utf8') as f:
 ```
 
-### accessMode:
+#### accessMode:
 
 | mode | 作用                                                         |
 | ---- | ------------------------------------------------------------ |
@@ -2342,7 +2373,7 @@ with open("dir/file", "access mode", encoding='utf8') as f:
 | wb+  | 二进制写读模式                                               |
 | ab+  | 二进制追加读模式                                             |
 
-### 具体的文件读函数:
+#### 具体的文件读函数:
 
 | 函数                                                         | 作用                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -2354,7 +2385,7 @@ with open("dir/file", "access mode", encoding='utf8') as f:
 | `file.readlines()`                                           | 全文件行读取变成list                                         |
 | `file.tell()`                                                | 光标的当前位置                                               |
 
-### 具体的文件写函数:
+#### 具体的文件写函数:
 
 | 函数                        | 作用                                             |
 | --------------------------- | ------------------------------------------------ |
@@ -2375,17 +2406,25 @@ for index,line in enumerate(f):
 f.close()
 ```
 
+### 内存读写
+
+看io模块
+
 ## 十四、异常处理
 
-| 关键词    | 作用                                         |
-| --------- | -------------------------------------------- |
-| `try`     | 尝试运行                                     |
-| `except`  | 捕获异常,`Exception`代表所有异常             |
-| `else`    | 无异常执行此代码，有异常不执行               |
-| `finally` | 无论是出现异常情况，或是无异常，都一定会执行 |
+| 关键词    | 作用                                                         |
+| --------- | ------------------------------------------------------------ |
+| `try`     | 尝试运行                                                     |
+| `except`  | 捕获异常,`Exception`代表所有异常                             |
+| `else`    | 无异常执行此代码,有异常不执行                                |
+| `finally` | 无论是出现异常情况,或是无异常,或是之前有`return`都一定会执行 |
+| `raise`   | 出现异常,向上返回错误                                        |
+| `assert`  | 断言,不满足条件则自己抛出异常                                |
 
 ```python
 code0
+n = 0
+assert n != 0, 'n is zero!'
 try:
     code1
 except TypeError:
@@ -2396,6 +2435,7 @@ except SyntaxError as err:
     print("error:",err)
 except Exception as err:
     print("Exception代表所有错误异常",err)
+    raise
 else:
     print("无异常执行此代码，有异常不执行")
 finally:
@@ -2503,6 +2543,13 @@ urls = urls.repos    # 还是实例的属性
 | `__getattr__`                       | 动态返回属性                                                 |
 | `__call__`                          | 令实例本身可调用                                             |
 |                                     |                                                              |
+|                                     |                                                              |
+
+metaclass
+
+创建类的类
+
+实际上类都是转换成为`type()`生成的
 
 ## 十六、面向对象
 
