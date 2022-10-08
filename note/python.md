@@ -1732,6 +1732,8 @@ for name, member in Month.__members__.items():
 
 ### logging:
 
+`logging`是多线程的可能会比`print()`先执行
+
 | 日志级别   | 数值 |
 | ---------- | ---- |
 | `CRITICAL` | 50   |
@@ -1740,6 +1742,51 @@ for name, member in Month.__members__.items():
 | `INFO`     | 20   |
 | `DEBUG`    | 10   |
 | `NOTSET`   | 0    |
+
+默认级别是`WARNING`,通过`logging.basicConfig()`可以修改
+
+| 函数                                 | 功能                                      |
+| ------------------------------------ | ----------------------------------------- |
+| `logging.debug("%s %s", var1, var2)` | 输出不同的日志级别的消息,可以附加变量参数 |
+| `logging.basicConfig()`              | 输出日志的基本设置                        |
+|                                      |                                           |
+|                                      |                                           |
+|                                      |                                           |
+|                                      |                                           |
+|                                      |                                           |
+
+| basicConfig | 说明                            |
+| ----------- | ------------------------------- |
+| `filename`  | 输出到文件时指定文件路径名称    |
+| `datefmt`   | 日志的时间格式自定义            |
+| `format`    | 指定日志输出的格式              |
+| `filemode`  | 输出到文件时指定,文件的写入方式 |
+| `level`     | 输出的级别                      |
+|             |                                 |
+
+| fomat             | 说明                                                  |
+| ----------------- | ----------------------------------------------------- |
+| `%(asctime)s`     | 日志产生的时间，默认格式为msecs2003-07-0816:49:45,896 |
+| `%(msecs)d`       | 日志生成时间的亳秒部分                                |
+| `%(created)f`     | time.tme)生成的日志创建时间戳                         |
+| `%(message)s`     | 具体的日志信息                                        |
+| `%(filename)s`    | 生成日志的程序名                                      |
+| `%(name)s`        | 日志调用者                                            |
+| `%(funcname)s`    | 调用日志的函数名                                      |
+| `%(levelname)s`   | 日志级別( DEBUG,INFO, WARNING, 'ERRORCRITICAL)        |
+| `%(leveling)s`    | 日志级别对应的数值                                    |
+| `%(lineno)d`      | 日志所针对的代码行号（如果可用的话）                  |
+| `%(module)s`      | 生成日志的模块名                                      |
+| `%(pathname)s`    | 生成日志的文件的完整路径                              |
+| `%(process)d`     | 生成日志的进程D（如果可用）                           |
+| `%(processname)s` | 进程名（如果可用）                                    |
+| `%(thread)d`      | 生成日志的线程D（如果可用）                           |
+| `%(threadname)s`  | 线程名（如果可用)                                     |
+|                   |                                                       |
+|                   |                                                       |
+|                   |                                                       |
+
+
 
 ### io:
 
