@@ -1927,19 +1927,19 @@ workbook.close()
 
   可以实现远程文件的上传,下载或通过ssh远程执行命令
 
-| paramiko函数                                                                 | 作用                     |
-| -------------------------------------------------------------------------- | ---------------------- |
-| paramiko.Transport("host", port)                                           | 确定传输的主机端口              |
-| trans.connect(hostname="host", port=22, username="user",password="passwd") | 确定用户密码                 |
-| paramiko.SFTPClient.from_transport(paramiko.Transport("host", port))       | 启动SFTP客户端              |
-| paramiko.SFTPClient.from_transport(trans).get("hostdir", "localdir")       | 下载                     |
-| paramiko.SFTPClient.from_transport(trans).put("hostdir", "localdir")       | 上传                     |
-| paramiko.Transport(("150.158.93.164",22)).close()                          | 关闭链接                   |
-| paramiko.SSHClient()                                                       | 创建一个ssh终端              |
-| paramiko.RSAKey.from_private_key_file(rsa_file)                            | 免密登录私钥                 |
-| ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)                    | 指纹（用于第一次登录）            |
-| stdin, stdout, stderr = ssh.exec_command("touch /home/lxw/123")            | 运行命令，有标准输入0，输出1，和错误输出2 |
-| ssh.close()                                                                | 关闭终端                   |
+| 类         | paramiko函数                                                 | 作用                                      |
+| ---------- | ------------------------------------------------------------ | ----------------------------------------- |
+| Transport  | paramiko.Transport("host", port)                             | 确定传输的主机端口                        |
+|            | trans.connect(hostname="host", port=22, username="user",password="passwd") | 确定用户密码                              |
+| SFTPClient | paramiko.SFTPClient.from_transport(paramiko.Transport("host", port)) | 启动SFTP客户端                            |
+|            | paramiko.SFTPClient.from_transport(trans).get("hostdir", "localdir") | 下载                                      |
+|            | paramiko.SFTPClient.from_transport(trans).put("hostdir", "localdir") | 上传                                      |
+|            | paramiko.Transport(("150.158.93.164",22)).close()            | 关闭链接                                  |
+| SSHClient  | paramiko.SSHClient()                                         | 创建一个ssh终端                           |
+| RSAKey     | paramiko.RSAKey.from_private_key_file(rsa_file)              | 免密登录私钥                              |
+|            | SSHClient.set_missing_host_key_policy(paramiko.AutoAddPolicy) | 指纹（用于第一次登录）                    |
+|            | stdin, stdout, stderr = SSHClient.exec_command("touch /home/lxw/123") | 运行命令，有标准输入0，输出1，和错误输出2 |
+|            | SSHClient.close()                                            | 关闭终端                                  |
 
 ```python
 import paramiko
@@ -2061,19 +2061,19 @@ pyinstaller.exe [option] [file.py]
 
 ### 第三方模块pymysql:
 
-| 函数                                                                                 | 功能             |
-| ---------------------------------------------------------------------------------- | -------------- |
-| db = pymysql.connect(host="172.17.0.3", user="root", password="123456", port=3306) | 创建一个数据库连接      |
-| cursor = db.cursor()                                                               | 创建游标           |
-| cursor.execute("sql")                                                              | 发送sql语句        |
-| db.commit()                                                                        | 修改数据需要提交，否则不生效 |
-| print(cursor.fetchall())                                                           | 打印mysql返回的结果   |
-| cursor.close()                                                                     | 删除游标           |
-| db.close()                                                                         | 断开数据库连接        |
+| 函数                                                         | 功能                         |
+| ------------------------------------------------------------ | ---------------------------- |
+| pymysql.connect(host="172.17.0.3", user="root", password="123456", port=3306, cursorclass=pymysql.cursors.DictCursor) | 创建一个数据库连接           |
+| cursor = db.cursor()                                         | 创建游标                     |
+| cursor.execute("sql")                                        | 发送sql语句                  |
+| db.commit()                                                  | 修改数据需要提交，否则不生效 |
+| print(cursor.fetchall())                                     | 打印mysql返回的结果          |
+| cursor.close()                                               | 删除游标                     |
+| db.close()                                                   | 断开数据库连接               |
 
 ```python
 import pymysql
-db = pymysql.connect(host="172.17.0.3", user="root", password="123456", port=3306)
+db = pymysql.connect(host="172.17.0.3", user="root", password="123456", port=3306, cursorclass=pymysql.cursors.DictCursor)
 cursor = db.cursor()
 cursor.execute("use test1;")
 cursor.execute("create table emp(ename varchar(20), sex char(1), sal int);")
@@ -2100,7 +2100,7 @@ db_host = input("please input db_address: ")
 db_user = input("please input db_username: ")
 db_passwd = input("please input db_password: ")
 db_port = int(input("please input db_port: "))
-db = pymysql.connect(host=db_host, user=db_user, password=db_passwd, port=db_port)
+db = pymysql.connect(host=db_host, user=db_user, password=db_passwd, port=db_port, cursorclass=pymysql.cursors.DictCursor)
 cursor = db.cursor()
 while True:
     sql_comand = input("please input SQL or press q to quit: ")
