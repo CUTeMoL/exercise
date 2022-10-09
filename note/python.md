@@ -1317,6 +1317,7 @@ print("---")
 |               | `os.path.dirname("/dir/file")`                               | 获取文件的绝对路径目录                                       |
 |               | `os.path.basename("/dir/file")`                              | 获取文件的名称                                               |
 |               | `os.path.split("/dir/file")`                                 | 把dirname和basename分开，结果以tuple类型输出                 |
+|               | `os.path.splitext("/dir/file")`                              | 分割文件和拓展名                                             |
 |               | `os.path.join("/dir", "file")`                               | 把dirname和basename合并                                      |
 |               | `os.path.isfile("/dir/file")`                                | 判断是否为文件                                               |
 |               | `os.path.isabs("/dir/file")`                                 | 判断是否为绝对路径                                           |
@@ -1462,24 +1463,39 @@ else:
 
 ### json:
 
-| json函数                             | 作用        |
-| ---------------------------------- | --------- |
-| json.dump("data", open(file, "w")) | 存储一组数据到文件 |
-| json.load(file open(file, "r"))    | 从文件读取一组数据 |
-| json.loads(str)                    | 读取一组数据    |
+| json函数                                         | 作用                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------ |
+| json.dump("data", open(file, "w"), default=None) | 序列化一组数据为 `JSON `形式的` file-like object`            |
+| json.dumps("data", default=None)                 | 序列化一组数据为 `JSON `形式的`str`,`default`为自定义转换方法 |
+| json.load(file open(file, "r"))                  | 从文件读取一组数据                                           |
+| json.loads(str)                                  | 读取一组数据                                                 |
 
 ```python
 import json
 numbers = [2, 3, 4, 5, 6, 7]
 filename = "numbers.json"
+def object2dict(std):
+    return {
+        'name': std.name,
+        'age': std.age,
+        'score': std.score
+    }
+# 通常class的实例都有一个__dict__属性，它就是一个dict，用来存储实例变量。也有少数例外，比如定义了__slots__的class所以也可以是return obj.__dict__的函数
 with open(filename, "w") as f:
-    json.dump(numbers, f)
+    json.dump(numbers, f, default=object2dict)
+    # json.dumps(s, default=student2dict)
 ```
 
 ```python
 import json
 numbers = [2, 3, 4, 5, 6, 7]
 filename = "numbers.json"
+def dict2object(std):
+    return {
+        'name': std.name,
+        'age': std.age,
+        'score': std.score
+    }
 with open(filename, "r") as f:
     json.load(f)
 ```
@@ -2614,7 +2630,7 @@ urls = urls.repos    # 还是实例的属性
 | `__getitem__`                       | 定义获取指定下标元素的方法                                   |
 | `__getattr__`                       | 动态返回属性                                                 |
 | `__call__`                          | 令实例本身可调用                                             |
-|                                     |                                                              |
+| `__dict__`                          | 以字典的格式返回属性                                         |
 |                                     |                                                              |
 
 metaclass
