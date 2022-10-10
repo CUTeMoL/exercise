@@ -198,6 +198,12 @@ pycharm建立项目
 | 双下划线开头               | 代表类的私有成员 |
 | 双下划线开头及双下划线结尾 | python专用标识   |
 
+```python
+__file__   # 当前文件
+```
+
+
+
 ### 变量：
 
 必须是有效的标识符
@@ -1301,48 +1307,154 @@ print("---")
 
 ### os:
 
-|               | os函数                                                       | 作用                                                         |
-| ------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 查            | `os.getcwd()`                                                | 打印当前目录（pwd）                                          |
-|               | `os.chdir("/dir")`                                           | 改变当前目录                                                 |
-|               | `os.curdir`                                                  | 打印当前目录（.）                                            |
-|               | `os.pardir`                                                  | 打印上级目录（..）                                           |
-|               | `os.listdir("/dir")`                                         | 返回列表形式的目录内容                                       |
-|               | `os.scandir(“/dir”)`                                         | 返回目录，需要遍历打印出来                                   |
-|               | `os.walk("/dir")`                                            | 遍历目录树，返回(dirpath路径, dirnames目录中的文件夹列表, filenames目录中的文件列表) |
-|               | `os.stat("/dir/file")`                                       | 查看文件的状态（类key: value的元组），可以用下标来元素切片，也可以通过.key_name获取所需值 |
-|               | `os.access("file", os.R_OK)`                                 | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)              |
-|               | `os.path.getsize("/dir/file")`                               | 获取文件的大小                                               |
-|               | `os.path.abspath("file")`                                    | 获取文件的绝对路径                                           |
-|               | `os.path.dirname("/dir/file")`                               | 获取文件的绝对路径目录                                       |
-|               | `os.path.basename("/dir/file")`                              | 获取文件的名称                                               |
-|               | `os.path.split("/dir/file")`                                 | 把dirname和basename分开，结果以tuple类型输出                 |
-|               | `os.path.splitext("/dir/file")`                              | 分割文件和拓展名                                             |
-|               | `os.path.join("/dir", "file")`                               | 把dirname和basename合并                                      |
-|               | `os.path.isfile("/dir/file")`                                | 判断是否为文件                                               |
-|               | `os.path.isabs("/dir/file")`                                 | 判断是否为绝对路径                                           |
-|               | `os.path.exists("dir/file")`                                 | 判断路径文件，存在为True                                     |
-|               | `os.path.isdir("dir/file")`                                  | 判断是否为目录                                               |
-|               | `os.path.islink("dir/file")`                                 | 判断是否为链接文件                                           |
-|               | `os.readlink("bin")`                                         | 显示实际路径名                                               |
-|               | `os.environ`                                                 | 返回返回json格式的环境变量，与字典相同，也可以通过os.environ["key"]="value",来设置变量，但退出终端后失效 |
-| 改            | `os.rename("/dir/file1", "/dir/file2")`                      | 改名                                                         |
-|               | `os.chown("/dir/file", uid, gid, *, dir_fd=None, follow_symlinks=True)` | 修改权限所属                                                 |
-|               | `os.chroot("path")`                                          | 修改进程的根目录                                             |
-|               | `os.remove("/dir/file")`                                     | 删除                                                         |
-|               | `os.mkdir("/dir")`                                           | 创建目录                                                     |
-|               | `os.rmdir("/dir")`                                           | 删除目录                                                     |
-|               | `os.makedirs("/dir1/dir2/dir3")`                             | 递归创建目录                                                 |
-|               | `os.removedirs("/dir1/dir2/dir3")`                           | 递归删除目录                                                 |
-|               | `os.link("old", "new")`                                      | 创建硬链接                                                   |
-|               | `os.symlink("old", "new")`                                   | 创建软链接                                                   |
-|               | `os.unlink("/bin")`                                          | 删除软链接                                                   |
-| 仅LINUX平台下 | `os.popen("bash_command")`                                   | 调用shell命令，不输出命令返回的结果，需要得到命令的结果则需要加上.read()来获取 |
-|               | `os.system("bash_command")`                                  | 调用shell命令，一定会返回命令的结果，但print()的结果是命令运行后的返回值return,相当于运行`bash script.sh`会创建一个子进程在系统上执行命令行，子进程的执行结果无法影响主进程 |
+|              | os函数                                                       | 作用                                                         |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 查           | `os.getcwd()`                                                | 打印当前目录（pwd）                                          |
+|              | `os.chdir("/dir")`                                           | 改变当前目录                                                 |
+|              | `os.curdir`                                                  | 打印当前目录（.）                                            |
+|              | `os.pardir`                                                  | 打印上级目录（..）                                           |
+|              | `os.listdir("/dir")`                                         | 返回列表形式的目录内容                                       |
+|              | `os.scandir(“/dir”)`                                         | 返回目录，需要遍历打印出来                                   |
+|              | `os.walk("/dir")`                                            | 遍历目录树，返回(dirpath路径, dirnames目录中的文件夹列表, filenames目录中的文件列表) |
+|              | `os.stat("/dir/file")`                                       | 查看文件的状态（类key: value的元组），可以用下标来元素切片，也可以通过.key_name获取所需值 |
+|              | `os.access("file", os.R_OK)`                                 | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)              |
+|              | `os.path.getsize("/dir/file")`                               | 获取文件的大小                                               |
+|              | `os.path.abspath("file")`                                    | 获取文件的绝对路径                                           |
+|              | `os.path.dirname("/dir/file")`                               | 获取文件的绝对路径目录                                       |
+|              | `os.path.basename("/dir/file")`                              | 获取文件的名称                                               |
+|              | `os.path.split("/dir/file")`                                 | 把dirname和basename分开，结果以tuple类型输出                 |
+|              | `os.path.splitext("/dir/file")`                              | 分割文件和拓展名                                             |
+|              | `os.path.join("/dir", "file")`                               | 把dirname和basename合并                                      |
+|              | `os.path.isfile("/dir/file")`                                | 判断是否为文件                                               |
+|              | `os.path.isabs("/dir/file")`                                 | 判断是否为绝对路径                                           |
+|              | `os.path.exists("dir/file")`                                 | 判断路径文件，存在为True                                     |
+|              | `os.path.isdir("dir/file")`                                  | 判断是否为目录                                               |
+|              | `os.path.islink("dir/file")`                                 | 判断是否为链接文件                                           |
+|              | `os.readlink("bin")`                                         | 显示实际路径名                                               |
+|              | `os.environ`                                                 | 返回返回json格式的环境变量，与字典相同，也可以通过os.environ["key"]="value",来设置变量，但退出终端后失效 |
+|              | `os.getpid()`                                                | 返回当前进程的进程id`pid`                                    |
+|              | `os.getppid()`                                               | 返回当前进程的父进程id`ppid`                                 |
+| 改           | `os.rename("/dir/file1", "/dir/file2")`                      | 改名                                                         |
+|              | `os.chown("/dir/file", uid, gid, *, dir_fd=None, follow_symlinks=True)` | 修改权限所属                                                 |
+|              | `os.chroot("path")`                                          | 修改进程的根目录                                             |
+|              | `os.remove("/dir/file")`                                     | 删除                                                         |
+|              | `os.mkdir("/dir")`                                           | 创建目录                                                     |
+|              | `os.rmdir("/dir")`                                           | 删除目录                                                     |
+|              | `os.makedirs("/dir1/dir2/dir3")`                             | 递归创建目录                                                 |
+|              | `os.removedirs("/dir1/dir2/dir3")`                           | 递归删除目录                                                 |
+|              | `os.link("old", "new")`                                      | 创建硬链接                                                   |
+|              | `os.symlink("old", "new")`                                   | 创建软链接                                                   |
+|              | `os.unlink("/bin")`                                          | 删除软链接                                                   |
+| 执行系统命令 | `os.popen("bash_command")`                                   | 调用shell命令，不输出命令返回的结果，需要得到命令的结果则需要加上.read()来获取 |
+|              | `os.system("bash_command")`                                  | 调用shell命令，一定会返回命令的结果，但print()的结果是命令运行后的返回值return,相当于运行`bash script.sh`会创建一个子进程在系统上执行命令行，子进程的执行结果无法影响主进程 |
+| 系统调用     | `os.fork()`                                                  | 当前为当前程序创造一个子进程,返回2次,在子进程返回0,在父进程中返回子进程的pid(Windows下不能使用) |
+|              |                                                              |                                                              |
 
 ```python
-__file__   #当前文件
+print('Process (%s) start...' % os.getpid())
+# Only works on Unix/Linux/Mac:
+pid = os.fork() # 一次函数调用返回2次函数,一个是0返回给子进程,一个是子进程id返回给父进程
+if pid == 0:
+    print('I am child process (%s) and my parent is %s.' % (os.getpid(), os.getppid()))
+else:
+    print('I (%s) just created a child process (%s).' % (os.getpid(), pid))
 ```
+
+### multiprocessing:
+
+|          | 函数                                                        | 功能                                                         |
+| -------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
+| 查       | `multiprocessing.cpu_count()`                               | cpu个数                                                      |
+|          | `multiprocessing.set_start_method('spawn')`                 | 设置启动方式`spawn`为Windows 和 macOS 默认启动方式,`fork`只存在于`unix`,`forkserver`支持通过Unix管道传递文件描述符 |
+| 单子进程 | `multiprocessing.Process(target=func_name, args=('arg', ))` | 创建一个要运行的子进程对象                                   |
+|          | `process_object.start()`                                    | 启动一个要运行的子进程对象                                   |
+|          | `process_object.join()`                                     | 等待,完成了要运行的子进程对象,再往下执行代码                 |
+| 多子进程 | `multiprocessing.Pool(n)`                                   | 创建容纳n个子进程的进程池,无参数默认使用CPU个数              |
+|          | `processpool_object.apply_async(func_name, args=("", ))`    | 在进程池对象中创建并运行子进程,如果进程池已满,将会等待进程池释放进程后再加入进程池 |
+|          | `processpool_object.close()`                                | 停止向进程池添加进程                                         |
+|          | `processpool_object.join()`                                 | 等待,完成了所有要运行的子进程对象后,再往下执行代码           |
+
+```python
+from multiprocessing import Process
+import os
+import time
+
+def run_proc(name):
+    print('Run child process %s (%s)...' % (name, os.getpid()))
+    print(time.strftime("%Y-%m-%d %H:%M:%S",time.localtime()))
+    time.sleep(1)
+    print(time.strftime("%Y-%m-%d %H:%M:%S",time.localtime()))
+
+if __name__=='__main__':
+    print('Parent process %s.' % os.getpid())
+    p = Process(target=run_proc, args=('test',))
+    print('Child process will start.')
+    p.start()
+    p.join()
+    print('Child process end.')
+```
+
+```python
+from multiprocessing import Pool 
+import logging
+Formatter = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s"
+logging.basicConfig(datefmt='%Y/%m/%d %H:%M:%S', format=Formatter, level=logging.DEBUG)
+def long_time_task(name):
+    logging.debug('Run task %s (%s)...' % (name, os.getpid()))
+    start = time.time()
+    time.sleep(random.random() * 3)
+    end = time.time()
+    logging.debug('Task %s runs %0.2f seconds.' % (name, (end - start)))
+
+if __name__=='__main__':
+    logging.debug('Parent process %s.' % os.getpid())
+    p = Pool(4)
+    for i in range(5):
+        p.apply_async(long_time_task, args=(i,))
+    logging.debug('Waiting for all subprocesses done...')
+    p.close()
+    p.join()
+    logging.debug('All subprocesses done.')
+```
+
+threading:
+
+|          | 函数                                                         | 功能                                                         |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 单线程   | `threading.Thread(target=func_name, name='threading_name', args=("str", ))` | 创建一个线程                                                 |
+|          | `threading.current_thread()`                                 | 当前线程的实例,具有`name`等属性                              |
+|          | `thread_object.start()`                                      | 启动线程                                                     |
+|          | `thread_object.join()`                                       | 等待,完成了要运行的线程对象,再往下执行代码                   |
+| 锁       | `threading.Lock()`                                           | 创建一个锁对象                                               |
+|          | `lock_object.acquire()`                                      | 让当前线程获取锁                                             |
+|          | `lock_object.release()`                                      | 让当前线程释放锁                                             |
+| 线程变量 | `threading.local()`                                          | 创建一个线程变量对象,每个线程`thread_object`都可以对他进行读写属性 |
+
+```python
+import threading
+    
+# 创建全局ThreadLocal对象:
+local_school = threading.local()
+
+def process_student():
+    # 获取当前线程关联的student:
+    std = local_school.student
+    print('Hello, %s (in %s)' % (std, threading.current_thread().name))
+
+def process_thread(name):
+    # 绑定ThreadLocal的student:
+    local_school.student = name
+    process_student()
+
+t1 = threading.Thread(target= process_thread, args=('Alice',), name='Thread-A')
+t2 = threading.Thread(target= process_thread, args=('Bob',), name='Thread-B')
+t1.start()
+t2.start()
+t1.join()
+t2.join()
+```
+
+
 
 ### subprocess:
 
@@ -1463,12 +1575,12 @@ else:
 
 ### json:
 
-| json函数                                         | 作用                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------ |
-| json.dump("data", open(file, "w"), default=None) | 序列化一组数据为 `JSON `形式的` file-like object`            |
-| json.dumps("data", default=None)                 | 序列化一组数据为 `JSON `形式的`str`,`default`为自定义转换方法 |
-| json.load(file open(file, "r"))                  | 从文件读取一组数据                                           |
-| json.loads(str)                                  | 读取一组数据                                                 |
+| json函数                                                     | 作用                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `json.dump("data", open(file, "w"), default=None, ensure_ascii=False)` | 序列化一组数据为 `JSON `形式的` file-like object`,`ensure_ascii=False`可以保留字符串原始编码,不转换为`ASCII` |
+| `json.dumps("data", default=None)`                           | 序列化一组数据为 `JSON `形式的`str`,`default`为自定义转换方法 |
+| `json.load(file open(file, "r"))`                            | 从文件读取一组数据                                           |
+| `json.loads(str)`                                            | 读取一组数据                                                 |
 
 ```python
 import json
@@ -2791,3 +2903,10 @@ print(double.__name__) # 表面上是double函数,实际上已经是exectimes函
 print(double(5))
 ```
 
+## 二十一、进程与线程
+
+多进程调用: `os.fork()`函数和`multiprocessing`模块
+
+多线程调用: `_thread`和`threading`
+
+多线程不可以作用于相同的全局变量,除非使用`threading.Lock()`
