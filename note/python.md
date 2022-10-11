@@ -1507,6 +1507,7 @@ subprocess使用shell=True,来确定输入的命令为字符串形式,否则要�
 | `datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo)` | 创建一个时间对象年月日必要                                   |
 | `datetime.datetime.now()`                                    | 当前时间                                                     |
 | `datetime.datetime.utcnow()`                                 | 显示UTC时间,`.replace(*tzinfo*=datetime.timezone.utc)`显示时间的基础上显示时区 |
+| `datetime_object.astimezone(datetime.timezone(datetime.timedelta(hours=8)))` | 显示对应时区的时间                                           |
 | `datetime.datetime.now()+datetime.timedelta(+3)`             | 3天后                                                        |
 | `datetime.datetime.now()+datetime.timedelta(days=-3)`        | 3天前                                                        |
 | `datetime.datetime.now()+datetime.timedelta(hours=5)`        | 5小时后                                                      |
