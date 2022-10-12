@@ -1979,17 +1979,69 @@ print(string.getvalue())
 
 ### collections:
 
-| 函数                                                         | 说明                              |
-| ------------------------------------------------------------ | --------------------------------- |
-| `collections.namedtuple("ClassName", ["property1", "property2"])` | 创建一个继承元组的类,限定类的属性 |
-|                                                              |                                   |
-|                                                              |                                   |
-|                                                              |                                   |
-|                                                              |                                   |
-|                                                              |                                   |
-|                                                              |                                   |
+| 函数                                                         | 说明                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `collections.namedtuple("ClassName", ["property1", "property2"])` | 创建一个继承元组的类,限定类的属性                            |
+| `collections.deque(list_object)`                             | 基于一个列表创建一个双向队列<br/>可以使用`object.appendleft()`从左插入<br/>可以使用`object.popleft()`从左取出数据 |
+| `collections.defaultdict(lamba: 'message')`                  | 创建一个字典对象,此字典不存在时,默认返回自定义`message`      |
+| `collections.OrderedDict([(key, value),])`                   | 创建一个根据key的插入顺序排序的字典<br/>可以使用`object.popitem(last=False)`来删除字典`last=True`时, |
+| `collections.ChainMap(dict_object1, dict_object2, dict_object3)` | 组合成一个虚拟的`dict_object`,查找值时,可以依次检索          |
+| `collections.Counter()`                                      | 计数器                                                       |
+|                                                              |                                                              |
 
+### base64:
 
+| 函数                               | 说明                         |
+| ---------------------------------- | ---------------------------- |
+| `base64.b64encode(b'str')`         | 编码,仅适用于ascii范围       |
+| `base64.b64decode(b'str')`         | 解码                         |
+| `base64.urlsafe_b64encode(b"str")` | 编码,url用,仅适用于ascii范围 |
+| `base64.urlsafe_b64decode(b"str")` | 解码,url用                   |
+
+### struct:
+
+| 函数                            | 说明                    |
+| ------------------------------- | ----------------------- |
+| `struct.pack('>I', int_object)` | 任意数据类型变成`bytes` |
+|                                 |                         |
+
+### hashlib:
+
+| 函数                                     | 说明                     |
+| ---------------------------------------- | ------------------------ |
+| `hashlib.md5()`                          | 创建一个md5对象,容纳内容 |
+| `md5_object.update(str.encode('utf-8'))` | 往md5对象中添加内容      |
+| `md5_object.hexdigest()`                 | 返md5的计算结果          |
+|                                          |                          |
+
+```python
+import hashlib
+import os
+
+def md5sumcheck(file_object):
+    object = hashlib.md5()
+    with open(file=file_object, mode="rb") as md5_object:
+        data = md5_object.read()
+        object.update(data)
+    return object.hexdigest().upper()
+
+if __name__ == "__main__":
+    while 1 == 1:
+        file_name = input("Input the full path for the source file or input q to exit: ")
+        if not file_name:
+            continue
+        if file_name != "q":
+            print(os.path.basename(file_name))
+            print(md5sumcheck(file_name))
+        else:
+            exit()
+```
+
+### 第三方模块md5hash:
+
+| 函数             | 说明        |
+| ---------------- | ----------- |
+| `md5hash.scan()` | 文件计算MD5 |
 
 
 
