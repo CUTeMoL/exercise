@@ -6,7 +6,7 @@
 
 设置变量
 
-```powershell
+```cmd
 set key=value
 set /p key=comment # 接受用户输入value
 set /a # 表达式计算
@@ -14,20 +14,20 @@ set /a # 表达式计算
 
 打印变量值
 
-```powershell
+```cmd
 set # 打印所有设置过的变量
 set key # 打印^key的变量
 ```
 
 取消变量
 
-```powershell
+```cmd
 set key=
 ```
 
 使用变量
 
-```powershell
+```cmd
 %variable%
 ```
 
@@ -35,7 +35,7 @@ set key=
 
 回显
 
-```powershell
+```cmd
 echo on # 每一行的内容都要显示出来
 echo off # 只显示执行结果
 echo message # 显示消息(cmd中遇空格不换行)
@@ -44,7 +44,7 @@ echo "message" # 显示消息(不加引号时powershell中遇空格换行)
 
 `@`本行只显示运行结果
 
-```powershell
+```cmd
 @echo on # 有@本行'echo on'不显示,只执行命令，其余行会显示
 ```
 
@@ -52,7 +52,7 @@ echo "message" # 显示消息(不加引号时powershell中遇空格换行)
 
 注释
 
-```powershell
+```cmd
 rem message # 注释信息echo on下会回显
 ```
 
@@ -62,14 +62,14 @@ rem message # 注释信息echo on下会回显
 
 暂停
 
-```powershell
+```cmd
 pause # 暂停，然后输入任意键继续
 echo 注释信息 & pause > nul # 暂停并显示注释信息
 ```
 
 ### 5. title
 
-```powershell
+```cmd
 title title_message # 窗口的标题设置
 ```
 
@@ -77,7 +77,7 @@ title title_message # 窗口的标题设置
 
 移动到`:label`这个标签的位置,可以创建循环
 
-```powershell
+```cmd
 :label1
 set /a var+=1
 echo %var%
@@ -89,7 +89,7 @@ pause
 
 文件中搜索指定字符串
 
-```powershell
+```cmd
 find [option] "string" [drive:]\[path]\filename
 /V 未包含
 /C 包含字符串的行数
@@ -101,7 +101,7 @@ find [option] "string" [drive:]\[path]\filename
 
 显示文件内容
 
-```powershell
+```cmd
 type [drive:]\[path]\filename
 ```
 
@@ -109,7 +109,7 @@ type [drive:]\[path]\filename
 
 新建一个终端运行外部程序，无论是否成功都会继续执行之后的语句
 
-```powershell
+```cmd
 start explorer D:\
 ```
 
@@ -121,7 +121,7 @@ start explorer D:\
 
 文件拓展名关联，即使用后缀名关联决定文件的类型
 
-```powershell
+```cmd
 assoc # 显示所有文件拓展名的关联
 assoc.txt # 显示.txt文件拓展名的关联
 assoc.txt=Word.Document.8 # 修改.txt文件拓展名关联到word文档
@@ -131,7 +131,7 @@ assoc.txt=Word.Document.8 # 修改.txt文件拓展名关联到word文档
 
 文件类型关联的打开程序路径
 
-```powershell
+```cmd
 ftype # 显示所有文件类型的打开程序路径
 ftype exefile # 显示exefile的打开程序路径
 ftype exefile="%1" %*
@@ -141,7 +141,7 @@ ftype exefile="%1" %*
 
 查询计算机名及用户
 
-```powershell
+```cmd
 whoami /all
 ```
 
@@ -149,7 +149,7 @@ whoami /all
 
 重新生成SID
 
-```powershell
+```cmd
 sysprep
 ```
 
@@ -157,7 +157,7 @@ sysprep
 
 转换硬盘格式
 
-```powershell
+```cmd
 convert e: /fs:ntfs
 ```
 
@@ -165,7 +165,7 @@ convert e: /fs:ntfs
 
 列出进程
 
-```powershell
+```cmd
 tasklist 
 /M # 列出调用的模块，若指定模块则列出使用此模块的进程
 /SVC # 列出操控此进程的服务名
@@ -176,13 +176,13 @@ tasklist
 
 运行程序或命令
 
-```powershell
+```cmd
 start process_name
 ```
 
 ### 18. taskkill
 
-```powershell
+```cmd
 taskkill
 /PID # 指定PID
 /IM # 指定名称
@@ -194,7 +194,7 @@ taskkill
 
 服务管理
 
-```powershell
+```cmd
 net start # 列出启动的服务
 net start service_name # 启动服务
 ```
@@ -203,7 +203,7 @@ net start service_name # 启动服务
 
 复制
 
-```powershell
+```cmd
 copy dir\file_name dir\file_name
 ```
 
@@ -211,7 +211,7 @@ copy dir\file_name dir\file_name
 
 剪切
 
-```powershell
+```cmd
 move dir\file_name dir\file_name
 ```
 
@@ -219,13 +219,13 @@ move dir\file_name dir\file_name
 
 删除
 
-```powershell
+```cmd
 del file_name
 ```
 
 ### 22. ren
 
-```powershell
+```cmd
 ren old_name new_name
 ```
 
@@ -239,7 +239,7 @@ ren old_name new_name
 
 创建IP安全策略, 不激活默认响应规则，不编辑属性
 
-```powershell
+```cmd
 netsh ipsec static add policy name="reject"
 ```
 
@@ -247,7 +247,7 @@ netsh ipsec static add policy name="reject"
 
 添加阻止所有，添加IP筛选器名为`拒绝所有`，属性编辑好源地址、目标地址、协议为`任意`，筛选器操作为`阻止`（需要自己新建）
 
-```powershell
+```cmd
 netsh ipsec static add filteraction name="阻止" action=block # 添加筛选器操作
 netsh ipsec static add filterlist name="拒绝所有" # 添加筛选器
 netsh ipsec static add filter filterlist="拒绝所有" srcaddr=any dstaddr=any description="拒绝一切" protocol=any mirrored=yes # 编辑筛选器的属性，即具体生效的规则
@@ -266,7 +266,7 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 
 #### 编辑服务属性
 
-```powershell
+```cmd
 net start service_name # 启动
 net stop service_name # 停止
 sc config service_name start= disabled # 禁用
@@ -309,3 +309,14 @@ sc delete service_name # 卸载命令
 ### 12. `mmc`
 
 控制台
+
+### 13.`tzutil.exe`
+
+时区设定
+
+```cmd
+tzutil.exe /g # 显示当前设定的时区
+tzutil.exe /l # 列出可设定的时区
+tzutil.exe /s "China Standard Time" # 设定时区
+```
+
