@@ -991,6 +991,8 @@ people("zhangsan", "man", 25, salary=20000, department="IT")
 
   `return`可以返回函数(如果是内部自定义函数,每次返回来的函数都不同,即使传入的是相同的参数,因为每次调用函数,都会重新在内部自定义一个新的函数)
 
+`return`可以返回条件表达式,相当于返回它的结果
+
 ```python
 def lazy_sum(*args):
     def sum():
@@ -2036,6 +2038,25 @@ if __name__ == "__main__":
         else:
             exit()
 ```
+
+### hmac:
+
+| 函数                                                  | 说明                       |
+| ----------------------------------------------------- | -------------------------- |
+| `hmac.new(key_bytes, message_bytes, digestmod='MD5')` | 创建容器加上key来计算md5值 |
+| `hmac_object.update(message_bytes)`                   | 容器添加message            |
+| `hmac_object.hexdigest()`                             | 返回md5值                  |
+
+### itertools:
+
+| 函数                          | 说明                                             |
+| ----------------------------- | ------------------------------------------------ |
+| `itertools.count(x ,y)`       | 创建一个从x开始无限的+y,`Iterator`对象           |
+| `itertools.cycle(Iterable)`   | 创建一个基于有限的`Iterable`循环的`Iterator`对象 |
+| `itertools.repeat(object, n)` | 创建一个将`object`无限循环下去的`Iterator`对象   |
+|                               |                                                  |
+
+
 
 
 
