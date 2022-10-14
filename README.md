@@ -28,6 +28,8 @@ warningMail.py - 监控内存，分区空间，超过后发送警告邮件
 
 findTruePid.py -  查找Windows服务器下端口被不存在的进程占用的真实pid
 
+md5check.py - 检测文件的MD5值
+
 ## shell
 
 inotifywait.sh - 监控目录并同步
