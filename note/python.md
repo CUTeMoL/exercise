@@ -2049,12 +2049,14 @@ if __name__ == "__main__":
 
 ### itertools:
 
-| 函数                          | 说明                                             |
-| ----------------------------- | ------------------------------------------------ |
-| `itertools.count(x ,y)`       | 创建一个从x开始无限的+y,`Iterator`对象           |
-| `itertools.cycle(Iterable)`   | 创建一个基于有限的`Iterable`循环的`Iterator`对象 |
-| `itertools.repeat(object, n)` | 创建一个将`object`无限循环下去的`Iterator`对象   |
-|                               |                                                  |
+| 函数                                            | 说明                                                   |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| `itertools.count(x ,y)`                         | 创建一个从x开始无限的+y,`Iterator`对象                 |
+| `itertools.cycle(Iterable)`                     | 创建一个基于有限的`Iterable`循环的`Iterator`对象       |
+| `itertools.repeat(object, n)`                   | 创建一个将`object`无限循环下去的`Iterator`对象         |
+| `itertools.takewhile(lamba x: x<=10, Iterator)` | 利用条件判断创建一个有限的`Iterable`                   |
+| `itertools.chain(Iterable, Iterable)`           | 可以把一组`Iterable`串联起来，形成一个更大的`Iterator` |
+|                                                 |                                                        |
 
 
 
