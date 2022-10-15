@@ -1921,10 +1921,6 @@ for name, member in Month.__members__.items():
 | `logging.debug("%s %s", var1, var2)` | 输出不同的日志级别的消息,可以附加变量参数 |
 | `logging.basicConfig()`              | 输出日志的基本设置                        |
 |                                      |                                           |
-|                                      |                                           |
-|                                      |                                           |
-|                                      |                                           |
-|                                      |                                           |
 
 | basicConfig | 说明                            |
 | ----------- | ------------------------------- |
@@ -1932,7 +1928,7 @@ for name, member in Month.__members__.items():
 | `datefmt`   | 日志的时间格式自定义            |
 | `format`    | 指定日志输出的格式              |
 | `filemode`  | 输出到文件时指定,文件的写入方式 |
-| `level`     | 输出的级别                      |
+| `level`     | 指定输出的级别                  |
 |             |                                 |
 
 | fomat             | 说明                                                  |
@@ -1957,7 +1953,28 @@ for name, member in Month.__members__.items():
 |                   |                                                       |
 |                   |                                                       |
 
+```python
+import logging
+import datetime
+Formatter = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s"
+logging.basicConfig(datefmt='%Y/%m/%d %H:%M:%S', format=Formatter, level=logging.DEBUG)
+logging.debug(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)) # 输出当前的UTC+0:00时间
+```
 
+| 模块组件     | 功能                                           |
+| ------------ | ---------------------------------------------- |
+| `Loggers`    | 记录器,提供应用程序代码能直接使用的接口        |
+| `Handlers`   | 处理器,将记录器产生的日志发送至目的地          |
+| `Filters`    | 过滤器,提供更好的粒度控制,决定哪些日志会被输出 |
+| `Formatters` | 格式化器,设置日志内容的组成结构和消息字段      |
+
+```mermaid
+graph TB
+创建一个带有默认日志输出级别的logger --> 创建带有日志输出级别的StreamHandler --> 创建formatter
+创建一个带有默认日志输出级别的logger --> 创建带有日志输出级别的FileHandler --> 创建formatter
+创建formatter --> 用formatter渲染所有的Handler --> 
+将所有Handler加入logger --> 程序调用logger
+```
 
 ### io:
 
