@@ -385,7 +385,7 @@ pass=password
 
 有密码才能通过`mysqld_multi`命令管理实例
 
-## 二、my.cnf配置参数
+## 二、my.cnf配置常用参数简介
 
 ```shell
 [mysqld]
@@ -545,7 +545,7 @@ socket=/tmp/mysql.sock
 prompt="\u@\h:\p \R:\m[\d]> "
 ```
 
-mysql8.0版本导出的变量
+mysql-5.7.35版本导出的变量
 
 ```shell
 auto_generate_certs=ON
@@ -3903,53 +3903,34 @@ mysql --login-path=root_3306
 
 ## 二十五、MySQL实用命令行用法
 
-`connect`、`\r`重新连接
-
-`ego``\G`垂直显示结果
-
-`go`、`\g`、`;`表格显示
-
-`pager less`、`\P less`以`less`的效果显示
-
-`nopager`、`\n`默认的方式输出
-
-`tee`、`\T`将命令行的结果保存到外部文件
-
-`notee`、`\t`不把执行结果输出到文件
-
-`system command`、`\! command`执行系统命令
-
-`source file.sql`、`\.file.sql `执行包含sql语句的文件
-
-`clear`、`\c`结束命令行输入
-
-`delimiter`、`\d`设置sql语句分隔符
-
-`edit`、`\e`进入脚本编辑模式
-
-`print`、`\p`显示执行的语句
-
-`prompt`、`\R`改变终端显示
-
-`quit`、`exit`、`\q`退出
-
-`status`、`\s`显示信息
-
-`use`、`\u`切换数据库
-
-`charset`、`\C`字符集设定
-
-`warnings`、`\W`每条语句都显示警告
-
-`nowarning`、`\w`不显示警告
+|format(long)|format(short)|说明|
+|-|-|-|
+|`connect`|`\r`|重新连接|
+|`ego`|`\G`|垂直显示结果|
+|`go`|`\g`、`;`|表格显示|
+|`pager less`|`\P less`|以`less`的效果显示|
+|`nopager`|`\n`|默认的方式输出|
+|`tee`|`\T`|将命令行的结果保存到外部文件|
+|`notee`|`\t`|不把执行结果输出到文件|
+|`system command`|`\! command`|执行系统命令|
+|`source file.sql`|`\.file.sql `|执行包含sql语句的文件|
+|`clear`|`\c`|结束命令行输入|
+|`delimiter`|`\d`|设置sql语句分隔符|
+|`edit`|`\e`|进入脚本编辑模式|
+|`print`|`\p`|显示执行的语句|
+|`prompt`|`\R`|改变终端显示|
+|`quit`、`exit`|`\q`|退出|
+|`status`|`\s`|显示信息|
+|`use`|`\u`|切换数据库|
+|`charset`|`\C`|字符集设定|
+|`warnings`|`\W`|每条语句都显示警告|
+|`nowarning`|`\w`|不显示警告|
 
 ## 二十六、常见错误
 
 ### 主从同步
 
-`Slave_IO_Running: Connecting`
-
-`Slave_SQL_Running:Yes`
+#### `Slave_IO_Running: Connecting`、`Slave_SQL_Running:Yes`
 
 | `Last_IO_Error`                                              | 原因                                                         | 处理                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -3958,9 +3939,7 @@ mysql --login-path=root_3306
 | Got fatal error 1236 from master when reading data from binary log: 'Slave has more GTIDs than the master has, using the master's SERVER_UUID. This may indicate that the end of the binary log was truncated or that the last binary log file was lost, e.g., after a power or disk failure when sync_binlog != 1. The master may or may not have rolled back transactions that were already replicated to the slave. Suggest to replicate any transactions that master has rolled back from slave to master, and/or commit empty transactions on master to account for transactions that have been' | 原因,MySQL主库还原过,或者执行过`reset master`                | 重做同步                                                     |
 |                                                              |                                                              |                                                              |
 
-`Slave_IO_Running: no`
-
-`Slave_SQL_Running:yes`
+#### `Slave_IO_Running: no`、`Slave_SQL_Running:yes`
 
 | `Last_IO_Error`                                              | 原因                                                         | 处理                               |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------- |
@@ -3968,11 +3947,7 @@ mysql --login-path=root_3306
 | Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file | binlog缺失                                                   | 重新修复数据库,然后主从同步        |
 |                                                              |                                                              |                                    |
 
-
-
-`Slave_IO_Running: Yes`
-
-`Slave_SQL_Running:No`
+#### `Slave_IO_Running: Yes`、`Slave_SQL_Running:No`
 
 | `Last_SQL_Error`                                             | 原因                                                         | 处理                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -3981,7 +3956,5 @@ mysql --login-path=root_3306
 |                                                              |                                                              | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步 |
 |                                                              | 主从库字符集不一致                                           | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集 |
 
-Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file
 
-Got fatal error 1236 from master when reading data from binary log: 'Could not open log file'
 

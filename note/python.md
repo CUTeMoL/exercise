@@ -1916,11 +1916,18 @@ for name, member in Month.__members__.items():
 
 默认级别是`WARNING`,通过`logging.basicConfig()`可以修改
 
-| 函数                                 | 功能                                      |
-| ------------------------------------ | ----------------------------------------- |
-| `logging.debug("%s %s", var1, var2)` | 输出不同的日志级别的消息,可以附加变量参数 |
-| `logging.basicConfig()`              | 输出日志的基本设置                        |
-|                                      |                                           |
+|          | 函数                                                         | 功能                                                         |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+|          | `logging.debug("%s %s", var1, var2)`                         | 输出不同的日志级别的消息,可以附加变量参数                    |
+|          | `logging.basicConfig()`                                      | 输出日志的基本设置                                           |
+| `logger` | `logging.getLogger(object)`                                  | 创建一个以`object`为对象的`logger`                           |
+|          | `logger_object.setLevel()`                                   | `logger`设置级别                                             |
+|          | `logger.addHandler()`                                        | 定义输出目标                                                 |
+|          | `logger.removeHandler()`                                     | 取消输出目标                                                 |
+| `Hander` | `logging.StreamHandler(stream=None)`                         | 创建一个目的地为标准输出的`Handler`                          |
+|          | `logging.FileHandler(filename, mode='a', encoding=None, delay=False)` | 创建一个目的地为磁盘文件的`Handler`<br/>`delay=False`代表不启用缓存 |
+|          | `logging.RotatingFileHandler(filename, mode='a', encoding=None, delay=False)` |                                                              |
+|          | `logging.handlers.TimedRotatingFileHandler(filename="/tmp/test.log", when="D", interval=2, backupCount=0, encoding=None, delay=False)` | 创建一个目的地为磁盘文件、通过时间进行切割的`Handler`<br/>`delay=False`代表不启用缓存 |
 
 | basicConfig | 说明                            |
 | ----------- | ------------------------------- |
