@@ -1916,29 +1916,37 @@ for name, member in Month.__members__.items():
 
 默认级别是`WARNING`,通过`logging.basicConfig()`可以修改
 
-|          | 函数                                                         | 功能                                                         |
-| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-|          | `logging.debug("%s %s", var1, var2)`                         | 输出不同的日志级别的消息,可以附加变量参数                    |
-|          | `logging.basicConfig()`                                      | 输出日志的基本设置                                           |
-| `logger` | `logging.getLogger(object)`                                  | 创建一个以`object`为对象的`logger`                           |
-|          | `logger_object.setLevel()`                                   | `logger`设置级别                                             |
-|          | `logger.addHandler()`                                        | 定义输出目标                                                 |
-|          | `logger.removeHandler()`                                     | 取消输出目标                                                 |
-| `Hander` | `logging.StreamHandler(stream=None)`                         | 创建一个目的地为标准输出的`Handler`                          |
-|          | `logging.FileHandler(filename, mode='a', encoding=None, delay=False)` | 创建一个目的地为磁盘文件的`Handler`<br/>`delay=False`代表不启用缓存 |
-|          | `logging.RotatingFileHandler(filename, mode='a', encoding=None, delay=False)` |                                                              |
-|          | `logging.handlers.TimedRotatingFileHandler(filename="/tmp/test.log", when="D", interval=2, backupCount=0, encoding=None, delay=False)` | 创建一个目的地为磁盘文件、通过时间进行切割的`Handler`<br/>`delay=False`代表不启用缓存 |
+|             | 函数                                                         | 功能                                                         |
+| ----------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+|             | `logging.debug("%s %s", var1, var2)`                         | 输出不同的日志级别的消息,可以附加变量参数                    |
+|             | `logging.basicConfig()`                                      | 输出日志的基本设置                                           |
+| `logger`    | `logging.getLogger(object_name)`                             | 创建一个以`object_name`为名称的`logger`                      |
+|             | `logger_object.setLevel(logging.DEBUG)`                      | `logger`设置级别                                             |
+|             | `logger_object.addHandler()`                                 | 定义输出目标                                                 |
+|             | `logger_object.removeHandler()`                              | 取消输出目标                                                 |
+|             | `logger_object.debug("%s %s", var1, var2)`                   | 输出不同的日志级别的消息,可以附加变量参数                    |
+|             | `logger_object.error(Exception)`                             | 打印错误                                                     |
+|             | `logger_object.exception(Exception)`                         | 打印错误信息详情                                             |
+| `Hander`    | `logging.StreamHandler(stream=None)`                         | 创建一个目的地为标准输出的`Handler`                          |
+|             | `logging.FileHandler(filename, mode='a', encoding=None, delay=False)` | 创建一个目的地为磁盘文件的`Handler`<br/>`delay=False`代表不启用缓存 |
+|             | `logging.handlers.RotatingFileHandler(filename="/tmp/test.log", mode='a', maxBytes=int_object, backupCount=int_object, encoding=None, delay=False)` | 创建一个目的地为磁盘文件的`Handler`<br/>`maxBytes`是最大比特数达到就会发生日志切割<br/>`backupCount`是备份的数量,0无限 |
+|             | `logging.handlers.TimedRotatingFileHandler(filename="/tmp/test.log", when="D", interval=2, backupCount=0, encoding=None, delay=False)` | 创建一个目的地为磁盘文件、通过时间进行切割的`Handler`<br/>`when`代表备份的基本时间单位设置<br/>`interval`是间隔 |
+| `formatter` | `logging.Formatter("%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s")` | 创建一个格式化器                                             |
+| `config`    | `logging.config.fileConfig('logging.conf')`                  | 指定配置文件的路径                                           |
+|             | `logging.dictConfig({})`                                     | 字典格式的配置文件                                           |
 
-| basicConfig | 说明                            |
-| ----------- | ------------------------------- |
-| `filename`  | 输出到文件时指定文件路径名称    |
-| `datefmt`   | 日志的时间格式自定义            |
-| `format`    | 指定日志输出的格式              |
-| `filemode`  | 输出到文件时指定,文件的写入方式 |
-| `level`     | 指定输出的级别                  |
-|             |                                 |
 
-| fomat             | 说明                                                  |
+
+| basicConfig的设置项 | 说明                            |
+| ------------------- | ------------------------------- |
+| `filename`          | 输出到文件时指定文件路径名称    |
+| `datefmt`           | 日志的时间格式自定义            |
+| `format`            | 指定日志输出的格式              |
+| `filemode`          | 输出到文件时指定,文件的写入方式 |
+| `level`             | 指定输出的级别                  |
+|                     |                                 |
+
+| Formatter格式     | 说明                                                  |
 | ----------------- | ----------------------------------------------------- |
 | `%(asctime)s`     | 日志产生的时间，默认格式为msecs2003-07-0816:49:45,896 |
 | `%(msecs)d`       | 日志生成时间的亳秒部分                                |
@@ -1982,6 +1990,109 @@ graph TB
 创建formatter --> 用formatter渲染所有的Handler --> 
 将所有Handler加入logger --> 程序调用logger
 ```
+
+以编程的方式使用
+
+```python
+import logging
+import logging.handlers
+log_path = "/tmp/test01.log"
+
+# 定义Filter
+filter_object = logging.Filter("test01")
+
+
+# 定义formatter
+formatter_object = logging.Formatter("%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s")
+
+# 定义handler
+streamhandler_object = logging.StreamHandler(stream=None)
+streamhandler_object.setLevel(logging.INFO)
+streamhandler_object.setFormatter(formatter_object)
+
+filehandler_object = logging.FileHandler(filename=log_path, mode='w', encoding=None, delay=False)
+filehandler_object.setLevel(logging.DEBUG)
+filehandler_object.setFormatter(formatter_object)
+filehandler_object.addFilter(filter_object)
+
+# 定义日志logger
+logger_object = logging.getLogger("test01")
+logger_object.setLevel(logging.DEBUG) # 级别最好为DEBUG,因为这个设置不是被后面handlers的覆盖,而是先过滤后才转给handlers
+logger_object.addHandler(streamhandler_object)
+logger_object.addHandler(filehandler_object)
+logger_object.addFilter(filter_object)
+
+# 打印日志
+logger_object.debug("message")
+logger_object.info("message")
+logger_object.warning("message")
+logger_object.error("message")
+logger_object.critical("message")
+```
+
+以配置文件的方式使用
+
+```python
+#./logging.conf
+
+#记录器：提供应用程序代码直接使用的接口
+#设置记录器名称，root必须存在！！！
+[loggers]
+keys=root,applog
+
+#处理器，将记录器产生的日志发送至目的地
+#设置处理器类型
+[handlers]
+keys=fileHandler,consoleHandler
+
+#格式化器，设置日志内容的组成结构和消息字段
+#设置格式化器的种类
+[formatters]
+keys=simpleFormatter
+
+#设置记录器root的级别与种类
+[logger_root]
+level=DEBUG
+handlers=consoleHandler
+
+#设置记录器applog的级别与种类
+[logger_applog]
+level=DEBUG 
+handlers=fileHandler,consoleHandler
+#起个对外的名字
+qualname=applog
+#继承关系
+propagate=0
+
+#设置
+[handler_consoleHandler]
+class=StreamHandler
+args=(sys.stdout,)
+level=DEBUG
+formatter=simpleFormatter
+
+[handler_fileHandler]
+class=handlers.TimedRotatingFileHandler
+#在午夜0点的0s开启下一个log文件，第四个参数0表示保留历史文件
+args=('applog.log','midnight',0,0)
+level=DEBUG
+formatter=simpleFormatter
+
+[formatter_simpleFormatter]
+format=%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s
+#设置时间输出格式
+datefmt=%Y-%m-%d %H:%M:%S
+
+```
+
+```python
+import logging
+import logging.config
+logging.config.fileConfig('logging.conf')
+logger_object= logging.getLogger('applog')
+```
+
+
 
 ### io:
 
