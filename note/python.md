@@ -143,41 +143,41 @@ pycharm建立项目
 
 不可以作为变量
 
-| 保留字     | 说明                                                         |
-| ---------- | ------------------------------------------------------------ |
-| `and`      | 和                                                           |
-| `or`       | 或                                                           |
-| `is`       | 判断                                                         |
-| `not`      | 非                                                           |
-| `in`       | 在里面                                                       |
-| `False`    | 错误标志                                                     |
-| `True`     | 正确标志                                                     |
-| `None`     | 空                                                           |
-| `if`       | 如果                                                         |
-| `elif`     | 如果                                                         |
-| `else`     | 如果未匹配表达式                                             |
-| `as`       | 重命名                                                       |
-| `assert`   | 断言                                                         |
-| `class`    | 声明类                                                       |
-| `def`      | 声明函数                                                     |
-| `global`   | 函数全局声明变量                                             |
-| `return`   | 函数返回                                                     |
-| `del`      | 删除变量的定义                                               |
-| `try`      | 尝试                                                         |
-| `except`   | 捕获错误                                                     |
-| `finally`  | 无论是否捕获                                                 |
-| `while`    | 表达式成立时循环                                             |
-| `break`    | 跳出循环                                                     |
-| `continue` | 跳出本次循环                                                 |
-| `for`      | 遍历循环                                                     |
-| `from`     | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
-| `import`   | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
-| `lambda`   | 轻量级函数,通常嵌入其他函数中使用                            |
-| `nonlocal` | 重新定义函数外部变量                                         |
-| `pass`     | 空代码跳过                                                   |
-| `raise`    | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
-| `with`     | 文件开启                                                     |
-| `yield`    | 函数返回生成器对象                                           |
+| 保留字         | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `and`          | 和                                                           |
+| `or`           | 或                                                           |
+| `is`           | 判断                                                         |
+| `not`          | 非                                                           |
+| `in`           | 在里面                                                       |
+| `False`        | 错误标志                                                     |
+| `True`         | 正确标志                                                     |
+| `None`         | 空                                                           |
+| `if`           | 如果                                                         |
+| `elif`         | 如果                                                         |
+| `else`         | 如果未匹配表达式                                             |
+| `as`           | 重命名                                                       |
+| `assert`       | 断言                                                         |
+| `class`        | 声明类                                                       |
+| `def`          | 声明函数                                                     |
+| `global`       | 函数全局声明变量                                             |
+| `return`       | 函数返回                                                     |
+| `del`          | 删除变量的定义                                               |
+| `try`          | 尝试                                                         |
+| `except`       | 捕获错误                                                     |
+| `finally`      | 无论是否捕获                                                 |
+| `while`        | 表达式成立时循环                                             |
+| `break`        | 跳出循环                                                     |
+| `continue`     | 跳出本次循环                                                 |
+| `for`          | 遍历循环                                                     |
+| `from`         | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
+| `import`       | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
+| `lambda`       | 轻量级函数,通常嵌入其他函数中使用                            |
+| `nonlocal`     | 重新定义函数外部变量                                         |
+| `pass`         | 空代码跳过                                                   |
+| `raise`        | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
+| `with object ` | 以上下文的方式获取`object`                                   |
+| `yield`        | 函数返回生成器对象                                           |
 
 
 ### 标识符
@@ -2193,6 +2193,14 @@ if __name__ == "__main__":
 | `itertools.chain(Iterable, Iterable)`           | 可以把一组`Iterable`串联起来，形成一个更大的`Iterator` |
 |                                                 |                                                        |
 
+### contextlib:
+
+| 函数                         | 说明                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| `contextlib.contextmanager`  | 装饰器,使`Class`生成的`object`可以使用`with`的方式获取 |
+| `contextlib.closing(object)` | 使`object`可以使用`with`的方式获取                     |
+|                              |                                                        |
+
 
 
 
@@ -3116,7 +3124,7 @@ for i in generator_expr:
 
 ## 二十、装饰器
 
-`Decorator`相当于装饰器接收原来的函数后,返回新的函数
+`Decorator`相当于装饰器接收原来的函数,然后改造,返回新的函数
 
 ```python
 import functools
@@ -3181,4 +3189,66 @@ print(double(5))
 | 多进程-Process(multiprocessing) | 一个父进程启动N个子进程(变量独立)   | 多核CPU并行计算             | 占用资源最多<br/>对比线程:可启动数量少                       | CPU密集型                |
 | 多线程-Thread(threading)        | 一个进程启动N个线程(进程内变量共享) | 对比进程:轻量级、占用资源少 | 对比进程:python中不能多核利用<br/>对比协程:启动数目有限,占用内存,有线程切换的开销 | IO密集型，任务数量不多时 |
 | 多协程-Coroutine(asyncio)       | 一个线程启动N个协程                 | 开销最小,启动协程数量最多   | 支持的库有限,代码实现复杂                                    | IO密集型,多任务运行      |
+
+## 二十二、上下文管理
+
+通过定义`__enter__`和`__exit__`两个方法,可以使用`with ClassName('object_name') as object:`来创建一个对象,实现上下文管理
+
+```python
+class ClassName(object):
+    def __init__(self, var_value):
+        self.var = var_value
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            print("error")
+        else:
+            print("end")
+    def query(self):
+        return self.var
+```
+
+也可以使用`@contextmanager`
+
+```python
+from contextlib import contextmanager
+
+class ClassName(object):
+    def __init__(self, var_value):
+        self.var = var_value
+    def query(self):
+        return self.var
+@contextmanager
+def create_object(var):
+    print("Begin")
+    object = ClassName(var)
+    yield object
+    print("end")
+```
+
+添加标签的案例
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def tag(name):
+    print("<%s>" % name)
+    yield
+    print("</%s>" % name)
+
+with tag("p"):
+    print("hello")
+    print("world")
+```
+
+通过`@closing`实现对象的上下文
+
+```python
+from contextlib import closing
+
+with closing(object_name) as object:
+    object.method()
+```
 
