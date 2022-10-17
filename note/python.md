@@ -143,41 +143,41 @@ pycharm建立项目
 
 不可以作为变量
 
-| 保留字     | 说明                                                         |
-| ---------- | ------------------------------------------------------------ |
-| `and`      | 和                                                           |
-| `or`       | 或                                                           |
-| `is`       | 判断                                                         |
-| `not`      | 非                                                           |
-| `in`       | 在里面                                                       |
-| `False`    | 错误标志                                                     |
-| `True`     | 正确标志                                                     |
-| `None`     | 空                                                           |
-| `if`       | 如果                                                         |
-| `elif`     | 如果                                                         |
-| `else`     | 如果未匹配表达式                                             |
-| `as`       | 重命名                                                       |
-| `assert`   | 断言                                                         |
-| `class`    | 声明类                                                       |
-| `def`      | 声明函数                                                     |
-| `global`   | 函数全局声明变量                                             |
-| `return`   | 函数返回                                                     |
-| `del`      | 删除变量的定义                                               |
-| `try`      | 尝试                                                         |
-| `except`   | 捕获错误                                                     |
-| `finally`  | 无论是否捕获                                                 |
-| `while`    | 表达式成立时循环                                             |
-| `break`    | 跳出循环                                                     |
-| `continue` | 跳出本次循环                                                 |
-| `for`      | 遍历循环                                                     |
-| `from`     | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
-| `import`   | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
-| `lambda`   | 轻量级函数,通常嵌入其他函数中使用                            |
-| `nonlocal` | 重新定义函数外部变量                                         |
-| `pass`     | 空代码跳过                                                   |
-| `raise`    | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
-| `with`     | 文件开启                                                     |
-| `yield`    | 函数返回生成器对象                                           |
+| 保留字         | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `and`          | 和                                                           |
+| `or`           | 或                                                           |
+| `is`           | 判断                                                         |
+| `not`          | 非                                                           |
+| `in`           | 在里面                                                       |
+| `False`        | 错误标志                                                     |
+| `True`         | 正确标志                                                     |
+| `None`         | 空                                                           |
+| `if`           | 如果                                                         |
+| `elif`         | 如果                                                         |
+| `else`         | 如果未匹配表达式                                             |
+| `as`           | 重命名                                                       |
+| `assert`       | 断言                                                         |
+| `class`        | 声明类                                                       |
+| `def`          | 声明函数                                                     |
+| `global`       | 函数全局声明变量                                             |
+| `return`       | 函数返回                                                     |
+| `del`          | 删除变量的定义                                               |
+| `try`          | 尝试                                                         |
+| `except`       | 捕获错误                                                     |
+| `finally`      | 无论是否捕获                                                 |
+| `while`        | 表达式成立时循环                                             |
+| `break`        | 跳出循环                                                     |
+| `continue`     | 跳出本次循环                                                 |
+| `for`          | 遍历循环                                                     |
+| `from`         | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
+| `import`       | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
+| `lambda`       | 轻量级函数,通常嵌入其他函数中使用                            |
+| `nonlocal`     | 重新定义函数外部变量                                         |
+| `pass`         | 空代码跳过                                                   |
+| `raise`        | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
+| `with object ` | 以上下文的方式获取`object`                                   |
+| `yield`        | 函数返回生成器对象                                           |
 
 
 ### 标识符
@@ -1916,26 +1916,37 @@ for name, member in Month.__members__.items():
 
 默认级别是`WARNING`,通过`logging.basicConfig()`可以修改
 
-| 函数                                 | 功能                                      |
-| ------------------------------------ | ----------------------------------------- |
-| `logging.debug("%s %s", var1, var2)` | 输出不同的日志级别的消息,可以附加变量参数 |
-| `logging.basicConfig()`              | 输出日志的基本设置                        |
-|                                      |                                           |
-|                                      |                                           |
-|                                      |                                           |
-|                                      |                                           |
-|                                      |                                           |
+|             | 函数                                                         | 功能                                                         |
+| ----------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+|             | `logging.debug("%s %s", var1, var2)`                         | 输出不同的日志级别的消息,可以附加变量参数                    |
+|             | `logging.basicConfig()`                                      | 输出日志的基本设置                                           |
+| `logger`    | `logging.getLogger(object_name)`                             | 创建一个以`object_name`为名称的`logger`                      |
+|             | `logger_object.setLevel(logging.DEBUG)`                      | `logger`设置级别                                             |
+|             | `logger_object.addHandler()`                                 | 定义输出目标                                                 |
+|             | `logger_object.removeHandler()`                              | 取消输出目标                                                 |
+|             | `logger_object.debug("%s %s", var1, var2)`                   | 输出不同的日志级别的消息,可以附加变量参数                    |
+|             | `logger_object.error(Exception)`                             | 打印错误                                                     |
+|             | `logger_object.exception(Exception)`                         | 打印错误信息详情                                             |
+| `Hander`    | `logging.StreamHandler(stream=None)`                         | 创建一个目的地为标准输出的`Handler`                          |
+|             | `logging.FileHandler(filename, mode='a', encoding=None, delay=False)` | 创建一个目的地为磁盘文件的`Handler`<br/>`delay=False`代表不启用缓存 |
+|             | `logging.handlers.RotatingFileHandler(filename="/tmp/test.log", mode='a', maxBytes=int_object, backupCount=int_object, encoding=None, delay=False)` | 创建一个目的地为磁盘文件的`Handler`<br/>`maxBytes`是最大比特数达到就会发生日志切割<br/>`backupCount`是备份的数量,0无限 |
+|             | `logging.handlers.TimedRotatingFileHandler(filename="/tmp/test.log", when="D", interval=2, backupCount=0, encoding=None, delay=False)` | 创建一个目的地为磁盘文件、通过时间进行切割的`Handler`<br/>`when`代表备份的基本时间单位设置<br/>`interval`是间隔 |
+| `formatter` | `logging.Formatter("%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s")` | 创建一个格式化器                                             |
+| `config`    | `logging.config.fileConfig('logging.conf')`                  | 指定配置文件的路径                                           |
+|             | `logging.dictConfig({})`                                     | 字典格式的配置文件                                           |
 
-| basicConfig | 说明                            |
-| ----------- | ------------------------------- |
-| `filename`  | 输出到文件时指定文件路径名称    |
-| `datefmt`   | 日志的时间格式自定义            |
-| `format`    | 指定日志输出的格式              |
-| `filemode`  | 输出到文件时指定,文件的写入方式 |
-| `level`     | 输出的级别                      |
-|             |                                 |
 
-| fomat             | 说明                                                  |
+
+| basicConfig的设置项 | 说明                            |
+| ------------------- | ------------------------------- |
+| `filename`          | 输出到文件时指定文件路径名称    |
+| `datefmt`           | 日志的时间格式自定义            |
+| `format`            | 指定日志输出的格式              |
+| `filemode`          | 输出到文件时指定,文件的写入方式 |
+| `level`             | 指定输出的级别                  |
+|                     |                                 |
+
+| Formatter格式     | 说明                                                  |
 | ----------------- | ----------------------------------------------------- |
 | `%(asctime)s`     | 日志产生的时间，默认格式为msecs2003-07-0816:49:45,896 |
 | `%(msecs)d`       | 日志生成时间的亳秒部分                                |
@@ -1956,6 +1967,130 @@ for name, member in Month.__members__.items():
 |                   |                                                       |
 |                   |                                                       |
 |                   |                                                       |
+
+```python
+import logging
+import datetime
+Formatter = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s"
+logging.basicConfig(datefmt='%Y/%m/%d %H:%M:%S', format=Formatter, level=logging.DEBUG)
+logging.debug(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)) # 输出当前的UTC+0:00时间
+```
+
+| 模块组件     | 功能                                           |
+| ------------ | ---------------------------------------------- |
+| `Loggers`    | 记录器,提供应用程序代码能直接使用的接口        |
+| `Handlers`   | 处理器,将记录器产生的日志发送至目的地          |
+| `Filters`    | 过滤器,提供更好的粒度控制,决定哪些日志会被输出 |
+| `Formatters` | 格式化器,设置日志内容的组成结构和消息字段      |
+
+```mermaid
+graph TB
+创建一个带有默认日志输出级别的logger --> 创建带有日志输出级别的StreamHandler --> 创建formatter
+创建一个带有默认日志输出级别的logger --> 创建带有日志输出级别的FileHandler --> 创建formatter
+创建formatter --> 用formatter渲染所有的Handler --> 
+将所有Handler加入logger --> 程序调用logger
+```
+
+以编程的方式使用
+
+```python
+import logging
+import logging.handlers
+log_path = "/tmp/test01.log"
+
+# 定义Filter
+filter_object = logging.Filter("test01")
+
+
+# 定义formatter
+formatter_object = logging.Formatter("%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s")
+
+# 定义handler
+streamhandler_object = logging.StreamHandler(stream=None)
+streamhandler_object.setLevel(logging.INFO)
+streamhandler_object.setFormatter(formatter_object)
+
+filehandler_object = logging.FileHandler(filename=log_path, mode='w', encoding=None, delay=False)
+filehandler_object.setLevel(logging.DEBUG)
+filehandler_object.setFormatter(formatter_object)
+filehandler_object.addFilter(filter_object)
+
+# 定义日志logger
+logger_object = logging.getLogger("test01")
+logger_object.setLevel(logging.DEBUG) # 级别最好为DEBUG,因为这个设置不是被后面handlers的覆盖,而是先过滤后才转给handlers
+logger_object.addHandler(streamhandler_object)
+logger_object.addHandler(filehandler_object)
+logger_object.addFilter(filter_object)
+
+# 打印日志
+logger_object.debug("message")
+logger_object.info("message")
+logger_object.warning("message")
+logger_object.error("message")
+logger_object.critical("message")
+```
+
+以配置文件的方式使用
+
+```python
+#./logging.conf
+
+#记录器：提供应用程序代码直接使用的接口
+#设置记录器名称，root必须存在！！！
+[loggers]
+keys=root,applog
+
+#处理器，将记录器产生的日志发送至目的地
+#设置处理器类型
+[handlers]
+keys=fileHandler,consoleHandler
+
+#格式化器，设置日志内容的组成结构和消息字段
+#设置格式化器的种类
+[formatters]
+keys=simpleFormatter
+
+#设置记录器root的级别与种类
+[logger_root]
+level=DEBUG
+handlers=consoleHandler
+
+#设置记录器applog的级别与种类
+[logger_applog]
+level=DEBUG 
+handlers=fileHandler,consoleHandler
+#起个对外的名字
+qualname=applog
+#继承关系
+propagate=0
+
+#设置
+[handler_consoleHandler]
+class=StreamHandler
+args=(sys.stdout,)
+level=DEBUG
+formatter=simpleFormatter
+
+[handler_fileHandler]
+class=handlers.TimedRotatingFileHandler
+#在午夜0点的0s开启下一个log文件，第四个参数0表示保留历史文件
+args=('applog.log','midnight',0,0)
+level=DEBUG
+formatter=simpleFormatter
+
+[formatter_simpleFormatter]
+format=%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s %(message)s
+#设置时间输出格式
+datefmt=%Y-%m-%d %H:%M:%S
+
+```
+
+```python
+import logging
+import logging.config
+logging.config.fileConfig('logging.conf')
+logger_object= logging.getLogger('applog')
+```
 
 
 
@@ -2057,6 +2192,14 @@ if __name__ == "__main__":
 | `itertools.takewhile(lamba x: x<=10, Iterator)` | 利用条件判断创建一个有限的`Iterable`                   |
 | `itertools.chain(Iterable, Iterable)`           | 可以把一组`Iterable`串联起来，形成一个更大的`Iterator` |
 |                                                 |                                                        |
+
+### contextlib:
+
+| 函数                         | 说明                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| `contextlib.contextmanager`  | 装饰器,使`Class`生成的`object`可以使用`with`的方式获取 |
+| `contextlib.closing(object)` | 使`object`可以使用`with`的方式获取                     |
+|                              |                                                        |
 
 
 
@@ -2981,7 +3124,7 @@ for i in generator_expr:
 
 ## 二十、装饰器
 
-`Decorator`相当于装饰器接收原来的函数后,返回新的函数
+`Decorator`相当于装饰器接收原来的函数,然后改造,返回新的函数
 
 ```python
 import functools
@@ -3046,4 +3189,66 @@ print(double(5))
 | 多进程-Process(multiprocessing) | 一个父进程启动N个子进程(变量独立)   | 多核CPU并行计算             | 占用资源最多<br/>对比线程:可启动数量少                       | CPU密集型                |
 | 多线程-Thread(threading)        | 一个进程启动N个线程(进程内变量共享) | 对比进程:轻量级、占用资源少 | 对比进程:python中不能多核利用<br/>对比协程:启动数目有限,占用内存,有线程切换的开销 | IO密集型，任务数量不多时 |
 | 多协程-Coroutine(asyncio)       | 一个线程启动N个协程                 | 开销最小,启动协程数量最多   | 支持的库有限,代码实现复杂                                    | IO密集型,多任务运行      |
+
+## 二十二、上下文管理
+
+通过定义`__enter__`和`__exit__`两个方法,可以使用`with ClassName('object_name') as object:`来创建一个对象,实现上下文管理
+
+```python
+class ClassName(object):
+    def __init__(self, var_value):
+        self.var = var_value
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            print("error")
+        else:
+            print("end")
+    def query(self):
+        return self.var
+```
+
+也可以使用`@contextmanager`
+
+```python
+from contextlib import contextmanager
+
+class ClassName(object):
+    def __init__(self, var_value):
+        self.var = var_value
+    def query(self):
+        return self.var
+@contextmanager
+def create_object(var):
+    print("Begin")
+    object = ClassName(var)
+    yield object
+    print("end")
+```
+
+添加标签的案例
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def tag(name):
+    print("<%s>" % name)
+    yield
+    print("</%s>" % name)
+
+with tag("p"):
+    print("hello")
+    print("world")
+```
+
+通过`@closing`实现对象的上下文
+
+```python
+from contextlib import closing
+
+with closing(object_name) as object:
+    object.method()
+```
 
