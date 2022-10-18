@@ -2203,22 +2203,42 @@ if __name__ == "__main__":
 
 ### urllib:
 
-| 函数                                    | 说明                                     |
-| --------------------------------------- | ---------------------------------------- |
-| `urllib.request.Request(url_str)`       | 创建一个请求                             |
-| `request_object.add-header(key, value)` | 添加请求头信息                           |
-| `urllib.request.urlopen("url_str")`     | 打开一个url对象                          |
-| `url_object.read()`                     | 返回响应内容,返回的是编码状态,需要decode |
-| `usrl_object.readline()`                | 读取单行内容                             |
-| `usrl_object.readlines()`               | 读取全部内容,以行为单位,赋值给列表       |
-| `url_object.status`                     | 返回响应状态码                           |
-| `usrl_object.getcode()`                 | 返回响应状态码                           |
-| `url_object.reason`                     | 返回响应状态                             |
-| `url_object.getheaders()`               | 返回响应头`[(key, value), ]`的格式       |
-|                                         |                                          |
-|                                         |                                          |
+| 类型 | 函数                                            | 说明                                                         |
+| ---- | ----------------------------------------------- | ------------------------------------------------------------ |
+| 请求 | `urllib.request.Request(url_str, data, header)` | 创建一个请求<br/>`data`必须先转换字节码                      |
+|      | `request_object.add-header(key, value)`         | 添加请求头信息                                               |
+|      | `urllib.request.urlopen("url_str")`             | 打开一个url对象                                              |
+| 响应 | `url_object.read()`                             | 返回响应内容,返回的是编码状态,需要decode                     |
+|      | `usrl_object.readline()`                        | 读取单行内容                                                 |
+|      | `usrl_object.readlines()`                       | 读取全部内容,以行为单位,赋值给列表                           |
+|      | `url_object.status`                             | 返回响应状态码                                               |
+|      | `usrl_object.getcode()`                         | 返回响应状态码                                               |
+|      | `url_object.reason`                             | 返回响应状态                                                 |
+|      | `url_object.getheaders()`                       | 返回响应头`[(key, value), ]`的格式                           |
+| 转换 | `urllib.parse.urlencode(data_object)`           | 把post的数据转换为http可以识别的格式(还需要用data_object.encode("utf8")转换为字节码) |
+|      |                                                 |                                                              |
 
+post请求
 
+```python
+#!/usr/bin/env python3
+
+import urllib.request
+import urllib.parse
+
+url = 'https://www.runoob.com/try/py3/py3_urllib_test.php'  # 提交到表单页面
+data = {'name':'RUNOOB', 'tag' : '菜鸟教程'}   # 提交数据
+header = {
+    'User-Agent':'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+}   #头部信息
+data = urllib.parse.urlencode(data)  # 对参数进行编码，解码使用 urllib.parse.urldecode
+print(data)
+request=urllib.request.Request(url, data.encode('utf8'), header)   # 请求处理
+reponse=urllib.request.urlopen(request).read()      # 读取结果
+
+with open("./urllib_test_post_runoob.html","wb") as fh:   # 将文件写入到当前目录中
+    fh.write(reponse)
+```
 
 
 
