@@ -79,12 +79,24 @@ GET /index.html HTTP/1.1
 
 #### (2)状态码
 
-| 状态码 | 说明 |
-| ------ | ---- |
-|        |      |
-|        |      |
-|        |      |
-|        |      |
+| 状态码 | 状态文字                   | 说明                                                   |
+| ------ | -------------------------- | ------------------------------------------------------ |
+| 200    | OK                         | 请求成功,一般用于`GET`与`POST`请求                     |
+| 301    | Moved Permanently          | 永久重定向                                             |
+| 302    | FOUND                      | 临时重定向                                             |
+| 304    | Not Modified               | `ETag`的文件的`Last-Modified`未修改,则重定向到本地缓存 |
+| 400    | Bad Request                | 客户端请求的语法错误,服务器无法理解                    |
+| 401    | Unauthorized               | 请求要求用户的身份认证                                 |
+| 403    | Forbidden                  | 禁止访问                                               |
+| 404    | Not Found                  | 请求不存在                                             |
+| 405    | Method Not Allowed         | 客户端请求中的方法被禁止                               |
+| 408    | Request Time-out           | 服务器等待客户端发送的请求时间过长,超时                |
+| 500    | Internal Server Error      | 服务器内部错误,无法完成请求                            |
+| 502    | Bad Gateway                | 作为网关或者代理工作的服务器,发现目标不可达            |
+| 503    | Service Unavailable        | 由于超载或系统维护,服务器暂时的无法处理客户端的请求    |
+| 504    | Gateway Time-out           | 充当网关或代理的服务器,未及时从远端服务器获取请求      |
+| 505    | HTTP Version not supported | 服务器不支持请求的HTTP协议的版本                       |
+|        |                            |                                                        |
 
 
 
@@ -106,7 +118,7 @@ HTTP/1.1 200 OK
 | `Content-Length` | 响应大小         |
 | `Last-Modified`  | 最后修改时间     |
 | `Connection`     | 连接             |
-| `ETag`           |                  |
+| `ETag`           | 文件标志         |
 | `Accept-Ranges`  | 响应范围,`bytes` |
 | `Content-Length` | 响应主体长度     |
 | `Vary`           |                  |
