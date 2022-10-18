@@ -752,6 +752,12 @@ option:
 -size   文件大小  +5M(大于5m) -5m（小于5m）
 ```
 
+#### xargs
+
+```shell
+xargs  # 从管道接收参数
+```
+
 #### rsync
 
 ```shell
