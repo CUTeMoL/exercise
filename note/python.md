@@ -2201,6 +2201,23 @@ if __name__ == "__main__":
 | `contextlib.closing(object)` | 使`object`可以使用`with`的方式获取                     |
 |                              |                                                        |
 
+### urllib:
+
+| 函数                                    | 说明                                     |
+| --------------------------------------- | ---------------------------------------- |
+| `urllib.request.Request(url_str)`       | 创建一个请求                             |
+| `request_object.add-header(key, value)` | 添加请求头信息                           |
+| `urllib.request.urlopen("url_str")`     | 打开一个url对象                          |
+| `url_object.read()`                     | 返回响应内容,返回的是编码状态,需要decode |
+| `usrl_object.readline()`                | 读取单行内容                             |
+| `usrl_object.readlines()`               | 读取全部内容,以行为单位,赋值给列表       |
+| `url_object.status`                     | 返回响应状态码                           |
+| `usrl_object.getcode()`                 | 返回响应状态码                           |
+| `url_object.reason`                     | 返回响应状态                             |
+| `url_object.getheaders()`               | 返回响应头`[(key, value), ]`的格式       |
+|                                         |                                          |
+|                                         |                                          |
+
 
 
 
