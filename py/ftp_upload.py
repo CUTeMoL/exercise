@@ -2,12 +2,17 @@
 import ftplib
 import os
 
-filename = 
-def ftp_upload(sourcefile, targethost="127.0.0.1", targetport=21, targetuser="anonymous", targetpasswd="anonymous", targetdir="/"):
+filename = "e:/tmp/t.txt"
+targethost = "127.0.0.1"
+targetport = 21
+targetuser = "anonymous"
+targetpasswd = "anonymous"
+targetdir = "/"
+ftp_object = ftplib.FTP()
+ftp_object.connect(host=targethost, port=targetport)
+ftp_object.login(user=targetuser, passwd=targetpasswd)
 
-    ftp_object = ftplib.FTP()
-    ftp_object.connect(host=targethost, port=targetport)
-    ftp_object.login(user=targetuser, passwd=targetpasswd)
+def ftp_upload(ftp_object, sourcefile, targetdir="/"):
     sourcefile_object = open(sourcefile,'rb')
     source_file_basename = os.path.basename(sourcefile)
     targetdir = targetdir.strip()
@@ -18,4 +23,4 @@ def ftp_upload(sourcefile, targethost="127.0.0.1", targetport=21, targetuser="an
     sourcefile_object.close()
 
 if __name__ == "__main__":
-    ftp_upload(filename)
+    ftp_upload(ftp_object , filename, targetdir)
