@@ -2242,6 +2242,37 @@ with open("./urllib_test_post_runoob.html","wb") as fh:   # 将文件写入到�
     fh.write(reponse)
 ```
 
+### ftplib:
+
+| 函数                                                   | 说明                               |
+| ------------------------------------------------------ | ---------------------------------- |
+| `ftplib.FTP()`                                         | 创建一个FTP终端实例                |
+| `ftp_object.connect(host="127.0.0.1", port=21)`        | 创建连接                           |
+| `ftp_object.login(user="lxw", passwd="password")`      | 登录信息                           |
+| `ftp_object.pwd()`                                     | 返回当前路径                       |
+| `ftp_object.nlst()`                                    | 返回列表                           |
+| `ftp_object.mkd("dirname")`                            | 当前路径新建文件夹                 |
+| `ftp_object.retrbinary("RETR t.txt", localfile.write)` | 下载文件<br/>`cmd="RETR dir/file"` |
+| `ftp_object.storbinary(cmd, localfile)`                | 上传文件<br/>`cmd="STOR dir/file"` |
+| `ftp_object.quit()`                                    | 退出                               |
+
+```python
+import ftplib
+ftp_object = ftplib.FTP()
+ftp_object.connect(host="127.0.0.1", port=21)
+ftp_object.login(user="lxw", passwd="password")
+upload_file_object = open('E:/TMP/t.txt','rb')
+upload_file_object = open('E:/TMP/t.txt','rb')
+# 上传文件
+cmd1 = 'STOR /t.txt'
+ftp_object.storbinary(cmd1, upload_file_object)
+# 下载文件
+cmd2 = "RETR t.txt"
+ftp_object.retrbinary(cmd2, download_file_object.write)
+download_file.close()
+ftp_object.quit()
+```
+
 
 
 ### 第三方模块pycurl:
