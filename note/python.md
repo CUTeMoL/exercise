@@ -2205,7 +2205,7 @@ if __name__ == "__main__":
 
 | 类型 | 函数                                                         | 说明                                                         |
 | ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 请求 | `urllib.request.Request(url_str, data, header, method="METHOD")` | 创建一个请求<br/>`data`必须先转换字节码                      |
+| 请求 | `urllib.request.Request(url_str, data, header, method="METHOD")` | 创建一个请求<br/>`data`必须先转换`bytes`                     |
 |      | `request_object.add-header(key, value)`                      | 添加请求头信息                                               |
 |      | `urllib.request.urlopen("url_str")`                          | 打开一个url对象                                              |
 | 响应 | `url_object.read()`                                          | 返回响应内容,返回的是编码状态,需要decode                     |
