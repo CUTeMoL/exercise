@@ -30,6 +30,8 @@ findTruePid.py -  查找Windows服务器下端口被不存在的进程占用的�
 
 md5check.py - 检测文件的MD5值
 
+ftp_upload.py - 上传文件到ftp服务器
+
 ## shell
 
 inotifywait.sh - 监控目录并同步
