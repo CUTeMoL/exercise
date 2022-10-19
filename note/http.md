@@ -85,6 +85,7 @@ GET /index.html HTTP/1.1
 | 301    | Moved Permanently          | 永久重定向                                             |
 | 302    | FOUND                      | 临时重定向                                             |
 | 304    | Not Modified               | `ETag`的文件的`Last-Modified`未修改,则重定向到本地缓存 |
+| 307    | Temporary Redirect         | 临时重定向,与302类似,但是会把原来的请求数据一同转发    |
 | 400    | Bad Request                | 客户端请求的语法错误,服务器无法理解                    |
 | 401    | Unauthorized               | 请求要求用户的身份认证                                 |
 | 403    | Forbidden                  | 禁止访问                                               |
