@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+import ftplib
+import os
+
+filename = 
+def ftp_upload(sourcefile, targethost="127.0.0.1", targetport=21, targetuser="anonymous", targetpasswd="anonymous", targetdir="/"):
+
+    ftp_object = ftplib.FTP()
+    ftp_object.connect(host=targethost, port=targetport)
+    ftp_object.login(user=targetuser, passwd=targetpasswd)
+    sourcefile_object = open(sourcefile,'rb')
+    source_file_basename = os.path.basename(sourcefile)
+    targetdir = targetdir.strip()
+    if targetdir[-1] == "/":
+        ftp_object.storbinary(f"STOR {targetdir}{source_file_basename}", sourcefile_object)
+    else:
+        ftp_object.storbinary(f"STOR {targetdir}/{source_file_basename}", sourcefile_object)
+    sourcefile_object.close()
+
+if __name__ == "__main__":
+    ftp_upload(filename)
