@@ -2251,7 +2251,10 @@ with open("./urllib_test_post_runoob.html","wb") as fh:   # 将文件写入到�
 | `ftp_object.login(user="lxw", passwd="password")`      | 登录信息                           |
 | `ftp_object.pwd()`                                     | 返回当前路径                       |
 | `ftp_object.nlst()`                                    | 返回列表                           |
-| `ftp_object.mkd("dirname")`                            | 当前路径新建文件夹                 |
+| `ftp_object.mkd("dirname")`                            | 新建文件夹                         |
+| `ftp_object.rmd("dirname")`                            | 下删除目录                         |
+| `ftp_object.delete("filename")`                        | 删除文件                           |
+| `ftp_object.rename("oldname", "newname")`              | 改名                               |
 | `ftp_object.retrbinary("RETR t.txt", localfile.write)` | 下载文件<br/>`cmd="RETR dir/file"` |
 | `ftp_object.storbinary(cmd, localfile)`                | 上传文件<br/>`cmd="STOR dir/file"` |
 | `ftp_object.quit()`                                    | 退出                               |
