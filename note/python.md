@@ -2276,6 +2276,21 @@ download_file.close()
 ftp_object.quit()
 ```
 
+### 第三方模块requests:
+
+| 函数                                         | 说明                                     |
+| -------------------------------------------- | ---------------------------------------- |
+| `requests.get(url_str, params={key: value})` | 获取一个url的信息<br/>`params`是可选参数 |
+| `requests_object.status_code`                | 返回状态码                               |
+| `requests_object.text`                       | 返回页面内容<br/>`str`形式               |
+| `requests_object.content`                    | 返回页面内容<br/>`bytes`形式             |
+| `requests_object.apparent_encoding`          | 返回编码                                 |
+| `requests_object.is_permanent_redirect`      | 是否永久重定向                           |
+| `requests_object.is_redirect`                | 是否重定向                               |
+|                                              |                                          |
+|                                              |                                          |
+|                                              |                                          |
+
 
 
 ### 第三方模块pycurl:
