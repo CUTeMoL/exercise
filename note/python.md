@@ -2276,6 +2276,39 @@ download_file.close()
 ftp_object.quit()
 ```
 
+### tarfile:
+
+| 函数                                   | 说明                                       |
+| -------------------------------------- | ------------------------------------------ |
+| `tarfile.is_tarfile(filename)`         | 判断是否是一个可读的`tarfile`              |
+| `tarfile.open(filename, filemode)`     | 创建一个`tarfile`对象                      |
+| `tarfile_object.getmembers()`          | 返回`TarInfo`格式tarfile`中的所有成员      |
+| `tarfile_object.getmember(name)`       | 返回对应名称`TarInfo`格式`tarfile`中的成员 |
+| `tarfile_object.getnames()`            | 返回`str`格式所有`tarfile`中的成员         |
+| `tarfile_object.list(*verbose*=False)` | 直接打印`members`                          |
+| `tarfile_object.next()`                | `tarfile_object`是一个迭代器               |
+|                                        |                                            |
+|                                        |                                            |
+
+| `tarfile.open()`的`filemode` | 选项                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| `r`、`r:*`                   | 打开和读取使用透明压缩(默认)                                 |
+| `r:`                         | 打开和读取不使用压缩                                         |
+| `r:gz`                       | 打开和读取使用gzip 压缩                                      |
+| `r:bz2`                      | 打开和读取使用bzip2 压缩                                     |
+| `r:xz`                       | 打开和读取使用lzma 压缩                                      |
+| `x`和`x:`                    | 创建tarfile不进行压缩.如果文件已经存在,则抛出 `FileExistsError`异常 |
+| `x:gz`                       | 使用gzip压缩创建tarfile.如果文件已经存在,则抛出 `FileExistsError`异常 |
+| `x:bz`                       | 使用gzip压缩创建tarfile.如果文件已经存在,则抛出 `FileExistsError`异常 |
+| `x:xz`                       | 使用gzip压缩创建tarfile.如果文件已经存在,则抛出 `FileExistsError`异常 |
+| `a`、`a:`                    | 打开以便在没有压缩的情况下追加.如果文件不存在，则创建该文件  |
+| `w`、`w:`                    | 打开用于未压缩的写入                                         |
+| `w:gz`                       | 打开用于 gzip 压缩的写入                                     |
+| `w:bz2`                      | 打开用于 bzip2 压缩的写入                                    |
+| `w:xz`                       | 打开用于 lzma 压缩的写入                                     |
+
+
+
 ### 第三方模块requests:
 
 | 函数                                         | 说明                                     |
