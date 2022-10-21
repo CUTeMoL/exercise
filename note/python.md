@@ -2287,8 +2287,8 @@ ftp_object.quit()
 | `tarfile_object.getnames()`                                  | 返回`str`格式所有`tarfile`中的成员         |
 | `tarfile_object.list(*verbose*=False)`                       | 直接打印`members`                          |
 | `tarfile_object.next()`                                      | `tarfile_object`是一个迭代器               |
-| `tarfile.extractall(path="", members=None, *, numeric_owner=False)` |                                            |
-|                                                              |                                            |
+| `tarfile.extractall(path="/", members=None, *, numeric_owner=False)` | 解压文件,到对应路径,或当前路径             |
+| `tarfile.extractfile(member)`                                | 将归档中的一个成员提取为文件对象           |
 
 | `tarfile.open()`的`filemode` | 选项                                                         |
 | ---------------------------- | ------------------------------------------------------------ |
