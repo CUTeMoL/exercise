@@ -2307,6 +2307,18 @@ ftp_object.quit()
 | `w:bz2`                      | 打开用于 bzip2 压缩的写入                                    |
 | `w:xz`                       | 打开用于 lzma 压缩的写入                                     |
 
+解压`tar-(.tar)`、`gzip(.gz)`、`bzip2(.bz2)`、`lzma(.xz)`文件
+
+```python
+#!/usr/bin/env python3
+import os
+import tarfile
+filename = os.path.abspath(input("file: "))
+targetdir = input("target path: ")
+with tarfile.open(filename , "r") as  tarfile_object:
+    tarfile_object.extractall(path=targetdir)
+```
+
 
 
 ### 第三方模块requests:
