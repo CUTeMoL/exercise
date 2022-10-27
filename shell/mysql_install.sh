@@ -191,7 +191,8 @@ EOF
     chown -R mysql:mysql ${data_dir}
     cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld_${mysql_port}
     sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
-    -e "/^other_args=/s#other_args=\"\$\*\"#other_args=\"\`\$basedir/bin/my_print_defaults --defaults-extra-file=${mysql_conf_dir}/my.cnf mysqld\` \$\*\"#g" \
+    -e "/^other_args=/s#other_args=\"\$\*\"#other_args=\"--defaults-file=${mysql_conf_dir}/my.cnf \$\*\"#g" \
+    -e "/\$bindir\/mysqld_safe --datadir=\"\$datadir\"/s#\$bindir/mysqld_safe --datadir=\"\$datadir\" --pid-file=\"\$mysqld_pid_file_path\" \$other_args#\$bindir/mysqld_safe \$other_args --datadir=\"\$datadir\" --pid-file=\"\$mysqld_pid_file_path\" #g" \
     -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld_${mysql_port}
     chmod +x /etc/init.d/mysqld_${mysql_port}
     systemctl daemon-reload
@@ -287,7 +288,7 @@ please check configuration \
 change_random_passwd() {
     mysql_port=$1
     root_passwd=$2
-    grep "root@localhost:" /tmp/my_install_${mysql_port}.log
+    grep "root@localhost:" /tmp/my_install_${mysql_port}.log >/dev/null 2>&1
     if [ $? -eq 0 ];then 
         random_passwd=`awk '/root@localhost:/{print $NF}' /tmp/my_install_${mysql_port}.log`
         ${mysql_base_dir}/bin/mysql --connect-expired-password -S /tmp/mysql_${mysql_port}.sock -p${random_passwd} \
