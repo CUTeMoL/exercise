@@ -1,7 +1,5 @@
 #!/bin/bash
-# 2022.10.1更新,优化多实例
-# # 修改basedir路径,使得不同实例可以使用相同的basedir,节省磁盘空间
-# # 修改my.cnf路径,方便多实例管理
+
 # 适用于mysqld 5.7/8.0
 # 修改以下变量
 download_mysql_version=8.0.28 # 要安装的版本
@@ -199,6 +197,7 @@ EOF
     grep "export PATH=\"\$PATH:${base_dir}/bin\"" /etc/profile >/dev/null 2>&1
     if [ $? -ne 0 ];then
         echo "export PATH=\"\$PATH:${base_dir}/bin\"" >> /etc/profile
+        echo "source /etc/profile to use MySQL clent."
     fi
     if [[ ${os_version} = Ubuntu ]];then
         if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
