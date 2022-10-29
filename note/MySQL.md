@@ -4,6 +4,7 @@
 
 ```shell
 #!/bin/bash
+
 # 适用于mysqld 5.7/8.0
 # 修改以下变量
 download_mysql_version=8.0.28 # 要安装的版本
@@ -166,7 +167,6 @@ EOF
     if [ ! -e /etc/my.cnf ] && [ ! -e /etc/mysql ];then
         cat > /etc/my.cnf <<EOF
 [mysql]
-user=root
 port=3306
 socket=/tmp/mysql_${mysql_port}.sock
 prompt="mysql>\u@\h:[\d]# "
@@ -194,13 +194,15 @@ EOF
     chown -R mysql:mysql ${data_dir}
     cp ${base_dir}/support-files/mysql.server /etc/init.d/mysqld_${mysql_port}
     sed -i -e "/^datadir=/s#datadir=#datadir=${data_dir}#g" \
-    -e "/^other_args=/s#other_args=\"\$\*\"#other_args=\"\`\$basedir/bin/my_print_defaults --defaults-extra-file=${mysql_conf_dir}/my.cnf mysqld\` \$\*\"#g" \
+    -e "/^other_args=/s#other_args=\"\$\*\"#other_args=\"--defaults-file=${mysql_conf_dir}/my.cnf \$\*\"#g" \
+    -e "/\$bindir\/mysqld_safe --datadir=\"\$datadir\"/s#\$bindir/mysqld_safe --datadir=\"\$datadir\" --pid-file=\"\$mysqld_pid_file_path\" \$other_args#\$bindir/mysqld_safe \$other_args --datadir=\"\$datadir\" --pid-file=\"\$mysqld_pid_file_path\" #g" \
     -e "/^basedir=/s#basedir=#basedir=${base_dir}#g" /etc/init.d/mysqld_${mysql_port}
     chmod +x /etc/init.d/mysqld_${mysql_port}
     systemctl daemon-reload
     grep "export PATH=\"\$PATH:${base_dir}/bin\"" /etc/profile >/dev/null 2>&1
     if [ $? -ne 0 ];then
         echo "export PATH=\"\$PATH:${base_dir}/bin\"" >> /etc/profile
+        echo "source /etc/profile to use MySQL clent."
     fi
     if [[ ${os_version} = Ubuntu ]];then
         if [ ! -e /lib/x86_64-linux-gnu/libtinfo.so.5 ];then
@@ -290,7 +292,7 @@ please check configuration \
 change_random_passwd() {
     mysql_port=$1
     root_passwd=$2
-    grep "root@localhost:" /tmp/my_install_${mysql_port}.log
+    grep "root@localhost:" /tmp/my_install_${mysql_port}.log >/dev/null 2>&1
     if [ $? -eq 0 ];then 
         random_passwd=`awk '/root@localhost:/{print $NF}' /tmp/my_install_${mysql_port}.log`
         ${mysql_base_dir}/bin/mysql --connect-expired-password -S /tmp/mysql_${mysql_port}.sock -p${random_passwd} \
@@ -330,6 +332,7 @@ do
     esac
 done
 echo "exit"
+
 ```
 
 ### 多实例:
