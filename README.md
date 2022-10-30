@@ -108,7 +108,7 @@ paramiko模块使用
 
 
 
-#### ftp_upload.py
+#### ftpUpload.py
 
 上传文件到ftp服务器
 
