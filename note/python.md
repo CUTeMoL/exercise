@@ -2375,6 +2375,30 @@ if __name__ == "__main__":
         print(f"format: {sys.argv[0]} source target")
 ```
 
+### socket:
+
+|        | 函数                                           | 说明                                                         |
+| ------ | ---------------------------------------------- | ------------------------------------------------------------ |
+|        | `socket.socket(AddressFamily, Type)`           | 创建一个`socket`<br/>`AddressFamily`可以选择`socket.AF_INET`用于进程间通信,`socket.AF_UNIX`用于同一台机器进程间通信<br/>`Type`套接字类型,`socket.SOCK_STREAM`流式套接字用于TCP,`socket.SOCK_DGRAM`数据报套接字,用于UDP |
+| server | `serversocket_object.bind((host, port))`       | 绑定地址                                                     |
+|        | `serversocket_object.listen(int)`              | TCP监听,backlog指定在拒绝连接前,操作系统可以挂起的最大连接数量,该值至少为1,大部分设置为5 |
+|        | `serversocket_object.accept()`                 | 被动接受TCP客户端连接,并以阻塞的方式等待连接的到来(接收到连接才运行之后的代码)<br/>返回连接实例的两个值,本次连接的客户端`socket`,连接地址 |
+| client | `clientsocket_object.connect((host, port))`    | 主动初始化TCP服务器连接,如果连接出错,返回`socket.error`错误  |
+|        | `clientsocket_object.connect_ex((host, port))` | connect的拓展,返回错码而不是抛出异常                         |
+| 共用   | `socket_object.recv()`                         | 接收TCP数据,数据以字符串的形式返回<br/>`bufsize`指定要接收的最大`bytes`<br/>`flag`提供其他消息 |
+|        | `socket_object.send()`                         | 发送TCP数据,返回值是要发送的字节数量                         |
+|        | `socket_object.sendall()`                      | 发送TCP数据                                                  |
+|        | `socket_object.recvfrom()`                     | 接受UDP,返回值是(data,address)                               |
+|        | `socket_object.sendto(data, (ipaddr,port))`    | 发送UDP,返回值是发送的字节数<br/>                            |
+|        | `socket_object.close()`                        | 关闭套接字                                                   |
+|        | `socket_object.getpeername()`                  | 获取对端远程地址,返回值通常式元组(ipaddr,port)               |
+|        | `socket_object.getsockname()`                  | 获取自身地址,返回值通常式元组(ipaddr,port)                   |
+|        | `socket_object.gethostname()`                  | 获取本地主机名                                               |
+|        |                                                |                                                              |
+|        |                                                |                                                              |
+|        |                                                |                                                              |
+|        |                                                |                                                              |
+
 
 
 ### 第三方模块requests:
