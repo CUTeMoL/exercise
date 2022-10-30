@@ -1311,14 +1311,14 @@ print("---")
 
 |              | os函数                                                       | 作用                                                         |
 | ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 查           | `os.getcwd()`                                                | 打印当前目录（pwd）                                          |
+| 查           | `os.getcwd()`                                                | 打印当前目录                                                 |
 |              | `os.chdir("/dir")`                                           | 改变当前目录                                                 |
-|              | `os.curdir`                                                  | 打印当前目录（.）                                            |
-|              | `os.pardir`                                                  | 打印上级目录（..）                                           |
+|              | `os.curdir`                                                  | 打印当前目录                                                 |
+|              | `os.pardir`                                                  | 打印上级目录                                                 |
 |              | `os.listdir("/dir")`                                         | 返回列表形式的目录内容                                       |
 |              | `os.scandir(“/dir”)`                                         | 返回目录，需要遍历打印出来                                   |
 |              | `os.walk("/dir")`                                            | 遍历目录树，返回(dirpath路径, dirnames目录中的文件夹列表, filenames目录中的文件列表) |
-|              | `os.stat("/dir/file")`                                       | 查看文件的状态（类key: value的元组），可以用下标来元素切片，也可以通过.key_name获取所需值 |
+|              | `os.stat("/dir/file")`                                       | 查看文件的状态(类key: value的元组)，可以用下标来元素切片，也可以通过.key_name获取所需值 |
 |              | `os.access("file", os.R_OK)`                                 | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)              |
 |              | `os.path.getsize("/dir/file")`                               | 获取文件的大小                                               |
 |              | `os.path.abspath("file")`                                    | 获取文件的绝对路径                                           |
@@ -1466,6 +1466,35 @@ t2.join()
 | `queue.Queue()`          | 创建一个queue对象                          |
 | `queue_object.put(item)` | 添加元素(队列满的时候会卡住等待空闲时添加) |
 | `queue_object.get()`     | 获取元素(没获取到时会卡住等待直到获取成功) |
+| `queue_object.qsize()`   | 获取元素个数                               |
+| `queue_object.empty()`   | 判断是否为空                               |
+| `queue_object.full()`    | 判断是否已满                               |
+
+### concurrent.futures:
+
+| 函数                                                    | 说明                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| `concurrent.futures.ThreadPoolExecutor()`               | 创建一个线程池对象                                           |
+| `concurrent.futures.ProcessPoolExecutor()`              | 创建一个进程池对象                                           |
+| `threadpool_object.map(func, args)`                     | 运行线程,遍历运行,返回结果<br/>`map`的结果顺序时`args`的顺序<br/>需要先准备好任务列表 |
+| `[threadpool_object.submit(func, arg) for url in urls]` | 创建一个`futures_object`来运行<br/>因为单个提交,所以可迭代对象都可以成为任务 |
+| `future_object.result()`                                | `submit`返回结果                                             |
+| `concurrent.futures.as_completed()`                     | `submit`返回结果,一旦完成就返回                              |
+
+```python
+from concurrent.futures import ThreadPoolExecutor, as_completed
+with ThreadPoolExecutor() as pool:
+    results = pool.map(func, args)
+    for result in results:
+        print(result)
+        
+with ThreadPoolExecutor() as pool:
+    futures = [ threadpool_object.submit(func, arg) for url in urls ]
+    for future in futures:
+        print(future.result()) # 依照遍历的顺序返回结果
+    for future in as_completed(futures):
+        print(future.result()) # 返回结果是无序的
+```
 
 
 
