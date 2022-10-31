@@ -1,5 +1,4 @@
 #!/bin/bash
-# 暂不可使用
 # 修改以下变量
 root_dir="/data/ftp/" # ftp根目录
 ftpuser="ftpuser" # ftp用户
@@ -71,8 +70,8 @@ pasv_min_port=65400
 pasv_max_port=65500
 EOF
     cat > /etc/pam.d/vsftpd.vu <<EOF
-auth ufficient pam_userdb.so db=/etc/vsftpd/vsftpd_login
-account sufficient pam_userdb.so db=/etc/vsftpd/vsftpd_login
+auth  required  pam_userdb.so  db=/etc/vsftpd/vsftpd_login
+account  required  pam_userdb.so  db=/etc/vsftpd/vsftpd_login
 EOF
 }
 
@@ -93,9 +92,10 @@ ftp_useradd(){
     # 创建不受限制的名单
     touch ${vsftpd_conf_dir}/chroot_list
     # 创建白名单
-    grep "${ftpuser}" ${vsftpd_conf_dir}/user_list >/dev/null 2>&1
+    sed -i "/^#/d" ${vsftpd_conf_dir}/user_list
+    grep "${virtualuser}" ${vsftpd_conf_dir}/user_list >/dev/null 2>&1
     if [ $? -ne 0 ];then
-        echo "${ftpuser}" >> ${vsftpd_conf_dir}/user_list
+        echo "${virtualuser}" >> ${vsftpd_conf_dir}/user_list
     fi
     grep "${virtualuser}" ${vsftpd_conf_dir}/logins.txt >/dev/null 2>&1
     if [ $? -ne 0 ];then
@@ -117,6 +117,8 @@ EOF
     if [ ! -e ${virtualrootdir} ];then
         mkdir -p ${virtualrootdir}
         chown -R ${ftpuser}:${ftpuser} ${virtualrootdir}
+    else
+        echo "${virtualrootdir} is exists.please check.If an error occurs, please use chown -R ${ftpuser}:${ftpuser} ${virtualrootdir}"
     fi
 }
 ftpcheck(){
@@ -128,7 +130,6 @@ ftpcheck(){
 	    echo "FTP install failed.Please check it." && exit
 	fi
 }
-ftpcheck
 
 help_info() {
     echo -e "
@@ -148,10 +149,15 @@ do
             ftp_useradd ${ftpuser} ${ftppasswd} ${vsftpd_conf_dir} ${virtualuser} ${virtualpasswd} ${virtualrootdir}
             modify_ftp_conf ${root_dir} ${vsftpd_conf_dir} ${root_dir} ${ftphost}
             systemctl restart vsftpd
+            ftpcheck
         ;;
         2)
+            read -p "user name: " virtualuser
+            read -p "user password: " virtualpasswd
+            virtualrootdir="${root_dir}${virtualuser}"
             ftp_useradd ${ftpuser} ${ftppasswd} ${vsftpd_conf_dir} ${virtualuser} ${virtualpasswd} ${virtualrootdir}
             systemctl restart vsftpd
+            ftpcheck
         ;;
         q)
             break
