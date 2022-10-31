@@ -109,16 +109,25 @@ tcp_wrappers=YES # 限速相关
 local_root=${root_dir} # 根目录
 anonymous_enable=NO # 匿名访问
 local_enable=YES # 本地用户访问
+
 write_enable=YES # 写总开关
 local_umask=022 # 权限子码
 dirmessage_enable=YES # 目录变更消息计入日志
 xferlog_enable=YES # 开启xferlog
 xferlog_file=/var/log/xferlog # 路径
 xferlog_std_format=YES # 记录xferlog日志风格
+dual_log_enable=YES # 启用日志
+vsftpd_log_file=/var/log/vsftpd.log # 启用日志
 ascii_upload_enable=YES
 ascii_download_enable=YES # ascii支持
 listen=YES # ipv4监听
-pam_service_name=vsftpd # pam
+# pam_service_name=vsftpd # pam
+pam_service_name=vsftpd.vu # pam
+
+# 虚拟用户配置
+guest_enable=YES # 虚拟用户映射为真实用户
+guest_username=ftpuser # 真实用户名称
+user_config_dir=${vsftpd_conf_dir}/user_conf/
 
 # 更改路径不受限
 chroot_local_user=YES # 本地用户更改路径不限
