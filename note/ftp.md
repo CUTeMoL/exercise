@@ -128,6 +128,8 @@ pam_service_name=vsftpd.vu # pam
 guest_enable=YES # 虚拟用户映射为真实用户
 guest_username=ftpuser # 真实用户名称
 user_config_dir=${vsftpd_conf_dir}/user_conf/
+virtual_use_local_privs=NO # 虚拟用户使用近似本地用户权限的开关
+
 
 # 更改路径不受限
 chroot_local_user=YES # 本地用户更改路径不限
