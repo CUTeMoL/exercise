@@ -269,6 +269,7 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 ```cmd
 net start service_name # 启动
 net stop service_name # 停止
+sc create service_name binpath="dir/file"
 sc config service_name start= disabled # 禁用
 sc config service_name start= auto # 自动启动
 sc delete service_name # 卸载命令
