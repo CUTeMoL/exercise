@@ -762,27 +762,27 @@ print(f(-10)) # 10
 
 ### 常用函数:
 
-| 常用函数                                                   | 说明                                                                                                 |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `range(start,end,step)`                                | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1                                                    |
-| `len(object)`                                          | 长度                                                                                                 |
-| `max(object, key=lambda x:x[1])`                       | 选出最大值                                                                                              |
-| `type(object)`                                         | 判断`object`类型                                                                                       |
-| `type('ClassName', (object,), dict(method=func_name))` | 也可以使用`type`创建类,传入类名,继承的元组,方法绑定的函数名                                                                 |
-| `isinstance(object, (int, float))`                     | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`                                                      |
-| `enumerate(object, n)`                                 | 枚举，打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n`                                                        |
-| `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典                                             |
-| `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出                                                       |
-| `lambda var: expression`                               | 传入变量`var`返回`expression`的结果,可以嵌入其他函数中使用                                                             |
+| 常用函数                                               | 说明                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| `range(start,end,step)`                                | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1 |
+| `len(object)`                                          | 长度                                                         |
+| `max(object, key=lambda x:x[1])`                       | 选出最大值                                                   |
+| `type(object)`                                         | 判断`object`类型                                             |
+| `type('ClassName', (object,), dict(method=func_name))` | 也可以使用`type`创建类,传入类名,继承的元组,方法绑定的函数名  |
+| `isinstance(object, (int, float))`                     | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`  |
+| `enumerate(object, n)`                                 | 枚举,打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n` |
+| `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典 |
+| `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
+| `lambda var: expression`                               | 传入变量`var`返回`expression`的结果,可以嵌入其他函数中使用   |
 | `sorted(object, key=lambda x:x[1], reverse=True)`      | 对`object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
-| `iter(object)`                                         | 将`Iterable`转为`Iterator`                                                                            |
-| `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator`                                                 |
-| `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素                |
-| `functools.reduce(funcname, Iterable)`                 | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算                              |
-| `dir(object)`                                          | 获取一个对象的所有属性                                                                                        |
-| `hasattr(object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`                                                               |
-| `getattr(object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                                                                                |
-| `setattr(object, "property", "value")`                 | 设置一个属性                                                                                             |
+| `iter(object)`                                         | 将`Iterable`转为`Iterator`                                   |
+| `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator` |
+| `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素 |
+| `functools.reduce(funcname, Iterable)`                 | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算 |
+| `dir(object)`                                          | 获取一个对象的所有属性                                       |
+| `hasattr(object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`             |
+| `getattr(object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                        |
+| `setattr(object, "property", "value")`                 | 设置一个属性                                                 |
 
 ```python
 print(len(abc)) # 调用len()函数来算长度
