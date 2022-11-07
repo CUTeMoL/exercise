@@ -338,9 +338,49 @@ echo "exit"
 
 ### windows
 
+1.下载zip包并解压
+
+2.根据情况填写`my.ini`
+
+```cmd
+[mysqld]
+
+server-id = 56
+port = 3311
+
+basedir = D:/Program Files/Sample/mysql-5.6.51/bin
+datadir = E:/data
+tmpdir = C:/windows/temp
+language = D:/Program Files/Sample/mysql-5.6.51/share/english
+character_set_server = utf8mb4
+
+log-error = mysql_error_log.txt
+general-log = 1
+general_log_file = E:/mysql_log/mysql_log.txt
+
+log-bin = E:/log_bin/log-bin
+expire-logs-days = 10
+sync-binlog = 1
+max_binlog_size = 200M
+
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES 
+```
+
+3.安装服务
+
 ```cmd
 "D:\Program Files\Sample\mysql-5.6.21\bin\mysqld" --install mysqd56_3311 --defaults-file="D:\Program Files\Sample\mysql-5.6.21\my.ini" 
 ```
+
+4.复制`data`文件夹里的内容到`my.ini`中的`datadir`
+
+5.启动
+
+```
+sc start mysqd56_3311
+```
+
+
 
 ### 多实例:
 
