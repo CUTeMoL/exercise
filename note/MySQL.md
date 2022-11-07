@@ -2,6 +2,8 @@
 
 ## 一、安装
 
+### linux
+
 ```shell
 #!/bin/bash
 
@@ -332,7 +334,12 @@ do
     esac
 done
 echo "exit"
+```
 
+### windows
+
+```cmd
+"D:\Program Files\Sample\mysql-5.6.21\bin\mysqld" --install mysqd56_3311 --defaults-file="D:\Program Files\Sample\mysql-5.6.21\my.ini" 
 ```
 
 ### 多实例:
@@ -1071,8 +1078,6 @@ version_compile_os=linux-glibc2.12
 wait_timeout=28800
 warning_count=0
 ```
-
-
 
 ## 三、INNODB
 
@@ -3906,28 +3911,28 @@ mysql --login-path=root_3306
 
 ## 二十五、MySQL实用命令行用法
 
-|format(long)|format(short)|说明|
-|-|-|-|
-|`connect`|`\r`|重新连接|
-|`ego`|`\G`|垂直显示结果|
-|`go`|`\g`、`;`|表格显示|
-|`pager less`|`\P less`|以`less`的效果显示|
-|`nopager`|`\n`|默认的方式输出|
-|`tee`|`\T`|将命令行的结果保存到外部文件|
-|`notee`|`\t`|不把执行结果输出到文件|
-|`system command`|`\! command`|执行系统命令|
-|`source file.sql`|`\.file.sql `|执行包含sql语句的文件|
-|`clear`|`\c`|结束命令行输入|
-|`delimiter`|`\d`|设置sql语句分隔符|
-|`edit`|`\e`|进入脚本编辑模式|
-|`print`|`\p`|显示执行的语句|
-|`prompt`|`\R`|改变终端显示|
-|`quit`、`exit`|`\q`|退出|
-|`status`|`\s`|显示信息|
-|`use`|`\u`|切换数据库|
-|`charset`|`\C`|字符集设定|
-|`warnings`|`\W`|每条语句都显示警告|
-|`nowarning`|`\w`|不显示警告|
+| format(long)      | format(short) | 说明             |
+| ----------------- | ------------- | -------------- |
+| `connect`         | `\r`          | 重新连接           |
+| `ego`             | `\G`          | 垂直显示结果         |
+| `go`              | `\g`、`;`      | 表格显示           |
+| `pager less`      | `\P less`     | 以`less`的效果显示   |
+| `nopager`         | `\n`          | 默认的方式输出        |
+| `tee`             | `\T`          | 将命令行的结果保存到外部文件 |
+| `notee`           | `\t`          | 不把执行结果输出到文件    |
+| `system command`  | `\! command`  | 执行系统命令         |
+| `source file.sql` | `\.file.sql ` | 执行包含sql语句的文件   |
+| `clear`           | `\c`          | 结束命令行输入        |
+| `delimiter`       | `\d`          | 设置sql语句分隔符     |
+| `edit`            | `\e`          | 进入脚本编辑模式       |
+| `print`           | `\p`          | 显示执行的语句        |
+| `prompt`          | `\R`          | 改变终端显示         |
+| `quit`、`exit`     | `\q`          | 退出             |
+| `status`          | `\s`          | 显示信息           |
+| `use`             | `\u`          | 切换数据库          |
+| `charset`         | `\C`          | 字符集设定          |
+| `warnings`        | `\W`          | 每条语句都显示警告      |
+| `nowarning`       | `\w`          | 不显示警告          |
 
 ## 二十六、常见错误
 
@@ -3935,29 +3940,26 @@ mysql --login-path=root_3306
 
 #### `Slave_IO_Running: Connecting`、`Slave_SQL_Running:Yes`
 
-| `Last_IO_Error`                                              | 原因                                                         | 处理                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Authentication plugin 'caching_sha2_password' reported error | 8.0.26之后的版本出现，在从库连接主库的时候使用的是不被 caching_sha2_password认可的RSA公钥，所以主库MySQL拒绝了数据库连接的请求 | `${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p`使用`--get-server-public-key`登录一次主库即可 |
-|                                                              |                                                              | `CREATE USER 'replica'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'XXXX';`不使用密码插件`caching_sha2_password`即可 |
-| Got fatal error 1236 from master when reading data from binary log: 'Slave has more GTIDs than the master has, using the master's SERVER_UUID. This may indicate that the end of the binary log was truncated or that the last binary log file was lost, e.g., after a power or disk failure when sync_binlog != 1. The master may or may not have rolled back transactions that were already replicated to the slave. Suggest to replicate any transactions that master has rolled back from slave to master, and/or commit empty transactions on master to account for transactions that have been' | 原因,MySQL主库还原过,或者执行过`reset master`                | 重做同步                                                     |
-|                                                              |                                                              |                                                              |
+| `Last_IO_Error`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 原因                                                                                | 处理                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication plugin 'caching_sha2_password' reported error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 8.0.26之后的版本出现，在从库连接主库的时候使用的是不被 caching_sha2_password认可的RSA公钥，所以主库MySQL拒绝了数据库连接的请求 | `${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p`使用`--get-server-public-key`登录一次主库即可 |
+|                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |                                                                                   | `CREATE USER 'replica'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'XXXX';`不使用密码插件`caching_sha2_password`即可                      |
+| Got fatal error 1236 from master when reading data from binary log: 'Slave has more GTIDs than the master has, using the master's SERVER_UUID. This may indicate that the end of the binary log was truncated or that the last binary log file was lost, e.g., after a power or disk failure when sync_binlog != 1. The master may or may not have rolled back transactions that were already replicated to the slave. Suggest to replicate any transactions that master has rolled back from slave to master, and/or commit empty transactions on master to account for transactions that have been' | 原因,MySQL主库还原过,或者执行过`reset master`                                                 | 重做同步                                                                                                                                |
+|                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |                                                                                   |                                                                                                                                     |
 
 #### `Slave_IO_Running: no`、`Slave_SQL_Running:yes`
 
-| `Last_IO_Error`                                              | 原因                                                         | 处理                               |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------- |
-| Got fatal error 1236 from master when reading data from binary log: 'Could not open log file' | binlog文件无法打开,调查后发现是空语句文件(有binlog的格式,但是没有事件产生) | 使用`change master to`跳过该binlog |
-| Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file | binlog缺失                                                   | 重新修复数据库,然后主从同步        |
-|                                                              |                                                              |                                    |
+| `Last_IO_Error`                                                                                                                  | 原因                                            | 处理                            |
+| -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ----------------------------- |
+| Got fatal error 1236 from master when reading data from binary log: 'Could not open log file'                                    | binlog文件无法打开,调查后发现是空语句文件(有binlog的格式,但是没有事件产生) | 使用`change master to`跳过该binlog |
+| Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file | binlog缺失                                      | 重新修复数据库,然后主从同步                |
+|                                                                                                                                  |                                               |                               |
 
 #### `Slave_IO_Running: Yes`、`Slave_SQL_Running:No`
 
-| `Last_SQL_Error`                                             | 原因                                                         | 处理                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile | grep -A15 "0d90d68e-3775-11ed-b19a-000c29afe996:9"`来查找出错的原因，然后根据情况解决，删除从库上冲突的数据，重新同步 |
-|                                                              |                                                              | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
-|                                                              |                                                              | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步 |
-|                                                              | 主从库字符集不一致                                           | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集 |
-
-
-
+| `Last_SQL_Error`                                                                             | 原因                              | 处理                                                                                                               |
+| -------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile                                                                                        |
+|                                                                                              |                                 | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
+|                                                                                              |                                 | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步                                                                            |
+|                                                                                              | 主从库字符集不一致                       | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集                        |
