@@ -376,7 +376,9 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 
 `mysql5.6`复制原始库
 
-复制`data`文件夹里的内容到`my.ini`中的`datadir`
+```cmd
+copy "D:\Program Files\Sample\mysql-5.6.21\data" "E:\data"
+```
 
 `mysql5.7`初始化数据库
 
@@ -416,13 +418,13 @@ mkdir -p /mysql_3307/data && chown -R mysql:mysql /mysql_3307
 3.
 
 ```shell
-mysqld --initialize-insecure --datadir=/mysql_3307/data --user=mysql#初始化
+mysqld --initialize-insecure --datadir=/mysql_3307/data --user=mysql # 初始化
 ```
 
 4.
 
 ```shell
-mysqld_multi start 1 #启动mysqld1
+mysqld_multi start 1 # 启动mysqld1
 ```
 
 5.
