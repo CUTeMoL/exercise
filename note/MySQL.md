@@ -369,7 +369,7 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 3.安装服务
 
 ```cmd
-"D:\Program Files\Sample\mysql-5.6.21\bin\mysqld" --install mysqd56_3311 --defaults-file="D:\Program Files\Sample\mysql-5.6.21\my.ini" 
+"D:\Program Files\Sample\mysql-5.6.21\bin\mysqld" --install mysqld56_3311 --defaults-file="D:\Program Files\Sample\mysql-5.6.21\my.ini" 
 ```
 
 4.复制`data`文件夹里的内容到`my.ini`中的`datadir`
@@ -377,10 +377,8 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 5.启动
 
 ```
-sc start mysqd56_3311
+sc start mysqld56_3311
 ```
-
-
 
 ### 多实例:
 
