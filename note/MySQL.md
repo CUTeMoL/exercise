@@ -372,7 +372,17 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 "D:\Program Files\Sample\mysql-5.6.21\bin\mysqld" --install mysqld56_3311 --defaults-file="D:\Program Files\Sample\mysql-5.6.21\my.ini" 
 ```
 
-4.复制`data`文件夹里的内容到`my.ini`中的`datadir`
+4.
+
+`mysql5.6`复制原始库
+
+复制`data`文件夹里的内容到`my.ini`中的`datadir`
+
+`mysql5.7`初始化数据库
+
+```cmd
+"D:\Program Files\Sample\mysql-5.7.39\bin\mysqld" --defaults-file="D:\Program Files\Sample\mysql-5.7.39\my.ini"  --initialize-insecure 
+```
 
 5.启动
 
