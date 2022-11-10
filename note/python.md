@@ -3350,7 +3350,7 @@ for i in generator_expr:
 
 ```python
 import functools
-def log(text)
+def log(text):
     def timecalc(func):
         @functools.wraps(func)
         def exectimes(*args, **kwargs):
