@@ -295,6 +295,17 @@ sc delete service_name # 卸载命令
 
 系统日志
 
+```cmd
+eventvwr # 启动事件查看器
+/l:<logfile> # 指定日志文件
+/c:<channel> # 指定通道名称
+/v:<query or view file> # 指定视图文件
+# /l、/c、/v 互斥
+/f:* # 筛选内容如果包含空格则需要使用双引号
+
+eventvwr /c:System /f:*"[System[Execution[@ProcessID='4'] and (EventID='1')]]"
+```
+
 ### 9. `perfmon`
 
 性能收集器
