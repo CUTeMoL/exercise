@@ -269,10 +269,11 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 ```cmd
 net start service_name # 启动
 net stop service_name # 停止
-sc create service_name binpath="dir/file"
+sc create service_name binpath= "dir/file"
 sc config service_name start= disabled # 禁用
 sc config service_name start= auto # 自动启动
 sc delete service_name # 卸载命令
+# 所有等号后面必须空一格！！！
 ```
 
 ### 4. `gpedit.msc`
@@ -305,6 +306,26 @@ eventvwr # 启动事件查看器
 
 eventvwr /c:System /f:*"[System[Execution[@ProcessID='4'] and (EventID='1')]]"
 ```
+
+自定义筛选语法
+
+```xml
+<QueryList>
+  <Query Id="0" Path="System">
+    <Select Path="System">*[System[Execution[@ProcessID="4"] and (EventID="1" or EventID="6")]]</Select>
+  </Query>
+</QueryList>
+```
+
+| 关键字 | 说明                       |
+| ------ | -------------------------- |
+| `Path` | 指定通道                   |
+| `[]`   | 包裹字段                   |
+| `@`    | 当该标签包含多个字段时加上 |
+| `and`  | 和                         |
+| `or`   | 或                         |
+
+
 
 ### 9. `perfmon`
 
