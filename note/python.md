@@ -3355,10 +3355,10 @@ def log(text):
         @functools.wraps(func)
         def exectimes(*args, **kwargs):
             starttime = time.time() # 记录开始时间
-            execfunc = func(*args, **kwargs) # 执行传入的函数及参数
+            func_result = func(*args, **kwargs) # 执行传入的函数及参数
             endtime = time.time() # 记录开始时间
-            exectime = endtime - starttime # 执行用时
-            return text, func.__name__, execfunc, exectime # 返回执行结果
+            running_time = endtime - starttime # 执行用时
+            return text, func.__name__, func_result, running_time # 返回执行结果
         return exectimes
     return timecalc 
 @log('execute') # 相当于double = log('execute')(double),log('execute')的结果就是返回函数timecalc，timecalc(double)就是调用返回exectimes这个函数,这个函数的名字因为@functools.wraps(func)的关系变成double,而不是exectimes
