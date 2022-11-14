@@ -398,6 +398,16 @@ print(abc.isspace())
 \续行 \n换行 \0空 \t制表符 \"双引号 \'单引号 \\一个反斜杠 \f换页 \0dd八进制数 \xhh十六进制数
 ```
 
+字符串形式
+
+```python
+r"\str" # 不转义
+b"str" # 字节
+f"str" # 引用变量格式化
+```
+
+
+
 ### 布尔类型bool:
 
 True: 1
@@ -663,14 +673,18 @@ print("~123 = "+str(~123))   # ~123 = -124
 ## 九、条件表达式
 
 ```python
-if 表达式:
+if expression:
     r=a
-elif 表达式:
+elif expression:
     r=b
 else:
     r=c
-#简化
-r = a if a > b else b
+```
+
+简化
+
+```python
+r=a if r==0 else r=c
 ```
 
 要注意缩进，根据缩进决定嵌套
@@ -773,12 +787,12 @@ print(f(-10)) # 10
 | `enumerate(object, n)`                                 | 枚举,打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n` |
 | `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典 |
 | `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
-| `lambda var: expression`                               | 传入变量`var`返回`expression`的结果,可以嵌入其他函数中使用   |
+| `lambda args: result`                                  | 传入变量`args`返回`result`的结果,可以嵌入其他函数中使用      |
 | `sorted(object, key=lambda x:x[1], reverse=True)`      | 对`object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
 | `iter(object)`                                         | 将`Iterable`转为`Iterator`                                   |
 | `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator` |
 | `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素 |
-| `functools.reduce(funcname, Iterable)`                 | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算 |
+| `functools.reduce(funcname, Iterable, initial)`        | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算<br/>如果`Iterable`只有一个元素,可以设定`initial`(默认为`None`)相当于填充了一个默认参数 |
 | `dir(object)`                                          | 获取一个对象的所有属性                                       |
 | `hasattr(object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`             |
 | `getattr(object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                        |
@@ -1073,11 +1087,16 @@ print(max_num3(1, 2, 3))
 
 ### 函数中的变量:
 
-  仅函数内部使用这个变量,除非使用`global`声明这个是一个全局变量
-
-  外部变量可以读取,但不可以修改,除非使用`nolocal`申明要定义的不是一个本地变量
+| 作用域       |      | 说明                                                         |
+| ------------ | ---- | ------------------------------------------------------------ |
+| `local`      | 本地 | 局部变量,仅函数内部使用这个变量,除非使用`global`申明这是一个全局变量 |
+| `encloseing` | 嵌套 | 向函数外部查询变量,可以读取,但不可以修改,除非使用`nolocal`申明要定义的不是一个本地变量 |
+| `global`     | 全局 | 全局生效                                                     |
+| `built-in`   | 内置 | `python`内置关键字                                           |
 
 `global`是全局生效,`nolocal`是函数的外一层生效
+
+函数查询变量的优先级: `LEGB`
 
 ```python
 name = "zhangsan"
@@ -1112,7 +1131,9 @@ lisi woman
 
 ### 递归函数:
 
-  自己调用自己
+自己调用自己
+
+使用递归函数必须符合三个条件,1.有入参2.有终点3.调用自己
 
 ```python
 def plus_one(n):
@@ -1148,6 +1169,25 @@ higher_function1([1, 2, 3], [4, 5, 6], sum)
 ### 内部函数:
 
 函数返回值返回函数
+
+### 匿名函数:
+
+可以作为参数传给其他函数
+
+接受`*args`,`return result`
+
+```python
+func = lambda *args: result
+func(*args)
+```
+
+以上相当于
+
+```python
+def func(*args):
+    return result
+func(*args)
+```
 
 ## 十二、模块
 
@@ -3347,6 +3387,22 @@ for i in generator_expr:
 ## 二十、装饰器
 
 `Decorator`相当于装饰器接收原来的函数,然后改造,返回新的函数
+
+```python
+def decorator(func):
+    def wrapper(*args,**kwargs):
+        pass
+        func(*args,**kwargs)
+        pass
+    pass
+    return wapper
+
+@decorator # 相当于func = decorator(func)
+def func(*args,**kwargs):
+    pass
+
+func(*args,**kwargs) # 调用func相当于调用wrapper
+```
 
 ```python
 import functools
