@@ -239,6 +239,23 @@ del file_name
 ren old_name new_name
 ```
 
+### 23.xcopy
+
+复制`src`文件夹中所有的内容到某一以存在的`dest`文件夹
+
+```
+xcopy /E /Q src dest
+```
+
+复制`src`文件夹到不存在的`dest`文件夹
+
+```cmd
+xcopy /E /Q /I src dest
+/E # 复制目录和子目录，包括空目录
+/Q # 复制时不显示文件名
+/I # 如果目标不存在，且要复制多个文件,则假定目标必须是目录
+```
+
 ## 二、管理工具
 
 ### 1. `secpol.msc`
