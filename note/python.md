@@ -143,41 +143,41 @@ pycharm建立项目
 
 不可以作为变量
 
-| 保留字         | 说明                                                         |
-| -------------- | ------------------------------------------------------------ |
-| `and`          | 和                                                           |
-| `or`           | 或                                                           |
-| `is`           | 判断                                                         |
-| `not`          | 非                                                           |
-| `in`           | 在里面                                                       |
-| `False`        | 错误标志                                                     |
-| `True`         | 正确标志                                                     |
-| `None`         | 空                                                           |
-| `if`           | 如果                                                         |
-| `elif`         | 如果                                                         |
-| `else`         | 如果未匹配表达式                                             |
-| `as`           | 重命名                                                       |
-| `assert`       | 断言                                                         |
-| `class`        | 声明类                                                       |
-| `def`          | 声明函数                                                     |
-| `nonlocal`     | 重新定义函数外部变量                                         |
-| `global`       | 函数全局声明变量                                             |
-| `return`       | 函数返回                                                     |
-| `del`          | 删除变量的定义                                               |
-| `try`          | 尝试                                                         |
-| `except`       | 捕获错误                                                     |
-| `finally`      | 无论是否捕获                                                 |
-| `while`        | 表达式成立时循环                                             |
-| `break`        | 跳出循环                                                     |
-| `continue`     | 跳出本次循环                                                 |
-| `for`          | 遍历循环                                                     |
+| 保留字            | 说明                                           |
+| -------------- | -------------------------------------------- |
+| `and`          | 和                                            |
+| `or`           | 或                                            |
+| `is`           | 判断                                           |
+| `not`          | 非                                            |
+| `in`           | 在里面                                          |
+| `False`        | 错误标志                                         |
+| `True`         | 正确标志                                         |
+| `None`         | 空                                            |
+| `if`           | 如果                                           |
+| `elif`         | 如果                                           |
+| `else`         | 如果未匹配表达式                                     |
+| `as`           | 重命名                                          |
+| `assert`       | 断言                                           |
+| `class`        | 声明类                                          |
+| `def`          | 声明函数                                         |
+| `nonlocal`     | 重新定义函数外部变量                                   |
+| `global`       | 函数全局声明变量                                     |
+| `return`       | 函数返回                                         |
+| `del`          | 删除变量的定义                                      |
+| `try`          | 尝试                                           |
+| `except`       | 捕获错误                                         |
+| `finally`      | 无论是否捕获                                       |
+| `while`        | 表达式成立时循环                                     |
+| `break`        | 跳出循环                                         |
+| `continue`     | 跳出本次循环                                       |
+| `for`          | 遍历循环                                         |
 | `from`         | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
-| `import`       | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
+| `import`       | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名)       |
 | `lambda`       | 轻量级函数,通常嵌入其他函数中使用                            |
-| `pass`         | 空代码跳过                                                   |
-| `raise`        | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
-| `with object ` | 以上下文的方式获取`object`                                   |
-| `yield`        | 函数返回生成器对象                                           |
+| `pass`         | 空代码跳过                                        |
+| `raise`        | 输出错误(如果不带参数就会把当前错误原样抛出)                      |
+| `with object ` | 以上下文的方式获取`object`                            |
+| `yield`        | 函数返回生成器对象                                    |
 
 ### 标识符
 
@@ -405,8 +405,6 @@ r"\str" # 不转义
 b"str" # 字节
 f"str" # 引用变量格式化
 ```
-
-
 
 ### 布尔类型bool:
 
@@ -776,27 +774,27 @@ print(f(-10)) # 10
 
 ### 常用函数:
 
-| 常用函数                                               | 说明                                                         |
-| ------------------------------------------------------ | ------------------------------------------------------------ |
-| `range(start,end,step)`                                | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1 |
-| `len(object)`                                          | 长度                                                         |
-| `max(object, key=lambda x:x[1])`                       | 选出最大值                                                   |
-| `type(object)`                                         | 判断`object`类型                                             |
-| `type('ClassName', (object,), dict(method=func_name))` | 也可以使用`type`创建类,传入类名,继承的元组,方法绑定的函数名  |
-| `isinstance(object, (int, float))`                     | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`  |
-| `enumerate(object, n)`                                 | 枚举,打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n` |
-| `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典 |
-| `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
-| `lambda args: result`                                  | 传入变量`args`返回`result`的结果,可以嵌入其他函数中使用      |
-| `sorted(object, key=lambda x:x[1], reverse=True)`      | 对`object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
-| `iter(object)`                                         | 将`Iterable`转为`Iterator`                                   |
-| `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator` |
-| `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素 |
+| 常用函数                                                   | 说明                                                                                                                                |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `range(start,end,step)`                                | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1                                                                                   |
+| `len(object)`                                          | 长度                                                                                                                                |
+| `max(object, key=lambda x:x[1])`                       | 选出最大值                                                                                                                             |
+| `type(object)`                                         | 判断`object`类型                                                                                                                      |
+| `type('ClassName', (object,), dict(method=func_name))` | 也可以使用`type`创建类,传入类名,继承的元组,方法绑定的函数名                                                                                                |
+| `isinstance(object, (int, float))`                     | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`                                                                                     |
+| `enumerate(object, n)`                                 | 枚举,打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n`                                                                                       |
+| `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典                                                                            |
+| `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出                                                                                      |
+| `lambda args: result`                                  | 传入变量`args`返回`result`的结果,可以嵌入其他函数中使用                                                                                               |
+| `sorted(object, key=lambda x:x[1], reverse=True)`      | 对`object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值                                |
+| `iter(object)`                                         | 将`Iterable`转为`Iterator`                                                                                                           |
+| `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator`                                                                                |
+| `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素                                               |
 | `functools.reduce(funcname, Iterable, initial)`        | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算<br/>如果`Iterable`只有一个元素,可以设定`initial`(默认为`None`)相当于填充了一个默认参数 |
-| `dir(object)`                                          | 获取一个对象的所有属性                                       |
-| `hasattr(object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`             |
-| `getattr(object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                        |
-| `setattr(object, "property", "value")`                 | 设置一个属性                                                 |
+| `dir(object)`                                          | 获取一个对象的所有属性                                                                                                                       |
+| `hasattr(object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`                                                                                              |
+| `getattr(object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                                                                                                               |
+| `setattr(object, "property", "value")`                 | 设置一个属性                                                                                                                            |
 
 ```python
 print(len(abc)) # 调用len()函数来算长度
@@ -1087,12 +1085,12 @@ print(max_num3(1, 2, 3))
 
 ### 函数中的变量:
 
-| 作用域       |      | 说明                                                         |
-| ------------ | ---- | ------------------------------------------------------------ |
-| `local`      | 本地 | 局部变量,仅函数内部使用这个变量,除非使用`global`申明这是一个全局变量 |
-| `encloseing` | 嵌套 | 向函数外部查询变量,可以读取,但不可以修改,除非使用`nolocal`申明要定义的不是一个本地变量 |
-| `global`     | 全局 | 全局生效                                                     |
-| `built-in`   | 内置 | `python`内置关键字                                           |
+| 作用域          |     | 说明                                                |
+| ------------ | --- | ------------------------------------------------- |
+| `local`      | 本地  | 局部变量,仅函数内部使用这个变量,除非使用`global`申明这是一个全局变量           |
+| `encloseing` | 嵌套  | 向函数外部查询变量,可以读取,但不可以修改,除非使用`nolocal`申明要定义的不是一个本地变量 |
+| `global`     | 全局  | 全局生效                                              |
+| `built-in`   | 内置  | `python`内置关键字                                     |
 
 `global`是全局生效,`nolocal`是函数的外一层生效
 
@@ -2441,7 +2439,7 @@ while True:
     clientsocket,addr = serversocket.accept()      
 
     print("连接地址: %s" % str(clientsocket.getpeername()))
-   
+
     msg = '欢迎访问www.lxw.com!\n'
     # 客户端连接实例发送message
     clientsocket.send(msg.encode('utf-8'))
@@ -2449,9 +2447,6 @@ while True:
     print(clientsocket.recv(1024).decode("utf-8"))
     # 连接实例关闭
     clientsocket.close()
-
-
-
 ```
 
 ### 第三方模块requests:
@@ -3095,12 +3090,12 @@ with open("dir/file", "access mode", encoding='utf8') as f:
 
 #### 文件写函数:
 
-| 函数                               | 作用                                             |
-| ---------------------------------- | ------------------------------------------------ |
-| `file.write("%s\n" %(str))`        | 写入数据                                         |
+| 函数                                 | 作用                        |
+| ---------------------------------- | ------------------------- |
+| `file.write("%s\n" %(str))`        | 写入数据                      |
 | `file.truncate(3)`                 | 移动3个光标，删除后面的字符，0全删除，默认不删除 |
-| `file.writelines(Iterable_object)` | 写入可迭代对象                                   |
-|                                    |                                                  |
+| `file.writelines(Iterable_object)` | 写入可迭代对象                   |
+|                                    |                           |
 
 ```python
 # 文件读的循环方法
