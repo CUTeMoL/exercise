@@ -116,6 +116,14 @@ paramiko模块使用
 
 
 
+#### telnetPort.py
+
+扫描端口状态
+
+---
+
+
+
 ### shell
 
 #### inotifywait.sh
