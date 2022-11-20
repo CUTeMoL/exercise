@@ -5,8 +5,10 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import Pool
 
+__author__ = "lxw"
+__last_mod_date__ = "20221120"
 ip_addrs = ["150.158.93.164", "127.0.0.1", ]
-ports = [port for port in range(3300, 3400)] # 多进程传多参数不支持列表生成式...
+ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表生成式...
 
 def port_test(ip_addr, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as telnet_object:
@@ -15,9 +17,9 @@ def port_test(ip_addr, port):
     return ip_addr, port, result
 
 
-def ip_test(ip_ports):
+def process_run(ip_ports):
     test_ip, test_ports = ip_ports
-    with ThreadPoolExecutor() as tpool:
+    with ThreadPoolExecutor(max_workers=50000) as tpool:
         futures = [ tpool.submit(port_test, test_ip, test_port) for test_port in test_ports ]
         for future in futures:
             if future.result()[2] == 0:
@@ -27,10 +29,13 @@ def ip_test(ip_ports):
 
 
 if __name__ == "__main__":
+    print(f"{__author__}最后一次修改于{__last_mod_date__}")
+    print("下一次可以更新的内容为,线程的异常处理")
     start = time.time()
     p = Pool()
     for ip_addr in ip_addrs:
-        p.apply_async(ip_test, [(ip_addr, ports)])
+        # 只能传参一个所以使用元组打包地址和端口传入后再拆开
+        p.apply_async(process_run, ((ip_addr, ports), ))
     p.close()
     p.join()
     end = time.time()
