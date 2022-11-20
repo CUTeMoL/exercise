@@ -116,9 +116,9 @@ paramiko模块使用
 
 
 
-#### telnetPort.py
+#### portTester.py
 
-扫描端口状态
+多进程+多线程端口扫描
 
 ---
 
