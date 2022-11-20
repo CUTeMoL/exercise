@@ -29,9 +29,9 @@ def process_run(ip_ports):
 
 
 if __name__ == "__main__":
-    print(f"{__author__}最后一次修改于{__last_mod_date__}")
-    print("下一次可以更新的内容为,线程的异常处理")
     start = time.time()
+    print(f"{__author__}最后一次修改于{__last_mod_date__}")
+    print("下一次可以更新的内容为,1.线程的异常处理2.引入Ipy实现网段的扫描")
     process_pool = Pool()
     for ip_addr in ip_addrs:
         # 只能传参一个所以使用元组打包地址和端口传入后再拆开
