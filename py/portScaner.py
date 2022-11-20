@@ -7,7 +7,7 @@ from multiprocessing import Pool
 
 __author__ = "lxw"
 __last_mod_date__ = "2022.11.20"
-ip_addrs = ["150.158.93.164", "127.0.0.1", "119.3.77.172", ]
+ip_addrs = ["150.158.93.164", "127.0.0.1", "119.3.77.172", "121.207.253.99"]
 ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表生成式...
 
 def port_test(ip_addr, port):
@@ -19,7 +19,7 @@ def port_test(ip_addr, port):
 
 def process_run(ip_ports):
     test_ip, test_ports = ip_ports
-    with ThreadPoolExecutor(max_workers=50000) as tpool:
+    with ThreadPoolExecutor(max_workers=6000) as tpool:
         futures = [ tpool.submit(port_test, test_ip, test_port) for test_port in test_ports ]
         for future in futures:
             if future.result()[2] == 0:

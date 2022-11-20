@@ -116,7 +116,7 @@ paramiko模块使用
 
 
 
-#### portTester.py
+#### portScaner.py
 
 多进程+多线程端口扫描
 
