@@ -3347,6 +3347,35 @@ run_twice(Stone()) # 只有没定义run()的类报错
 
 可以通过for循环生成一个`generator object`,通过`[generator object]`或`list(generator object)`来获取列表
 
+### 列表生成式
+
+只需要`if`条件时
+
+```python
+[i for i in Iterable_object if i != 0]
+# 相当于
+newlist = []
+for i in Iterable_object:
+    if i != 0:
+        return newlist.append(i)
+```
+
+存在`else`时,`if else`提前需要提前
+
+```python
+[i if i != 0 else i + 1 for i in Iterable_object]
+# 相当于
+newlist = []
+def create_list(Iterable_object):
+    for i in Iterable_object:
+        if i != 0:
+            return newlist.append(i)
+        else:
+            return newlist.append(i+10)
+```
+
+99乘法表
+
 ```python
 print([f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10)])
 print(list(f"{x}*{y}="+str(x*y) for x in range(1, 10) for y in range(x, 10) if x != y ))
@@ -3359,6 +3388,23 @@ generator_expr = (f"{x}*{y}={x * y}" for x in range(1, 10) for y in range(x, 10)
 for i in generator_expr:
     print(i) # 遍历时才计算来获取结果
 ```
+
+### 集合推导式
+
+同列表生成式,只是括号变了
+
+```python
+{i for i in Iterable_object if i != 0}
+```
+
+### 字典推导式
+
+```python
+dict_object = {"lxw": 27, "lgh": 58}
+{key: value + 1 for key, value in dict_object.item()}
+```
+
+
 
 ## 十九、迭代器
 
