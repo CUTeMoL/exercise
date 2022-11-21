@@ -282,6 +282,20 @@ print('中文'.encode('utf-8'))
 print(b'\xe4\xb8\xad\xe6\x96\x87'.decode('utf-8', errors='ignore')) # 无法解码的部分就用errors='ignore'来跳过
 ```
 
+默认编码修改
+
+```python
+# python2
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+# python3
+import importlib,sys
+importlib.reload(sys)
+```
+
+
+
 数字,字符串,元组是不可变类型 (改变值的话是在内存里开辟新的内存地址存放新值,原内存地址里的值不变)
 
 列表,字典,集合是可变数据类型(内存地址不变的基础上修改值)
@@ -1339,51 +1353,51 @@ print("---")
 
 ### os:
 
-|              | os函数                                                       | 作用                                                         |
-| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 查           | `os.getcwd()`                                                | 打印当前目录                                                 |
-|              | `os.chdir("/dir")`                                           | 改变当前目录                                                 |
-|              | `os.curdir`                                                  | 打印当前目录                                                 |
-|              | `os.pardir`                                                  | 打印上级目录                                                 |
-|              | `os.listdir("/dir")`                                         | 返回列表形式的目录内容                                       |
-|              | `os.scandir("/dir")`                                         | 返回目录，需要遍历打印出来                                   |
-|              | `os.walk("/dir")`                                            | 遍历目录树，返回(dirpath路径, dirnames目录中的文件夹列表, filenames目录中的文件列表) |
-|              | `os.path.isabs("/dir")`                                      | 判断是否为绝对路径                                           |
-|              | `os.path.isdir("/dir")`                                      | 判断是否为文件夹                                             |
-|              | `os.path.isfile("file")`                                     | 判断是否为文件                                               |
-|              | `os.stat("/dir/file")`                                       | 查看文件的状态(类key: value的元组)，可以用下标来元素切片，也可以通过.key_name获取所需值 |
-|              | `os.access("file", os.R_OK)`                                 | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)              |
-|              | `os.path.getsize("/dir/file")`                               | 获取文件的大小                                               |
-|              | `os.path.abspath("file")`                                    | 获取文件的绝对路径                                           |
-|              | `os.path.dirname("/dir/file")`                               | 获取文件的绝对路径目录                                       |
-|              | `os.path.basename("/dir/file")`                              | 获取文件的名称                                               |
-|              | `os.path.split("/dir/file")`                                 | 把dirname和basename分开，结果以tuple类型输出                 |
-|              | `os.path.splitext("/dir/file")`                              | 分割文件和拓展名                                             |
-|              | `os.path.join("/dir", "file")`                               | 把dirname和basename合并                                      |
-|              | `os.path.isfile("/dir/file")`                                | 判断是否为文件                                               |
-|              | `os.path.isabs("/dir/file")`                                 | 判断是否为绝对路径                                           |
-|              | `os.path.exists("dir/file")`                                 | 判断路径文件，存在为True                                     |
-|              | `os.path.isdir("dir/file")`                                  | 判断是否为目录                                               |
-|              | `os.path.islink("dir/file")`                                 | 判断是否为链接文件                                           |
-|              | `os.readlink("bin")`                                         | 显示实际路径名                                               |
-|              | `os.environ`                                                 | 返回返回json格式的环境变量，与字典相同，也可以通过os.environ["key"]="value",来设置变量，但退出终端后失效 |
-|              | `os.getpid()`                                                | 返回当前进程的进程id`pid`                                    |
-|              | `os.getppid()`                                               | 返回当前进程的父进程id`ppid`                                 |
-| 改           | `os.rename("/dir/file1", "/dir/file2")`                      | 改名                                                         |
-|              | `os.chown("/dir/file", uid, gid, *, dir_fd=None, follow_symlinks=True)` | 修改权限所属                                                 |
-|              | `os.chroot("path")`                                          | 修改进程的根目录                                             |
-|              | `os.remove("/dir/file")`                                     | 删除                                                         |
-|              | `os.mkdir("/dir")`                                           | 创建目录                                                     |
-|              | `os.rmdir("/dir")`                                           | 删除空目录                                                   |
-|              | `os.makedirs("/dir1/dir2/dir3")`                             | 递归创建目录                                                 |
-|              | `os.removedirs("/dir1/dir2/dir3")`                           | 删除非空目录                                                 |
-|              | `os.link("old", "new")`                                      | 创建硬链接                                                   |
-|              | `os.symlink("old", "new")`                                   | 创建软链接                                                   |
-|              | `os.unlink("/bin")`                                          | 删除软链接                                                   |
-| 执行系统命令 | `os.popen("bash_command")`                                   | 调用shell命令，不输出命令返回的结果，需要得到命令的结果则需要加上.read()来获取 |
-|              | `os.system("bash_command")`                                  | 调用shell命令，一定会返回命令的结果，但print()的结果是命令运行后的返回值return,相当于运行`bash script.sh`会创建一个子进程在系统上执行命令行，子进程的执行结果无法影响主进程 |
-| 系统调用     | `os.fork()`                                                  | 当前为当前程序创造一个子进程,返回2次,在子进程返回0,在父进程中返回子进程的pid(Windows下不能使用) |
-|              |                                                              |                                                              |
+|        | os函数                                                                    | 作用                                                                                                      |
+| ------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 查      | `os.getcwd()`                                                           | 打印当前目录                                                                                                  |
+|        | `os.chdir("/dir")`                                                      | 改变当前目录                                                                                                  |
+|        | `os.curdir`                                                             | 打印当前目录                                                                                                  |
+|        | `os.pardir`                                                             | 打印上级目录                                                                                                  |
+|        | `os.listdir("/dir")`                                                    | 返回列表形式的目录内容                                                                                             |
+|        | `os.scandir("/dir")`                                                    | 返回目录，需要遍历打印出来                                                                                           |
+|        | `os.walk("/dir")`                                                       | 遍历目录树，返回(dirpath路径, dirnames目录中的文件夹列表, filenames目录中的文件列表)                                               |
+|        | `os.path.isabs("/dir")`                                                 | 判断是否为绝对路径                                                                                               |
+|        | `os.path.isdir("/dir")`                                                 | 判断是否为文件夹                                                                                                |
+|        | `os.path.isfile("file")`                                                | 判断是否为文件                                                                                                 |
+|        | `os.stat("/dir/file")`                                                  | 查看文件的状态(类key: value的元组)，可以用下标来元素切片，也可以通过.key_name获取所需值                                                  |
+|        | `os.access("file", os.R_OK)`                                            | 权限判断(F_OK判断路径是否存在、R读、W写、X执行)                                                                            |
+|        | `os.path.getsize("/dir/file")`                                          | 获取文件的大小                                                                                                 |
+|        | `os.path.abspath("file")`                                               | 获取文件的绝对路径                                                                                               |
+|        | `os.path.dirname("/dir/file")`                                          | 获取文件的绝对路径目录                                                                                             |
+|        | `os.path.basename("/dir/file")`                                         | 获取文件的名称                                                                                                 |
+|        | `os.path.split("/dir/file")`                                            | 把dirname和basename分开，结果以tuple类型输出                                                                        |
+|        | `os.path.splitext("/dir/file")`                                         | 分割文件和拓展名                                                                                                |
+|        | `os.path.join("/dir", "file")`                                          | 把dirname和basename合并                                                                                     |
+|        | `os.path.isfile("/dir/file")`                                           | 判断是否为文件                                                                                                 |
+|        | `os.path.isabs("/dir/file")`                                            | 判断是否为绝对路径                                                                                               |
+|        | `os.path.exists("dir/file")`                                            | 判断路径文件，存在为True                                                                                          |
+|        | `os.path.isdir("dir/file")`                                             | 判断是否为目录                                                                                                 |
+|        | `os.path.islink("dir/file")`                                            | 判断是否为链接文件                                                                                               |
+|        | `os.readlink("bin")`                                                    | 显示实际路径名                                                                                                 |
+|        | `os.environ`                                                            | 返回返回json格式的环境变量，与字典相同，也可以通过os.environ["key"]="value",来设置变量，但退出终端后失效                                     |
+|        | `os.getpid()`                                                           | 返回当前进程的进程id`pid`                                                                                        |
+|        | `os.getppid()`                                                          | 返回当前进程的父进程id`ppid`                                                                                      |
+| 改      | `os.rename("/dir/file1", "/dir/file2")`                                 | 改名                                                                                                      |
+|        | `os.chown("/dir/file", uid, gid, *, dir_fd=None, follow_symlinks=True)` | 修改权限所属                                                                                                  |
+|        | `os.chroot("path")`                                                     | 修改进程的根目录                                                                                                |
+|        | `os.remove("/dir/file")`                                                | 删除                                                                                                      |
+|        | `os.mkdir("/dir")`                                                      | 创建目录                                                                                                    |
+|        | `os.rmdir("/dir")`                                                      | 删除空目录                                                                                                   |
+|        | `os.makedirs("/dir1/dir2/dir3")`                                        | 递归创建目录                                                                                                  |
+|        | `os.removedirs("/dir1/dir2/dir3")`                                      | 删除非空目录                                                                                                  |
+|        | `os.link("old", "new")`                                                 | 创建硬链接                                                                                                   |
+|        | `os.symlink("old", "new")`                                              | 创建软链接                                                                                                   |
+|        | `os.unlink("/bin")`                                                     | 删除软链接                                                                                                   |
+| 执行系统命令 | `os.popen("bash_command")`                                              | 调用shell命令，不输出命令返回的结果，需要得到命令的结果则需要加上.read()来获取                                                           |
+|        | `os.system("bash_command")`                                             | 调用shell命令，一定会返回命令的结果，但print()的结果是命令运行后的返回值return,相当于运行`bash script.sh`会创建一个子进程在系统上执行命令行，子进程的执行结果无法影响主进程 |
+| 系统调用   | `os.fork()`                                                             | 当前为当前程序创造一个子进程,返回2次,在子进程返回0,在父进程中返回子进程的pid(Windows下不能使用)                                                |
+|        |                                                                         |                                                                                                         |
 
 ```python
 print('Process (%s) start...' % os.getpid())
@@ -3403,8 +3417,6 @@ for i in generator_expr:
 dict_object = {"lxw": 27, "lgh": 58}
 {key: value + 1 for key, value in dict_object.item()}
 ```
-
-
 
 ## 十九、迭代器
 
