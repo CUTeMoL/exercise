@@ -1049,7 +1049,7 @@ print(f1(), f2(), f3()) # 返回1 4 9,因为f(j)是赋值数字给j,对于函数
 
 ### generator函数返回值yield:
 
-  `generator`的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行。
+  创建`generator`的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行。
 
   如果使用循环来调用`generator`的函数,那就无法得到`return`的值,除非使用`next()`以及异常捕获`StopIteration`,返回值包含在`StopIteration`的`value`中
 
@@ -1075,6 +1075,25 @@ while True:
         print('Generator return value:', e.value)
         break
 ```
+
+如果`yield`被赋值给变量,则此时可以接受由外部`generator_object.send("value")`传来的值,
+
+```python
+def gen():
+    i = 0
+    while i < 5:
+        temp = yield i
+        print("temp: ", temp)
+        i += 1
+    return "complete"
+
+g = gen() # 接收为新的generator
+print(g.send(None)) # 因为先执行yield,再执行temp的赋值,所以第一次只能为None
+print(g.send("tmp1"))
+print(g.send("tmp2"))
+```
+
+
 
 ### 函数嵌套:
 
@@ -3435,6 +3454,8 @@ dict_object = {"lxw": 27, "lgh": 58}
 生成器是`Iterator`,但是`list`,`tuple`,`dict`,`set`,`str`等数据类型不是
 
 可以通过`iter(object)`函数使一个`Iterable`转为`Iterator`
+
+`Iterator`的调用方法`next(Iterator_object)`、`Iterator_object.__next__()`
 
 ### 区别
 
