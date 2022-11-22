@@ -294,8 +294,6 @@ import importlib,sys
 importlib.reload(sys)
 ```
 
-
-
 数字,字符串,元组是不可变类型 (改变值的话是在内存里开辟新的内存地址存放新值,原内存地址里的值不变)
 
 列表,字典,集合是可变数据类型(内存地址不变的基础上修改值)
@@ -1093,8 +1091,6 @@ print(g.send("tmp1"))
 print(g.send("tmp2"))
 ```
 
-
-
 ### 函数嵌套:
 
   被嵌套的函数也要先定义才能调用，不能在调用后定义
@@ -1688,7 +1684,7 @@ else:
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `json.dump("data", open(file, "w"), default=None, ensure_ascii=False)` | 序列化一组数据为 `JSON `形式的` file-like object`,`ensure_ascii=False`可以保留字符串原始编码,不转换为`ASCII` |
 | `json.dumps("data", default=None)`                                     | 序列化一组数据为 `JSON `形式的`str`,`default`为自定义转换方法                                         |
-| `json.load(file open(file, "r"))`                                      | 从文件读取一组数据                                                                          |
+| `json.load(file open(file, "r"))`                                      | 从文件读取一组数据<br/>`object_pairs_hook=json_check_repeat_key`可以键重复                       |
 | `json.loads(str)`                                                      | 读取一组数据                                                                             |
 
 ```python
