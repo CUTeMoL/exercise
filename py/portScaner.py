@@ -3,12 +3,18 @@
 import socket
 import time
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import Pool
+from multiprocessing import Pool, freeze_support
 
 __author__ = "lxw"
-__last_mod_date__ = "2022.11.20"
-ip_addrs = ["150.158.93.164", "127.0.0.1", ]
+__last_mod_date__ = "2022.11.22"
+__modify__ = "支持打包成EXE"
+ip_addrs = []
+
+
+
 ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表生成式...
+
+
 
 def port_test(ip_addr, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as telnet_object:
@@ -29,8 +35,15 @@ def process_run(ip_ports):
 
 
 if __name__ == "__main__":
+    freeze_support() # windows下打包为exe需要
+    ip_addr = None
+    while (ip_addr != "quit" and ip_addrs != "exit") :
+        print("Input [exit] or [quit] to exit process.", end="")
+        ip_addr = input("Please input ipaddr: ")
+        ip_addrs.append(ip_addr)
     start = time.time()
     print(f"{__author__}最后一次修改于{__last_mod_date__}")
+    print(f"更新了：{__modify__}")
     print("下一次可以更新的内容为,1.线程的异常处理2.引入Ipy实现网段的扫描")
     process_pool = Pool()
     for ip_addr in ip_addrs:
