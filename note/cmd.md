@@ -377,3 +377,7 @@ tzutil.exe /g # 显示当前设定的时区
 tzutil.exe /l # 列出可设定的时区
 tzutil.exe /s "China Standard Time" # 设定时区
 ```
+
+### 14.`wmic`
+
+已经弃用，可以使用`Get-WmiObject`替代
