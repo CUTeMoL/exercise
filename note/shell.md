@@ -1005,6 +1005,7 @@ iftop [option]
 -P # 显示端口
 -N # 显示端口而不是服务名
 -i <interface> # 选择监控的网络接口名称
+iftop -nPN -i enp0s3
 ```
 
 ### 网络管理
