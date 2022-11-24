@@ -989,7 +989,23 @@ LONG_BIT   # 查看系统位数
 PAGE_SIZE   # 查看系统分页大小
 ```
 
+#### sysstat
 
+```shell
+sar [option] <interval> <count>
+-n <keyword> # 选择网卡
+sar -n DEV 1 5
+```
+
+#### iftop
+
+```shell
+iftop [option]
+-n # 解析为IP
+-P # 显示端口
+-N # 显示端口而不是服务名
+-i <interface> # 选择监控的网络接口名称
+```
 
 ### 网络管理
 
