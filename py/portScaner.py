@@ -6,9 +6,10 @@ import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from multiprocessing import freeze_support
+import IPy
 
 __author__ = "lxw"
-__last_mod_date__ = "2022.11.22"
+__last_mod_date__ = "2022.11.24"
 __modify__ = "解决KeyboardInterrupt不能停止脚本的问题"
 ip_addrs = []
 ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表生成式直接传参...
@@ -65,5 +66,5 @@ if __name__ == "__main__":
         sys.exit()
     finally:
         end = time.time()
-        print("cost %.2fs"%(end - start))
-        input("exit.")
+        print("Cost %.2fs"%(end - start))
+        input("End.")

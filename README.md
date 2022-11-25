@@ -96,7 +96,7 @@ paramiko模块使用
 
 **2022.11.20更新,可以多进程+多线程执行**
 
-使用`ThreadPoolExecutor`
+使用`ThreadPoolExecutor`和`multiprocessing.Pool`
 
 **2022.11.22更新,可以支持打包exe**
 
