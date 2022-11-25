@@ -870,6 +870,7 @@ Blk_read/s # 每秒读取的block数.
 Blk_wrtn/s # 每秒写入的block数.
 Blk_read # 读入的block总数.
 Blk_wrtn # 写入的block总数
+iostat -dxpt 5
 ```
 
 #### dstat
@@ -929,7 +930,7 @@ ps
 -f # 格式化输出
 -o # 自定义输出项 pid,pcpu,pmem,stat,cmd
 --sort= # 排序+<key>或者-<key>影响正序或者负序输出
-ps -eo pcpu,pmem,pid,cmd,user --sort=-pmem,-pcpu
+ps -eao user,s,pcpu,pmem,cmd --sort=-pmem,-pcpu
 ```
 
 #### strace
