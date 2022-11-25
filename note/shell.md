@@ -928,7 +928,8 @@ ps
 -e # all
 -f # 格式化输出
 -o # 自定义输出项 pid,pcpu,pmem,stat,cmd
---sort= # 排序
+--sort= # 排序+<key>或者-<key>影响正序或者负序输出
+ps -eo pcpu,pmem,pid,cmd,user --sort=-pmem,-pcpu
 ```
 
 #### strace
