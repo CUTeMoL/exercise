@@ -3180,22 +3180,106 @@ print("捕获到异常执行，没捕获到不执行")
 
 如果发生异常，但异常都没有被捕捉到，就会报异常，并终止程序运行；如果捕捉到，会报你自定义的错误，并继续可以执行下面的代码 
 
-## 十五、类
+## 十五、类与对象
 
 类是总结事物特征的抽象概念,是创建对象的模板
 
+### 类的属性
+
+用类创建的对象会继承类的属性
+
+#### 定义类的属性
+
+方法一:
+
+内部定义和外部修改
+
 ```python
 class ClassName(object):
-    __slots__ = ('property_name0', 'property_name1', 'property_name2')
-    property_name0 = "class_var_value"
-    def __init__(self, property_name1, property_name2):
-        self.property_name1 =  property_name1
-        self.__property_name2 =  property_name2
-    def show_property_name2(self)
-        print(self.__property_name2)
-    def method1(self)
-        codes……
-        return code|info
+    key = value # 定义类的属性,和定义变量一样
+
+ClassName.key = value # 如果不在class申明中定义,则可以通过这种方式修改
+```
+
+方法二:
+
+用类创建对象时,接受传参来设定对象的属性
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        self.key = value
+
+object = ClassName(value)
+```
+
+方法三:
+
+定义方法来设置属性,可以进行条件判断,也可以进行私有属性的设定
+
+```python
+class ClassName(object):
+
+    def __init__(self, value):
+        self.__key = value
+
+    def return_key(self):
+        return self.__key
+
+    def set_key(self, value):
+        if isinstance(value, (int, float)):
+            self.__key = value
+        else:
+            raise ValueError('int float')
+
+
+object = ClassName(0)
+object.set_key(int_object)
+print(object.return_key())
+```
+
+#### 对属性进行限制
+
+设定私有属性
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        self.__key = value
+
+object = ClassName(value)
+print(object.__key) # 会报错,不可访问
+```
+
+限制属性的个数
+
+```python
+class ClassName(object):
+    __slots__ = ('key1', )
+    def __init__(self, value):
+        self.key = value
+
+object = ClassName(value)
+object.key1 = 1
+object.key2 = 1 # 会报错没有key2
+```
+
+### 类的方法
+
+使对象可以调用,相当于定义函数
+
+#### 定义类的方法
+
+```python
+class ClassName(object):
+    def return_self(self):
+        return self
+```
+
+rewirte
+
+```python
+class ClassName(object):
     def __str__(self):
         return "print(object)时输出的内容"
     def __del__(self):

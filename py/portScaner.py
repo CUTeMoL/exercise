@@ -6,13 +6,15 @@ import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from multiprocessing import freeze_support
-import IPy
+from os import cpu_count
+
+
 
 __author__ = "lxw"
 __last_mod_date__ = "2022.11.24"
 __modify__ = "解决KeyboardInterrupt不能停止脚本的问题"
 ip_addrs = []
-ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表生成式直接传参...
+ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表推导式直接传参...
 
 def port_test(ip_addr, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as telnet_object:
@@ -50,7 +52,7 @@ if __name__ == "__main__":
                 elif re.match("([0-9]{1,3}\.){1,3}[0-9]{1,3}", ip_addr.strip()):
                     ip_addrs.append(ip_addr.strip())
                 else:
-                    print("\nPlease enter the correct ip address and try again")
+                    print("\nPlease enter the correct ip address and try again.")
                     continue
     except KeyboardInterrupt:
         print("exit.")
@@ -58,7 +60,7 @@ if __name__ == "__main__":
 
     start = time.time()
     try:
-        with ProcessPoolExecutor() as ppool:
+        with ProcessPoolExecutor(max_workers=int(cpu_count()/2+1)) as ppool:
             process_results = [ ppool.submit(process_run, (ip_addr, ports)) for ip_addr in ip_addrs ]
             for process_result in as_completed(process_results):
                 print("\nScan {} is completed.".format(process_result.result()))
