@@ -18,7 +18,7 @@ ip_addrs = []
 ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表推导式直接传参...
 
 
-def port_test(ip_addr, port):
+def port_TCP_test(ip_addr, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as telnet_object:
         telnet_object.settimeout(1)
         result = telnet_object.connect_ex((ip_addr, port))
@@ -27,13 +27,14 @@ def port_test(ip_addr, port):
 
 def process_run(ip_ports):
     test_ip, test_ports = ip_ports
-    with ThreadPoolExecutor(max_workers=1000) as tpool:
-        thread_results = [ tpool.submit(port_test, str(test_ip), test_port) for test_port in test_ports ]
+    with ThreadPoolExecutor(max_workers=2000) as tpool:
+        thread_results = [ tpool.submit(port_TCP_test, str(test_ip), test_port) for test_port in test_ports ]
         for thread_result in thread_results:
             if thread_result.result()[2] == 0:
                 print("{}:{} is open.".format(thread_result.result()[0], thread_result.result()[1]))
             # elif thread_result.result()[2] == 10035:
             #     print(f"{thread_result.result()[0]}:{thread_result.result()[1]} is close.")
+
     return test_ip
 
 
@@ -41,11 +42,10 @@ if __name__ == "__main__":
     freeze_support() # windows下打包为exe需要
     print("{}最后一次修改于{}".format(__author__, __last_mod_date__))
     print("更新了：{}".format(__modify__))
-    print("下一次可以更新的内容为, 2.加入udp")
-
+    print("下一次可以更新的内容为, 1.加入xlsxwriter")
     try:
         while True:
-            ip_addr = input("Input [ipaddress] to add the scan list until input [start] to run process: \n")
+            ip_addr = input("Input [ipaddress/subnet] or [ipaddress] to add the scan list until input [start] to run process: \n")
             if ip_addr.strip() == "start":
                 print(ip_addrs)
                 break
