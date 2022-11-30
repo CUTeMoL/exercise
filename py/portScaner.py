@@ -66,7 +66,11 @@ if __name__ == "__main__":
 
     start = time.time()
     try:
-        with ProcessPoolExecutor(max_workers=int(cpu_count()/2+1)) as ppool:
+        if cpu_count() <= 2:
+            work_process = 1
+        else:
+            work_process = int(cpu_count()/2+1)
+        with ProcessPoolExecutor(max_workers=work_process) as ppool:
             process_results = [ ppool.submit(process_run, (ip_addr, ports)) for ip_addr in ip_addrs ]
             for process_result in as_completed(process_results):
                 print("\nScan {} is completed.".format(process_result.result()))
