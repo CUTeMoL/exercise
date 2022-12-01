@@ -3307,6 +3307,36 @@ class ClassName(object):
     @classmethod
     def return_ClassName(cls):
         return cls.name
+    
+ClassName.return_ClassName()
+```
+
+##### 静态方法
+
+加上`staticmethod`,不需要传参`cls`和`self`
+
+```python
+class ClassName(object):
+    name = "ClassName"
+    @staticmethod
+    def return_ClassName():
+        return ClassName.name
+
+ClassName.return_ClassName()
+```
+
+
+
+#### 方法之间的调用
+
+方法之间调用需要依赖`self`对象,因此类方法或静态方法不可调用普通方法
+
+```python
+class ClassName(object):
+    def return_self(self):
+        return self
+    def return_func(self):
+        print(self.return_self())
 ```
 
 rewirte
