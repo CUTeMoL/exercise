@@ -1010,6 +1010,16 @@ iftop [option]
 iftop -nPN -i enp0s3
 ```
 
+#### blkid
+
+查看分区信息(磁盘路径+uuid+块大小+格式化的类型)
+
+```shell
+blkid
+```
+
+
+
 ### 网络管理
 
 #### ip
@@ -1623,9 +1633,22 @@ mount /dev/sr0 /mnt/cdrom
 
 #自动挂载:
 echo \
-'"挂载设备/dev/sdb" "挂载目录/vm" "挂载格式ext4" "挂载方式default" 0 0'\
+'"/dev/sdb" "/vm" "ext4" "default" 0 0'\
  >> /etc/fstab
 ```
+
+`/etc/fstab`说明
+
+| 列   | 说明            | 可选                                                                                                                                                                                                                                                                                                  |
+| --- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 挂载设备          | 设备名、label、uuid(uuid最好)                                                                                                                                                                                                                                                                              |
+| 2   | 挂载目录          |                                                                                                                                                                                                                                                                                                     |
+| 3   | 挂载格式          | ext4、ext3、reiserfs、nfs、vfat                                                                                                                                                                                                                                                                         |
+| 4   | 挂载方式(权限)      | `Async/sync`是否为同步方式<br/>`auto/noauto``mount -a`主动挂载<br/>`rw/ro`读写<br/>`exec/noexec`执行权限<br/>`user/nouser`是否允许用户使用`mount`命令挂载<br/>`suid/nosuid`是否允许SUID的存在<br/>`Usrquota`启动文件系统支持磁盘配额模式<br/>`Grpquota`启动文件系统对群组磁盘配额模式的支持<br/>`Defaults`同事具有rw,suid,dev,exec,auto,nouser,async等默认参数的设置<br/>`bind`目录挂载 |
+| 5   | 能否被dump备份命令作用 | `0`无`1`每天`2`不定日期                                                                                                                                                                                                                                                                                    |
+| 6   | 是否检验扇区        | `0`不查`1`最早检查`2`低优先级                                                                                                                                                                                                                                                                                 |
+
+`/proc/mounts`可以查看所有挂载情况
 
 ### 用户权限类
 
@@ -2140,7 +2163,7 @@ net.ipv4.tcp_max_syn_backlog = 16384 # 对于那些依然还未获得客户端�
 net.ipv4.tcp_wmem = 8192 131072 16777216 # 发送缓冲的内存最小值|默认值|最大值
 net.ipv4.tcp_rmem = 32768 131072 16777216 # 接受缓存
 net.ipv4.tcp_mem = 786432 1048576 1572864 # 释放内存三个界值
-net.ipv4.ip_local_port_range = 1024 65000 # 表示用于向外连接的端口范围
+net.ipv4.ip_local_port_range = 1024 65000 # 表示用于向外连接的端口范围,存在/proc/sys/net/ipv4/ip_local_port_range,直接修改文件也行
 net.ipv4.ip_conntrack_max = 65536 # 系统支持的最大ipv4连接数，默认65536（事实上这也是理论最大值）
 net.ipv4.netfilter.ip_conntrack_max=65536 # 防火墙的最大ipv4连接数
 net.ipv4.netfilter.ip_conntrack_tcp_timeout_established=180 # 已建立的tcp连接的超时时间，默认432000，也就是5天
@@ -2148,6 +2171,8 @@ net.core.somaxconn = 16384 # 用来限制监听(LISTEN)队列最大数据包的�
 net.core.netdev_max_backlog = 16384 # 每个网络接口接收数据包的速率比内核处理这些包的速率快时，允许送到队列的数据包的最大数目，对重负载服务器而言，该值需要调高一点
 vm.swappiness=10 # 使用SWAP内存前可用内存剩余百分比，0不使用swap
 ```
+
+
 
 ## 十七、服务自启动
 
