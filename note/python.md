@@ -3184,6 +3184,11 @@ print("捕获到异常执行，没捕获到不执行")
 
 类是总结事物特征的抽象概念,是创建对象的模板
 
+```python
+class ClassName:
+    pass
+```
+
 ### 类的属性
 
 用类创建的对象会继承类的属性
@@ -3270,10 +3275,38 @@ object.key2 = 1 # 会报错没有key2
 
 #### 定义类的方法
 
+##### 普通方法
+
 ```python
 class ClassName(object):
     def return_self(self):
         return self
+```
+
+##### 魔术方法
+
+`__method__`称为魔术方法
+
+###### `__init__`
+
+构造器
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        self.key = value
+```
+
+##### 类方法
+
+加上`@classmethed`传参的不是对象`self`,而是类`cls`,普通方法依赖对象,类方法不需要对象
+
+```python
+class ClassName(object):
+    name = "ClassName"
+    @classmethod
+    def return_ClassName(cls):
+        return cls.name
 ```
 
 rewirte
