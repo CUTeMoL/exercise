@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#-*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import socket
 import time
 import re
@@ -9,13 +9,11 @@ from multiprocessing import freeze_support
 from os import cpu_count
 import ipaddress
 
-
-
 __author__ = "lxw"
 __last_mod_date__ = "2022.11.28"
 __modify__ = "加入ipaddress模块,可以扫描网段"
 ip_addrs = []
-ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表推导式直接传参...
+ports = [port for port in range(1, 65536)]  # 多进程传多参数不支持列表推导式直接传参...
 
 
 def port_TCP_test(ip_addr, port):
@@ -28,7 +26,7 @@ def port_TCP_test(ip_addr, port):
 def process_run(ip_ports):
     test_ip, test_ports = ip_ports
     with ThreadPoolExecutor(max_workers=2000) as tpool:
-        thread_results = [ tpool.submit(port_TCP_test, str(test_ip), test_port) for test_port in test_ports ]
+        thread_results = [tpool.submit(port_TCP_test, str(test_ip), test_port) for test_port in test_ports]
         for thread_result in thread_results:
             if thread_result.result()[2] == 0:
                 print("{}:{} is open.".format(thread_result.result()[0], thread_result.result()[1]))
@@ -39,13 +37,14 @@ def process_run(ip_ports):
 
 
 if __name__ == "__main__":
-    freeze_support() # windows下打包为exe需要
+    freeze_support()  # windows下打包为exe需要
     print("{}最后一次修改于{}".format(__author__, __last_mod_date__))
     print("更新了：{}".format(__modify__))
     print("下一次可以更新的内容为, 1.加入xlsxwriter")
     try:
         while True:
-            ip_addr = input("Input [ipaddress/subnet] or [ipaddress] to add the scan list until input [start] to run process: \n")
+            ip_addr = input(
+                "Input [ipaddress/subnet] or [ipaddress] to add the scan list until input [start] to run process: \n")
             if ip_addr.strip() == "start":
                 print(ip_addrs)
                 break
@@ -66,13 +65,13 @@ if __name__ == "__main__":
 
     start = time.time()
     try:
-        with ProcessPoolExecutor(max_workers=int(cpu_count()/2+1)) as ppool:
-            process_results = [ ppool.submit(process_run, (ip_addr, ports)) for ip_addr in ip_addrs ]
+        with ProcessPoolExecutor(max_workers=int(cpu_count() / 2 + 1)) as ppool:
+            process_results = [ppool.submit(process_run, (ip_addr, ports)) for ip_addr in ip_addrs]
             for process_result in as_completed(process_results):
                 print("\nScan {} is completed.".format(process_result.result()))
     except KeyboardInterrupt:
         sys.exit()
     finally:
         end = time.time()
-        print("Cost %.2fs"%(end - start))
+        print("Cost %.2fs" % (end - start))
         input("End.")

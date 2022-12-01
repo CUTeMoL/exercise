@@ -12,8 +12,9 @@ ftp_object = ftplib.FTP()
 ftp_object.connect(host=targethost, port=targetport)
 ftp_object.login(user=targetuser, passwd=targetpasswd)
 
+
 def ftp_upload(ftp_object, sourcefile, targetdir="/"):
-    sourcefile_object = open(sourcefile,'rb')
+    sourcefile_object = open(sourcefile, 'rb')
     source_file_basename = os.path.basename(sourcefile)
     targetdir = targetdir.strip()
     try:
@@ -26,6 +27,8 @@ def ftp_upload(ftp_object, sourcefile, targetdir="/"):
         return False
     finally:
         sourcefile_object.close()
+
+
 if __name__ == "__main__":
-    ftp_upload(ftp_object , filename, targetdir)
+    ftp_upload(ftp_object, filename, targetdir)
     ftp_object.quit()
