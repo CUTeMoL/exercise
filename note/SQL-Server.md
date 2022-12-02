@@ -56,6 +56,8 @@ C:\SQL2019\Developer_CHS\SETUP.EXE
 
 一路下一步即可
 
+`NT AUTHORITY\SYSTEM`
+
 #### 3.配置TCP/IP连接
 
 打开配置管理器

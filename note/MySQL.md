@@ -3046,6 +3046,7 @@ mysqldump --single-transaction --master-data=1 -R --triggers -E -B database_name
 --quick # 一行行备份，不经过buffer，默认打开
 --hex-blob # 二进制数据已十六进制的形式导出
 --set-gtid-purged=OFF # 取消标记GTID,备份后导入到其他数据库会生成新的GTID,迁移或还原单个库时用,做从库时不要使用
+--column-statistics=0 # 
 ```
 
 一步备份并压缩
