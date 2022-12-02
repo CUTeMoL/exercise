@@ -256,6 +256,8 @@ xcopy /E /Q /I src dest
 /I # 如果目标不存在，且要复制多个文件,则假定目标必须是目录
 ```
 
+
+
 ## 二、管理工具
 
 ### 1. `secpol.msc`
@@ -381,3 +383,15 @@ tzutil.exe /s "China Standard Time" # 设定时区
 ### 14.`wmic`
 
 已经弃用，可以使用`Get-WmiObject`替代
+
+### 15.`regedit`
+
+注册表,树形数据库管理配置文件
+
+| 根键                    | 说明  |
+| --------------------- | --- |
+| `HKEY_CLASSES_ROOT`   |     |
+| `HKEY_CURRENT_USER`   |     |
+| `HKEY_LOCAL_MACHINE`  |     |
+| `HKEY_USERS`          |     |
+| `HKEY_CURRENT_CONFIG` |     |
