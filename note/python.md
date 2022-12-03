@@ -807,6 +807,9 @@ print(f(-10)) # 10
 | `hasattr(Object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`             |
 | `getattr(Object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                        |
 | `setattr(Object, "property", "value")`                 | 设置一个属性                                                 |
+| `del Object`                                           | 回收这个地址引用(如果一个地址的所有引用都回收,则可以称为内存释放) |
+
+
 
 ```python
 print(len(abc)) # 调用len()函数来算长度
@@ -1250,14 +1253,15 @@ from . dir_name import module_name
 
 ### sys:
 
-| sys函数                           | 作用                                                                 |
-| ------------------------------- | ------------------------------------------------------------------ |
-| sys.path                        | 模块路径                                                               |
-| sys.version                     | python解释器版本                                                        |
-| sys.platform                    | 操作系统名称                                                             |
+| sys函数                         | 作用                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| sys.path                        | 模块路径                                                     |
+| sys.version                     | python解释器版本                                             |
+| sys.platform                    | 操作系统名称                                                 |
 | sys.argv[n]                     | sys.argv[0]等同于shell里的\$0, sys.argv[1]等同于shell里的\$1(脚本里跟着的参数)，以此类推j |
-| sys.exit(n)                     | 退出程序,会引出一个异常                                                       |
-| sys.stdout.write('hello world') | 不换行打印                                                              |
+| sys.exit(n)                     | 退出程序,会引出一个异常                                      |
+| sys.stdout.write('hello world') | 不换行打印                                                   |
+| `sys.getrefcount(Object)`       | 该地址的引用次数                                             |
 
   sys.path   #模块路径列表
 
@@ -3326,6 +3330,35 @@ class ClassName(object):
 
 Object = ClassName("value")
 key = Object()
+```
+
+###### `__del__`
+
+回收所有地址引用时调用
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        self.key = value
+    def __del__(self):
+        return self
+
+Object = ClassName("value")
+del Object
+```
+
+`__str__`
+
+定义对象信息
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        self.key = value
+    def __str__(self):
+        return 'value: "{}"'.format(self.key)
+
+Object = ClassName("value")
 ```
 
 
