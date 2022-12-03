@@ -54,9 +54,9 @@ C:\SQL2019\Developer_CHS\SETUP.EXE
 
 ✔️ 混合模式+密码
 
-一路下一步即可
+数据库服务如`SQL Server 代理`和`SQL Server Datebase Engine`如果缺少用户则选择`NT AUTHORITY\SYSTEM`，`SQL Server 代理`改为自动
 
-`NT AUTHORITY\SYSTEM`
+一路下一步即可
 
 #### 3.配置TCP/IP连接
 
