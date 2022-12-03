@@ -143,41 +143,41 @@ pycharm建立项目
 
 不可以作为变量
 
-| 保留字            | 说明                                           |
-| -------------- | -------------------------------------------- |
-| `and`          | 和                                            |
-| `or`           | 或                                            |
-| `is`           | 判断                                           |
-| `not`          | 非                                            |
-| `in`           | 在里面                                          |
-| `False`        | 错误标志                                         |
-| `True`         | 正确标志                                         |
-| `None`         | 空                                            |
-| `if`           | 如果                                           |
-| `elif`         | 如果                                           |
-| `else`         | 如果未匹配表达式                                     |
-| `as`           | 重命名                                          |
-| `assert`       | 断言                                           |
-| `class`        | 声明类                                          |
-| `def`          | 声明函数                                         |
-| `nonlocal`     | 重新定义函数外部变量                                   |
-| `global`       | 函数全局声明变量                                     |
-| `return`       | 函数返回                                         |
-| `del`          | 删除变量的定义                                      |
-| `try`          | 尝试                                           |
-| `except`       | 捕获错误                                         |
-| `finally`      | 无论是否捕获                                       |
-| `while`        | 表达式成立时循环                                     |
-| `break`        | 跳出循环                                         |
-| `continue`     | 跳出本次循环                                       |
-| `for`          | 遍历循环                                         |
+| 保留字         | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `and`          | 和                                                           |
+| `or`           | 或                                                           |
+| `is`           | 判断                                                         |
+| `not`          | 非                                                           |
+| `in`           | 在里面                                                       |
+| `False`        | 错误标志                                                     |
+| `True`         | 正确标志                                                     |
+| `None`         | 空                                                           |
+| `if`           | 如果                                                         |
+| `elif`         | 如果                                                         |
+| `else`         | 如果未匹配表达式                                             |
+| `as`           | 重命名                                                       |
+| `assert`       | 断言                                                         |
+| `class`        | 声明类                                                       |
+| `def`          | 声明函数                                                     |
+| `nonlocal`     | 重新定义函数外部变量                                         |
+| `global`       | 函数全局声明变量                                             |
+| `return`       | 函数返回                                                     |
+| `del`          | 删除变量的定义                                               |
+| `try`          | 尝试                                                         |
+| `except`       | 捕获错误                                                     |
+| `finally`      | 无论是否捕获                                                 |
+| `while`        | 表达式成立时循环                                             |
+| `break`        | 跳出循环                                                     |
+| `continue`     | 跳出本次循环                                                 |
+| `for`          | 遍历循环                                                     |
 | `from`         | 导入模块中的对象(需要声明引用的对象名,`*`可以代表所有,声明后可以直接使用类和函数) |
-| `import`       | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名)       |
+| `import`       | 导入模块中的对象(不需要声明引用模块的类和函数,但是在使用时需要加上模块名) |
 | `lambda`       | 轻量级函数,通常嵌入其他函数中使用                            |
-| `pass`         | 空代码跳过                                        |
-| `raise`        | 输出错误(如果不带参数就会把当前错误原样抛出)                      |
-| `with object ` | 以上下文的方式获取`object`                            |
-| `yield`        | 函数返回生成器对象                                    |
+| `pass`         | 空代码跳过                                                   |
+| `raise`        | 输出错误(如果不带参数就会把当前错误原样抛出)                 |
+| `with Object ` | 以上下文的方式获取`Object`                                   |
+| `yield`        | 函数返回生成器对象                                           |
 
 ### 标识符
 
@@ -786,27 +786,27 @@ print(f(-10)) # 10
 
 ### 常用函数:
 
-| 常用函数                                                   | 说明                                                                                                                                |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `range(start,end,step)`                                | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1                                                                                   |
-| `len(object)`                                          | 长度                                                                                                                                |
-| `max(object, key=lambda x:x[1])`                       | 选出最大值                                                                                                                             |
-| `type(object)`                                         | 判断`object`类型                                                                                                                      |
-| `type('ClassName', (object,), dict(method=func_name))` | 也可以使用`type`创建类,传入类名,继承的元组,方法绑定的函数名                                                                                                |
-| `isinstance(object, (int, float))`                     | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`                                                                                     |
-| `enumerate(object, n)`                                 | 枚举,打印`object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n`                                                                                       |
-| `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典                                                                            |
-| `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出                                                                                      |
-| `lambda args: result`                                  | 传入变量`args`返回`result`的结果,可以嵌入其他函数中使用                                                                                               |
-| `sorted(object, key=lambda x:x[1], reverse=True)`      | 对`object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值                                |
-| `iter(object)`                                         | 将`Iterable`转为`Iterator`                                                                                                           |
-| `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator`                                                                                |
-| `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素                                               |
+| 常用函数                                               | 说明                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| `range(start,end,step)`                                | `start`起始值,省略则为0,`end`终止值,但不包括该值,`step`步长，省略则为1 |
+| `len(Object)`                                          | 长度                                                         |
+| `max(Object, key=lambda x:x[1])`                       | 选出最大值                                                   |
+| `type(Object)`                                         | 判断`object`类型                                             |
+| `type('ClassName', (Object,), dict(method=func_name))` | 也可以使用`type`创建类,传入类名,继承的元组,方法绑定的函数名  |
+| `isinstance(Object, (int, float))`                     | 判断类型是否为`int`或`float`,若为`int`或`float`则返回`True`  |
+| `enumerate(Object, n)`                                 | 枚举,打印`Object`的[下标]和[元素\|字符],可以自定义起始[下标]为`n` |
+| `eval(str)`                                            | 计算在字符串中的有效python表达式,并返回一个对象,比如字符串为公式时计算结果,json格式时识别为字典 |
+| `zip(list1, list2)`                                    | 可以把两个列表按顺序打包到一起,变成一个对象,可以以`list`或`dict`的形式输出 |
+| `lambda args: result`                                  | 传入变量`args`返回`result`的结果,可以嵌入其他函数中使用      |
+| `sorted(Object, key=lambda x:x[1], reverse=True)`      | 对`Object`进行排序,`key`可以是函数名,作用于每个元素后再排序(不修改原值,仅影响排序),`reverse`为`True`时倒序输出(从大到小),不改变原值,`sort()`会改变原值 |
+| `iter(Object)`                                         | 将`Iterable`转为`Iterator`                                   |
+| `map(funcname, Iterable)`                              | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回新的`Iterator` |
+| `filter(funcname, Iterable)`                           | 接受函数和`Iterable`,将传入的函数作用于可迭代对象的每个元素,返回`True`(如果有其它结果那么也会当成`True`)或者`False`,决定是否保留元素 |
 | `functools.reduce(funcname, Iterable, initial)`        | 接受函数(必须接受2个参数)和`Iterable`,将传入的函数作用于前2个可迭代对象的元素后,再把返回的结果和后一个元素进行函数累积计算<br/>如果`Iterable`只有一个元素,可以设定`initial`(默认为`None`)相当于填充了一个默认参数 |
-| `dir(object)`                                          | 获取一个对象的所有属性                                                                                                                       |
-| `hasattr(object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`                                                                                              |
-| `getattr(object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                                                                                                               |
-| `setattr(object, "property", "value")`                 | 设置一个属性                                                                                                                            |
+| `dir(Object)`                                          | 获取一个对象的所有属性                                       |
+| `hasattr(Object, "property")`                          | 判断对象是否有属性`property`,返回`True`和`False`             |
+| `getattr(Object, "property", 404)`                     | 获取一个属性,不存在则返回自定义的参数                        |
+| `setattr(Object, "property", "value")`                 | 设置一个属性                                                 |
 
 ```python
 print(len(abc)) # 调用len()函数来算长度
@@ -2198,15 +2198,15 @@ print(string.getvalue())
 
 ### collections:
 
-| 函数                                                                | 说明                                                                                |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `collections.namedtuple("ClassName", ["property1", "property2"])` | 创建一个继承元组的类,限定类的属性                                                                 |
-| `collections.deque(list_object)`                                  | 基于一个列表创建一个双向队列<br/>可以使用`object.appendleft()`从左插入<br/>可以使用`object.popleft()`从左取出数据 |
-| `collections.defaultdict(lamba: 'message')`                       | 创建一个字典对象,此字典不存在时,默认返回自定义`message`                                                 |
-| `collections.OrderedDict([(key, value),])`                        | 创建一个根据key的插入顺序排序的字典<br/>可以使用`object.popitem(last=False)`来删除字典`last=True`时,        |
-| `collections.ChainMap(dict_object1, dict_object2, dict_object3)`  | 组合成一个虚拟的`dict_object`,查找值时,可以依次检索                                                 |
-| `collections.Counter()`                                           | 计数器                                                                               |
-|                                                                   |                                                                                   |
+| 函数                                                         | 说明                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `collections.namedtuple("ClassName", ["property1", "property2"])` | 创建一个继承元组的类,限定类的属性                            |
+| `collections.deque(list_object)`                             | 基于一个列表创建一个双向队列<br/>可以使用`Object.appendleft()`从左插入<br/>可以使用`Object.popleft()`从左取出数据 |
+| `collections.defaultdict(lamba: 'message')`                  | 创建一个字典对象,此字典不存在时,默认返回自定义`message`      |
+| `collections.OrderedDict([(key, value),])`                   | 创建一个根据key的插入顺序排序的字典<br/>可以使用`Object.popitem(last=False)`来删除字典`last=True`时, |
+| `collections.ChainMap(dict_object1, dict_object2, dict_object3)` | 组合成一个虚拟的`dict_object`,查找值时,可以依次检索          |
+| `collections.Counter()`                                      | 计数器                                                       |
+|                                                              |                                                              |
 
 ### base64:
 
@@ -2238,11 +2238,11 @@ import hashlib
 import os
 
 def md5sumcheck(file_object):
-    object = hashlib.md5()
+    Object = hashlib.md5()
     with open(file=file_object, mode="rb") as md5_object:
         data = md5_object.read()
-        object.update(data)
-    return object.hexdigest().upper()
+        Object.update(data)
+    return Object.hexdigest().upper()
 
 if __name__ == "__main__":
     while 1 == 1:
@@ -2266,22 +2266,22 @@ if __name__ == "__main__":
 
 ### itertools:
 
-| 函数                                              | 说明                                    |
-| ----------------------------------------------- | ------------------------------------- |
-| `itertools.count(x ,y)`                         | 创建一个从x开始无限的+y,`Iterator`对象            |
-| `itertools.cycle(Iterable)`                     | 创建一个基于有限的`Iterable`循环的`Iterator`对象    |
-| `itertools.repeat(object, n)`                   | 创建一个将`object`无限循环下去的`Iterator`对象      |
-| `itertools.takewhile(lamba x: x<=10, Iterator)` | 利用条件判断创建一个有限的`Iterable`               |
+| 函数                                            | 说明                                                   |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| `itertools.count(x ,y)`                         | 创建一个从x开始无限的+y,`Iterator`对象                 |
+| `itertools.cycle(Iterable)`                     | 创建一个基于有限的`Iterable`循环的`Iterator`对象       |
+| `itertools.repeat(Object, n)`                   | 创建一个将`Object`无限循环下去的`Iterator`对象         |
+| `itertools.takewhile(lamba x: x<=10, Iterator)` | 利用条件判断创建一个有限的`Iterable`                   |
 | `itertools.chain(Iterable, Iterable)`           | 可以把一组`Iterable`串联起来，形成一个更大的`Iterator` |
-|                                                 |                                       |
+|                                                 |                                                        |
 
 ### contextlib:
 
-| 函数                           | 说明                                     |
-| ---------------------------- | -------------------------------------- |
-| `contextlib.contextmanager`  | 装饰器,使`Class`生成的`object`可以使用`with`的方式获取 |
-| `contextlib.closing(object)` | 使`object`可以使用`with`的方式获取               |
-|                              |                                        |
+| 函数                         | 说明                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| `contextlib.contextmanager`  | 装饰器,使`Class`生成的`Object`可以使用`with`的方式获取 |
+| `contextlib.closing(Object)` | 使`Object`可以使用`with`的方式获取                     |
+|                              |                                                        |
 
 ### urllib:
 
@@ -3215,7 +3215,7 @@ class ClassName(object):
     def __init__(self, value):
         self.key = value
 
-object = ClassName(value)
+Object = ClassName(value)
 ```
 
 方法三:
@@ -3238,9 +3238,9 @@ class ClassName(object):
             raise ValueError('int float')
 
 
-object = ClassName(0)
-object.set_key(int_object)
-print(object.return_key())
+Object = ClassName(0)
+Object.set_key(int_object)
+print(Object.return_key())
 ```
 
 #### 对属性进行限制
@@ -3252,8 +3252,8 @@ class ClassName(object):
     def __init__(self, value):
         self.__key = value
 
-object = ClassName(value)
-print(object.__key) # 会报错,不可访问
+Object = ClassName(value)
+print(Object.__key) # 会报错,不可访问
 ```
 
 限制属性的个数
@@ -3264,9 +3264,9 @@ class ClassName(object):
     def __init__(self, value):
         self.key = value
 
-object = ClassName(value)
-object.key1 = 1
-object.key2 = 1 # 会报错没有key2
+Object = ClassName(value)
+Object.key1 = 1
+Object.key2 = 1 # 会报错没有key2
 ```
 
 ### 类的方法
@@ -3296,6 +3296,39 @@ class ClassName(object):
     def __init__(self, value):
         self.key = value
 ```
+
+###### `__new__`
+
+实例化时,会先调用`__new__`为对象分配空间,返回对象的引用,再执行`__init__`
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        print("__init__")
+        self.key = value
+    def __new__(cls, *args, **kwargs):
+        print("__new__")
+        return super().__new__(cls) # 3.6后无需传参
+
+Object = ClassName("value")
+```
+
+###### `__call__`
+
+定义将对象作为函数调用时的方法
+
+```python
+class ClassName(object):
+    def __init__(self, value):
+        self.key = value
+    def __call__(self, value):
+        return value
+
+Object = ClassName("value")
+key = Object()
+```
+
+
 
 ##### 类方法
 
