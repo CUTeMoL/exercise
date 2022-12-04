@@ -1,4 +1,4 @@
-python
+# python
 
 ## 一、搭建环境
 
@@ -3234,6 +3234,10 @@ class ClassName(object):
 
     def return_key(self):
         return self.__key
+    
+    @property
+    def key(self):
+        return self.__key
 
     def set_key(self, value):
         if isinstance(value, (int, float)):
@@ -3242,9 +3246,11 @@ class ClassName(object):
             raise ValueError('int float')
 
 
+
 Object = ClassName(0)
 Object.set_key(int_object)
 print(Object.return_key())
+print(Object.key)
 ```
 
 #### 对属性进行限制
@@ -3260,6 +3266,56 @@ Object = ClassName(value)
 print(Object.__key) # 会报错,不可访问
 ```
 
+私有属性的访问
+
+```python
+class ClassName(object):
+
+    def __init__(self, value):
+        self.__key = value
+
+    def return_key(self):
+        return self.__key
+    
+
+    def set_key(self, value):
+        if isinstance(value, (int, float)):
+            self.__key = value
+        else:
+            raise ValueError('int float')
+
+Object = ClassName(0)
+Object.set_key(int_object)
+print(Object.return_key()) # 调用方法
+print(Object.key)  # 会报错
+```
+
+设置私有属性后,想要像公开属性一样访问/设置可以使用装饰器`@property`和`@key.setter`
+
+```python
+class ClassName(object):
+
+    def __init__(self, value):
+        self.__key = value
+
+    # @property 方法视为属性
+    @property
+    def key(self):
+        return self.__key
+
+    # @key.setter 方法视为设置属性
+    @key.setter
+    def key(self, value):
+        if isinstance(value, (int, float)):
+            self.__key = value
+        else:
+            raise ValueError('int float')
+
+Object = ClassName(0)
+Object.key = 1
+print(Object.key)  
+```
+
 限制属性的个数
 
 ```python
@@ -3272,6 +3328,8 @@ Object = ClassName(value)
 Object.key1 = 1
 Object.key2 = 1 # 会报错没有key2
 ```
+
+
 
 ### 类的方法
 
@@ -3347,9 +3405,9 @@ Object = ClassName("value")
 del Object
 ```
 
-`__str__`
+###### `__str__`
 
-定义对象信息
+定义对象信息,使对象可以`str(Object)`转化为字符串
 
 ```python
 class ClassName(object):
@@ -3359,6 +3417,7 @@ class ClassName(object):
         return 'value: "{}"'.format(self.key)
 
 Object = ClassName("value")
+print(Object)
 ```
 
 
@@ -3499,32 +3558,11 @@ metaclass
 
 实际上类都是转换成为`type()`生成的
 
-## 十六、面向对象
+## 十六、类的关联关系
 
-对象是按照类来具体化的实物
+has a 一个类中使用了另外一种自定义的类型
 
-创建对象:
-
-```python
-var1 = ClassName("property_value1", "property_value2")
-var2 = ClassName(property_name1="property_value1", property_name2="property_value2")
-```
-
-property_value -> \__init__.property_name -> self.property_name1 == var.property_name1 == property_value
-
-给对象加属性:
-
-```python
-var1.property_name3 = "property_value3"
-```
-
-使用对象方法:
-
-```python
-var1.method()
-```
-
-## 十七、继承
+## 十七、类的继承关系
 
 类的继承属性及方法
 
