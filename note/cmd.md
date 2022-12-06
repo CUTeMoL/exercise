@@ -256,8 +256,6 @@ xcopy /E /Q /I src dest
 /I # 如果目标不存在，且要复制多个文件,则假定目标必须是目录
 ```
 
-
-
 ## 二、管理工具
 
 ### 1. `secpol.msc`
@@ -285,7 +283,7 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 
 然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建）
 
-### 2. `taskchd.msc`
+### 2. `taskschd.msc`
 
 查看计划任务
 
