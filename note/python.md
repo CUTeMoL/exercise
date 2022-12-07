@@ -3558,29 +3558,53 @@ metaclass
 
 实际上类都是转换成为`type()`生成的
 
-## 十六、类的关联关系
+## 十六、单例模式
 
-has a 一个类中使用了另外一种自定义的类型
+只允许一个实例
+
+```python
+class Singleton(object):
+    __instance = None
+    def __new__(cls):
+        print("__new__")
+        if cls.__instance is None:
+            print("Creating instance...")
+            cls.__instance = object.__init__(cls)
+            return cls.__instance
+        else:
+            print("Instance is exist...")
+            return cls.__instance
+```
+
+
 
 ## 十七、类的继承关系
 
-类的继承属性及方法
+### 类的继承属性及方法
 
-子类def的属性、方法会覆盖父继承(例\__init__()),不想覆盖可以使用`super().__init__(self, arg)`
+子类def的属性、方法会覆盖父继承
 
-方法里可以调用方法（其实就是函数互相调用）
+不想覆盖可以使用`super(type, self).method（arg1, arg2)`, `super(type, self)`会进行判断,判断`self`是不是`type`这个类型,是的话就执行`method(arg1, arg2)`,为空不进行判断
 
-可以多层继承
+### 方法里可以调用方法（其实就是函数互相调用）
 
-可以多重继承class ClassName3(ClassName1, ClassName2):
+### 可以多层继承
+
+### 可以多重继承
+
+#### 继承顺序`cls.__mro__`
+
+(python2.7后)先左后右,广度优先,匹配到方法即停止搜索
+
+(python2.7前)先左后右,深度优先,匹配到方法即停止搜索
 
 ```python
 class Man(People):
     sex = "man"
 # def 重新定义会覆盖父继承，不想覆盖可以使用super
-    def __init__(self, property_name1, property_name2, property_name3):
-        super(Man, self).__init__(property_name1, property_name2)
-        self.property_name3 =  property_name3
+    def __init__(self, value1, value2, value3):
+        super(Man, self).__init__(value1, value2)
+        self.key3 =  value3
     def restroom(self):
         print(f"{self.name}去男厕所")
     def info(self):
