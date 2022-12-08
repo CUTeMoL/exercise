@@ -1018,8 +1018,6 @@ iftop -nPN -i enp0s3
 blkid
 ```
 
-
-
 ### 网络管理
 
 #### ip
@@ -1657,7 +1655,11 @@ echo \
 ```shell
 su user   # 切换用户环境变量不变
 su - user   # 切换用户环境变量和目录改变
--c program # 指定某用户执行程序
+-c program # 指定执行程序
+-p # 使用当前环境变量切换用户
+
+
+su -p ${user} -c ${command} # 指定某一用户已当前环境运行某一程序后退出
 ```
 
 #### visudo
@@ -2171,8 +2173,6 @@ net.core.somaxconn = 16384 # 用来限制监听(LISTEN)队列最大数据包的�
 net.core.netdev_max_backlog = 16384 # 每个网络接口接收数据包的速率比内核处理这些包的速率快时，允许送到队列的数据包的最大数目，对重负载服务器而言，该值需要调高一点
 vm.swappiness=10 # 使用SWAP内存前可用内存剩余百分比，0不使用swap
 ```
-
-
 
 ## 十七、服务自启动
 
