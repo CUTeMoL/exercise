@@ -1219,53 +1219,71 @@ func(*args)
 
 ## 十二、模块
 
-模块就是定义好了一组函数的代码打包文件
+### 模块
 
-包就是含有`__init__.py`和其他模块的的文件夹
+就是定义好了一组函数的代码打包文件
+
+### 包
+
+包就是含有`__init__.py`和模块的的文件夹
 
 使用当前工程目录为绝对路径的根路径
 
 ### `__init__.py`
 
-导包时默认执行`__init__.py`
+导包时会默认执行`__init__.py`
 
-### 使用方式
+### 导入方式
 
-#### 导入模块
+#### 通过`import ...`导入
 
-##### `import package` or `import module`
+```python
+import package
+import module
+```
 
 非暴露的方式导入包或者模块,使用时需要包名或模块名
 
 因为非暴露所以其中的对象可以重名
 
-##### `from package import module`
 
-暴露某个模块,可以直接使用这个模块
 
-##### `from package import *`
+#### 通过`from ... import ...`方式导入包
 
-`__init__.py`必须要有`__all__`
+```python
+from package import module # 暴露某个模块,可以直接使用这个模块
+from package import * # 暴露包__init__.py中__all__这一列表所记录的所有模块
+```
 
-暴露包`__init__.py`中`__all__`这一列表所记录的所有模块
+`__init__.py`必须要有`__all__ = ["module", ]`
 
-##### `from module import object`
+重名会发生覆盖
+
+```python
+from . import module
+```
+
+用相对路径的方式导入模块,只有子包可以使用
+
+
+
+#### 通过`from ... import ...`方式导入模块
+
+```python
+from module import object
+```
 
 暴露模块中的一个对象,可以直接使用这个对象
 
-##### `from module import *`
+```python
+from module import *
+```
 
 暴露模块中的所有对象,可以直接使用模块中的所有对象
 
 可以有`__all__`也可以不使用`__all__`进行限制
 
 
-
-也可以通过 `from module_name import function_name` ,使用模块（调用时可以不写module_name，只写`function_name()`就可以调用模块里的函数）
-
-  `from module_name import *` 可以导入模块里的所有函数(需要指定`__all__`这个列表)
-
-`from . import function_name()`相对路径只能使用在子包中
 
 ### 分类
 
@@ -1287,15 +1305,6 @@ func(*args)
 | `__all__`  | `__init__.py`中的一个列表,可以用来指定可以被导入到其他文件中的对象 |
 | `__file__` | 模块的路径                                                   |
 
-### 包:
-
-  相当于模块目录
-
-```python
-# __init__.py 包里一定有这个文件，导入包相当于执行这个文件
-from . import module_name
-from . dir_name import module_name
-```
 
 ### sys:
 
