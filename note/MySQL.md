@@ -4016,3 +4016,10 @@ mysql --login-path=root_3306
 |                                                                                              |                                 | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
 |                                                                                              |                                 | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步                                                                            |
 |                                                                                              | 主从库字符集不一致                       | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集                        |
+
+### 建库建表
+
+| 建表                                                         | 原因                                                         | 处理                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `Error 1071: Specified key was too long; max key length is 767 bytes.` | 由于MySQL5.6的InnoDB引擎表索引字段长度的限制为767字节，因此对于多字节字符集的大字段或者多字段组合，创建索引时会出现该问题。 | `default-storage-engine=INNODB` <br/>`innodb_large_prefix=on` |
+
