@@ -1514,19 +1514,22 @@ else:
 
 ### multiprocessing:
 
-|      | 函数                                                                            | 功能                                                                                  |
-| ---- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 查    | `multiprocessing.cpu_count()`                                                 | cpu个数                                                                               |
-|      | `multiprocessing.set_start_method('spawn')`                                   | 设置启动方式`spawn`为Windows 和 macOS 默认启动方式,`fork`只存在于`unix`,`forkserver`支持通过Unix管道传递文件描述符 |
-| 单子进程 | `multiprocessing.Process(target=func_name, args=('arg', ))`                   | 创建一个要运行的子进程对象                                                                       |
-|      | `process_object.start()`                                                      | 启动一个要运行的子进程对象                                                                       |
-|      | `process_object.join()`                                                       | 等待,完成了要运行的子进程对象,再往下执行代码                                                             |
-| 多子进程 | `multiprocessing.Pool(n)`                                                     | 创建容纳n个子进程的进程池,无参数默认使用CPU个数                                                          |
-|      | `processpool_object.apply_async(func_name, args=("", ))`                      | 在进程池对象中创建并运行子进程,如果进程池已满,将会等待进程池释放进程后再加入进程池                                          |
-|      | `processpool_object.close()`                                                  | 停止向进程池添加进程                                                                          |
-|      | `processpool_object.join()`                                                   | 等待,完成了所有要运行的子进程对象后,再往下执行代码                                                          |
-|      | `multiprocessing.Manager()`                                                   | 这个对象可以用于在不同进程中共享数据                                                                  |
-|      | `multiprocessing.managers.BaseManager(address=('', 5000), authkey=b'passwd')` | 创建一个多进程管理器                                                                          |
+|          | 函数                                                         | 功能                                                         |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 查       | `multiprocessing.cpu_count()`                                | cpu个数                                                      |
+|          | `multiprocessing.set_start_method('spawn')`                  | 设置启动方式`spawn`为Windows 和 macOS 默认启动方式,`fork`只存在于`unix`,`forkserver`支持通过Unix管道传递文件描述符 |
+| 单子进程 | `multiprocessing.Process(target=func_name, args=('arg', ), name="process", daemon=True)` | 创建一个要运行的子进程对象<br/>`daemon`当进程退出时，它会尝试终止其所有守护进程子进程。 |
+|          | `process_object.start()`                                     | 启动一个要运行的子进程对象                                   |
+|          | `process_object.join(timeout=float)`                         | 等待,完成了要运行的子进程对象,再往下执行代码<br/>如果设置了时间则最多会堵塞到该时间 |
+|          | `process_object.is_alive()`                                  | 判断程序是否还存在                                           |
+|          | `process_object.terminate()`                                 | 优雅退出                                                     |
+|          | `process_object.kill()`                                      | 强制退出                                                     |
+| 多子进程 | `multiprocessing.Pool(n)`                                    | 创建容纳n个子进程的进程池,无参数默认使用CPU个数              |
+|          | `processpool_object.apply_async(func_name, args=("", ), kwds, callback=, error_callback=)` | 在进程池对象中创建并运行子进程,如果进程池已满,将会等待进程池释放进程后再加入进程池<br/>`callback`回调方法,把`return`回来的值通过`callback`来处理,必须是一个接受单个参数的可调用对象<br/>当目标函数执行失败时， 会将抛出的异常对象作为参数传递给 `error_callback`执行 |
+|          | `processpool_object.close()`                                 | 停止向进程池添加进程                                         |
+|          | `processpool_object.join()`                                  | 等待,完成了所有要运行的子进程对象后,再往下执行代码           |
+|          | `multiprocessing.Manager()`                                  | 这个对象可以用于在不同进程中共享数据                         |
+|          | `multiprocessing.managers.BaseManager(address=('', 5000), authkey=b'passwd')` | 创建一个多进程管理器                                         |
 
 ```python
 from multiprocessing import Process
