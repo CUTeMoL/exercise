@@ -1614,14 +1614,14 @@ t2.join()
 
 ### queue:
 
-| 函数                       | 说明                     |
-| ------------------------ | ---------------------- |
-| `queue.Queue()`          | 创建一个queue对象            |
-| `queue_object.put(item)` | 添加元素(队列满的时候会卡住等待空闲时添加) |
-| `queue_object.get()`     | 获取元素(没获取到时会卡住等待直到获取成功) |
-| `queue_object.qsize()`   | 获取元素个数                 |
-| `queue_object.empty()`   | 判断是否为空                 |
-| `queue_object.full()`    | 判断是否已满                 |
+| 函数                                  | 说明                                                         |
+| ------------------------------------- | ------------------------------------------------------------ |
+| `queue.Queue(n)`                      | 创建一个queue对象,限制队列的个数为5个                        |
+| `queue_object.put(Object, timeout=n)` | 添加元素(队列满的时候会阻塞,直到空闲时添加),`timeout`设置的秒数超时时,会`raise Full` |
+| `queue_object.get()`                  | 获取元素(没获取到时会阻塞等待直到获取成功),`timeout`设置的秒数超时时,会`raise Empty` |
+| `queue_object.qsize()`                | 获取元素个数                                                 |
+| `queue_object.empty()`                | 判断是否为空                                                 |
+| `queue_object.full()`                 | 判断是否已满                                                 |
 
 ### concurrent.futures:
 
