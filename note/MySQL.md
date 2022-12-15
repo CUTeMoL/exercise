@@ -3041,12 +3041,13 @@ mysqldump --single-transaction --master-data=1 -R --triggers -E -B database_name
 --triggers # 触发器
 -E=--events # 事件
 -B=--database # 数据库
--w=where # 某记录
+-w=--where # 某记录
+--lock-tables # 锁表
 --master-data=1 # 获取到二进制日志文件的位置
 --quick # 一行行备份，不经过buffer，默认打开
 --hex-blob # 二进制数据已十六进制的形式导出
 --set-gtid-purged=OFF # 取消标记GTID,备份后导入到其他数据库会生成新的GTID,迁移或还原单个库时用,做从库时不要使用
---column-statistics=0 # 
+--column-statistics=0 # 不导出分析
 ```
 
 一步备份并压缩
@@ -3157,12 +3158,26 @@ Q2.多个线程怎么对一张表进行备份？
 
 ```shell
 innobackupex --compress --compress-threads=8 --stream=xbstream --user=root --parallel=4   ./ > backup.xbstream
---compress        压缩
---compress-threads=8    压缩用的线程数
---stream=xbstream        流的格式
---parallel=4        备份用的线程数
---throttle=        限制备份时的IO速度
---user=root        指数据库的user
+--compress=level        # 压缩
+--uncompress # 解压
+--compress-threads=8    # 压缩用的线程数
+--stream=xbstream        # 流的格式
+--parallel=4        # 备份用的线程数
+--throttle=        # 限制备份时的IO速度
+--defaults-file=${CONFIG_FILE} # 配置文件
+-socket=${SOCKET_FILE} # socket路径
+-user=${DBUSER} # 指数据库的user
+--password=${DBPASS} # user的密码
+--slave-info # 复制的信息
+--safe-slave-backup # 检测从库是否有打开的临时表，如果没有就stop SQL thread开始备份，备份完后start SQL thread
+--target-dir # 没压缩的时候使用
+--sleep=n # 每备份1M数据,停止n毫秒,减小对正常业务的影响
+--remote-host=${HOSTNAME} # 通过ssh将备份数据存储到进程服务器上;
+--redo-only # 增量备份时使用,强制备份日志时只redo ,跳过rollback。这在做增量备份时非常必要。
+--apply-log # 增量备份时使用
+--use-memory= # 限制内存
+--databases= # 指定库
+--copy-back # 还原时指定datadir
 ```
 
 percona-xtrabackup备份表空间数据的同时也会备份REDO日志
@@ -3631,7 +3646,7 @@ grant replication slave on *.* to 'replication_name'@'IP' ;
 2.刷新表并锁表
 
 ```sql
-flush tables with read lock; # 其实不需要锁表
+flush tables with read lock; # 所有库所有表都被锁定只读,写操作阻塞,如果使用mysqldumpd导出时添加了--master-data，则不需要锁表
 ```
 
 3.记录position
@@ -3989,37 +4004,97 @@ mysql --login-path=root_3306
 
 ## 二十六、常见错误
 
+### 备份
+
+| 错误                                                                                                                                                      | 原因                                              | 解决                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------- |
+| `mysqldump: Couldn’t execute 'SELECT COLUMN_NAME, JSON_EXTRACT(HISTOGRAM, ‘$.“number-of-buckets-specified”’) FROM information_schema.COLUMN_STATISTICS` | `mysqldump`8.0以上版本会默认导出`information_schema`的分析表 | 使用`--column-statistics=0`来禁用这一功能 |
+|                                                                                                                                                         |                                                 |                                  |
+
+
+
+### 还原
+
+| 错误                                                                      | 原因             | 处理                                            |
+| ----------------------------------------------------------------------- | -------------- | --------------------------------------------- |
+| 使用binlog还原数据库时`mysqlbinlog: error writing file “UNOPENED” <errcode 22>` | `binlog`文件读取失败 | 先将`binlog`还原成`.sql`文件,然后在MySQL连接中使用`source`还原 |
+|                                                                         |                |                                               |
+
+
+
 ### 主从同步
 
 #### `Slave_IO_Running: Connecting`、`Slave_SQL_Running:Yes`
 
-| `Last_IO_Error`                                              | 原因                                                         | 处理                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| `Authentication plugin 'caching_sha2_password' reported error` | 8.0.26之后的版本出现，在从库连接主库的时候使用的是不被 caching_sha2_password认可的RSA公钥，所以主库MySQL拒绝了数据库连接的请求 | `${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p`使用`--get-server-public-key`登录一次主库即可 |
-|                                                              |                                                              | `CREATE USER 'replica'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'XXXX';`不使用密码插件`caching_sha2_password`即可 |
-| `Got fatal error 1236 from master when reading data from binary log: 'Slave has more GTIDs than the master has, using the master's SERVER_UUID. This may indicate that the end of the binary log was truncated or that the last binary log file was lost, e.g., after a power or disk failure when sync_binlog != 1. The master may or may not have rolled back transactions that were already replicated to the slave. Suggest to replicate any transactions that master has rolled back from slave to master, and/or commit empty transactions on master to account for transactions that have been'` | 原因,MySQL主库还原过,或者执行过`reset master`                | 重做同步                                                     |
-|                                                              |                                                              |                                                              |
+| `Last_IO_Error`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 原因                                                                                | 处理                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Authentication plugin 'caching_sha2_password' reported error`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 8.0.26之后的版本出现，在从库连接主库的时候使用的是不被 caching_sha2_password认可的RSA公钥，所以主库MySQL拒绝了数据库连接的请求 | `${slave_base_dir}/bin/mysql --get-server-public-key -h${master_ipaddress} -u${replica_user} -p`使用`--get-server-public-key`登录一次主库即可 |
+|                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |                                                                                   | `CREATE USER 'replica'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'XXXX';`不使用密码插件`caching_sha2_password`即可                      |
+| `Got fatal error 1236 from master when reading data from binary log: 'Slave has more GTIDs than the master has, using the master's SERVER_UUID. This may indicate that the end of the binary log was truncated or that the last binary log file was lost, e.g., after a power or disk failure when sync_binlog != 1. The master may or may not have rolled back transactions that were already replicated to the slave. Suggest to replicate any transactions that master has rolled back from slave to master, and/or commit empty transactions on master to account for transactions that have been'` | 原因,MySQL主库还原过,或者执行过`reset master`                                                 | 重做同步                                                                                                                                |
+|                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |                                                                                   |                                                                                                                                     |
 
 #### `Slave_IO_Running: no`、`Slave_SQL_Running:yes`
 
-| `Last_IO_Error`                                              | 原因                                                         | 处理                               |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------- |
-| `Got fatal error 1236 from master when reading data from binary log: 'Could not open log file'` | binlog文件无法打开,调查后发现是空语句文件(有binlog的格式,但是没有事件产生) | 使用`change master to`跳过该binlog |
-| `Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file` | binlog缺失                                                   | 重新修复数据库,然后主从同步        |
-|                                                              |                                                              |                                    |
+| `Last_IO_Error`                                                                                                                    | 原因                                            | 处理                            |
+| ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ----------------------------- |
+| `Got fatal error 1236 from master when reading data from binary log: 'Could not open log file'`                                    | binlog文件无法打开,调查后发现是空语句文件(有binlog的格式,但是没有事件产生) | 使用`change master to`跳过该binlog |
+| `Got fatal error 1236 from master when reading data from binary log: 'Could not find first log file name in binary log index file` | binlog缺失                                      | 重新修复数据库,然后主从同步                |
+|                                                                                                                                    |                                               |                               |
 
 #### `Slave_IO_Running: Yes`、`Slave_SQL_Running:No`
 
-| `Last_SQL_Error`                                             | 原因                                                         | 处理                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| `Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log` | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile`                                 |
-|                                                              |                                                              | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
-|                                                              |                                                              | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步 |
-|                                                              | 主从库字符集不一致                                           | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集 |
+| `Last_SQL_Error`                                                                               | 原因                              | 处理                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log` | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile`                                                                                       |
+|                                                                                                |                                 | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
+|                                                                                                |                                 | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步                                                                            |
+|                                                                                                | 主从库字符集不一致                       | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集                        |
 
 ### 建库建表
 
-| 建表                                                         | 原因                                                         | 处理                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 建表                                                                     | 原因                                                                     | 处理                                                            |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `Error 1071: Specified key was too long; max key length is 767 bytes.` | 由于MySQL5.6的InnoDB引擎表索引字段长度的限制为767字节，因此对于多字节字符集的大字段或者多字段组合，创建索引时会出现该问题。 | `default-storage-engine=INNODB` <br/>`innodb_large_prefix=on` |
 
+## 二十七、用户管理
+
+### 显示已有用户
+
+```sql
+-- 5.7以下
+select concat(user,"@",host) as account,plugin from mysql.user;
+-- 5.7以上(包括5.7)
+select concat(user,"@",host) as account,plugin,authentication_string from mysql.user;
+
+```
+
+### 显示用户权限
+
+```sql
+SHOW GRANTS FOR "root"@"localhost" ;
+```
+
+### 创建用户
+
+```sql
+-- 8.0以后
+CREATE USER 'native'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password!';
+CREATE USER 'native'@'localhost' IDENTIFIED WITH mysql_native_password BY PASSWORD '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9';
+-- 通用
+CREATE USER 'lxw'@'localhost' IDENTIFIED BY '123456';
+```
+
+### 授权用户
+
+```sql
+-- 通用
+GRANT ALL PRIVILEGES ON *.* TO 'lxw'@'localhost';
+-- 8.0以前
+GRANT SELECT, REPLICATION CLIENT ON *.* TO 'lxw'@'localhost' IDENTIFIED BY PASSWORD '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9';
+```
+
+### 回收权限
+
+```sql
+REVOKE ALL PRIVILEGES on  *.* from 'lxw'@'localhost';
+```
