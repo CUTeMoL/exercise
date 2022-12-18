@@ -1583,7 +1583,7 @@ if __name__=='__main__':
 |          | `thread_object.start()`                                      | 启动线程                                                     |
 |          | `thread_object.join()`                                       | 等待,完成了要运行的线程对象,再往下执行代码                   |
 | 锁       | `threading.Lock()`                                           | 创建一个锁对象                                               |
-|          | `lock_object.acquire()`                                      | 让当前线程获取锁,其他线程会阻塞                              |
+|          | `lock_object.acquire()`                                      | 让当前线程获取锁,其他线程会阻塞,成功获取会返回`True`,可以使用`if lock_object.acquire():` |
 |          | `lock_object.release()`                                      | 让当前线程释放锁                                             |
 | 线程变量 | `threading.local()`                                          | 创建一个线程变量对象,每个线程`thread_object`都可以对他进行读写属性,线程之间赋值的属性互不干扰 |
 |          | `threading.active_count()`                                   | 当前活跃线程数                                               |
@@ -3163,17 +3163,29 @@ else:
 
 ### 第三方模块pexpect:
 
-|     |     |     |
-| --- | --- | --- |
-|     |     |     |
-|     |     |     |
-|     |     |     |
-|     |     |     |
-|     |     |     |
-|     |     |     |
-|     |     |     |
-|     |     |     |
-|     |     |     |
+|      |      |      |
+| ---- | ---- | ---- |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+|      |      |      |
+
+### 第三方模块gevent
+
+| 函数                                                     | 说明                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| `monkey.patch_all()`                                     | 猴子补丁,替换一下代码,需要先`from gevent import monkey` |
+| `gevent.spawn(function_object)`                          | 创建一个协程对象`coroutines_object`                     |
+| `coroutines_object.join()`                               | 阻塞                                                    |
+| `gevent.joinall(coroutines_object1, coroutines_object2)` | 阻塞                                                    |
+
+
 
 ## 十三、IO操作
 
