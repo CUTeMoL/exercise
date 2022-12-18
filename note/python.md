@@ -1576,17 +1576,17 @@ if __name__=='__main__':
 
 ### threading:
 
-|      | 函数                                                                          | 功能                                                      |
-| ---- | --------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 单线程  | `threading.Thread(target=func_name, name='threading_name', args=("str", ))` | 创建一个线程                                                  |
-|      | `threading.current_thread()`                                                | 当前线程的实例,具有`name`等属性                                     |
-|      | `thread_object.start()`                                                     | 启动线程                                                    |
-|      | `thread_object.join()`                                                      | 等待,完成了要运行的线程对象,再往下执行代码                                  |
-| 锁    | `threading.Lock()`                                                          | 创建一个锁对象                                                 |
-|      | `lock_object.acquire()`                                                     | 让当前线程获取锁                                                |
-|      | `lock_object.release()`                                                     | 让当前线程释放锁                                                |
-| 线程变量 | `threading.local()`                                                         | 创建一个线程变量对象,每个线程`thread_object`都可以对他进行读写属性,线程之间赋值的属性互不干扰 |
-|      | `threading.active_count()`                                                  | 当前活跃线程数                                                 |
+|          | 函数                                                         | 功能                                                         |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 单线程   | `threading.Thread(target=func_name, name='threading_name', args=("str", ))` | 创建一个线程                                                 |
+|          | `threading.current_thread()`                                 | 当前线程的实例,具有`name`等属性                              |
+|          | `thread_object.start()`                                      | 启动线程                                                     |
+|          | `thread_object.join()`                                       | 等待,完成了要运行的线程对象,再往下执行代码                   |
+| 锁       | `threading.Lock()`                                           | 创建一个锁对象                                               |
+|          | `lock_object.acquire()`                                      | 让当前线程获取锁,其他线程会阻塞                              |
+|          | `lock_object.release()`                                      | 让当前线程释放锁                                             |
+| 线程变量 | `threading.local()`                                          | 创建一个线程变量对象,每个线程`thread_object`都可以对他进行读写属性,线程之间赋值的属性互不干扰 |
+|          | `threading.active_count()`                                   | 当前活跃线程数                                               |
 
 ```python
 import threading
