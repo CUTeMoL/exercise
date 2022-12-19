@@ -283,6 +283,12 @@ netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝
 
 然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建）
 
+策略导出
+
+```cmd
+netsh ipsec static exportpolicy secpol.ipsec
+```
+
 ### 2. `taskschd.msc`
 
 查看计划任务
