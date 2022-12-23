@@ -45,7 +45,23 @@ git reset --hard ${commit id}
 --hard # 倒退版本时保持工作区和暂存区与正式仓库对应版本一致
 ```
 
+7.从远程仓库下载
 
+```shell
+git clone ${url}
+```
+
+8.推送到远程仓库
+
+```
+git push 
+```
+
+9.更新本地的仓库
+
+```
+git pull
+```
 
 n.设置
 
