@@ -399,3 +399,14 @@ tzutil.exe /s "China Standard Time" # 设定时区
 | `HKEY_LOCAL_MACHINE`  |     |
 | `HKEY_USERS`          |     |
 | `HKEY_CURRENT_CONFIG` |     |
+
+# tmp
+
+如果是非常驻进程修改了系统时间，那么通过上面步骤查看到的进程ID在任务管理器中是查看不到的，因为他们执行后就结束了，那么我们需要增加下系统日志的进程审核记录来获取到这些进程的信息。
+
+```
+reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit /v ProcessCreationIncludeCmdLine_Enabled /t REG_DWORD /d 1
+auditpol.exe /set /subcategory:"{0CCE922B-69AE-11D9-BED3-505054503030}" /success:enable /failure:enable
+gpupdate /force
+```
+
