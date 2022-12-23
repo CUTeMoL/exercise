@@ -63,7 +63,17 @@ git push
 git pull
 ```
 
-n.设置
+10.分支
+
+```shell
+git branch # 查看分支
+git branch ${branchname} # 创建分支
+git checkout ${branchname} # 切换分支
+git merge ${branchname} # 合并分支
+git branch -d ${branchname} # 删除分支
+```
+
+11.设置
 
 ```shell
 git config 
