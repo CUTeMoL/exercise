@@ -377,7 +377,7 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 `mysql5.6`复制原始库
 
 ```cmd
-copy "D:\Program Files\Sample\mysql-5.6.21\data" "E:\data"
+xcopy /E /Q /I "D:\Program Files\Sample\mysql-5.6.21\data" "E:\data"
 ```
 
 `mysql5.7`初始化数据库
@@ -1283,15 +1283,25 @@ innodb_purge_threads=4   # 设置回收线程数
 show variables like 'innodb%row%';
 ```
 
-REDUDENT:老版本，已经不用了
+#### REDUDENT:
 
-COMPACT:默认，存不下时使用行溢出叶
+老版本，已经不用了
 
-COMPRESSED:压缩
+#### COMPACT:
 
-DYNAMIC:通常等于COMPACT,大对象时只存指针，指针指向大对象的行溢出叶
+默认，存不下时使用行溢出叶
 
 *是否使用行溢出叶的判断标准是单行记录大小>page/2
+
+#### COMPRESSED:
+
+压缩
+
+#### DYNAMIC:
+
+通常等于COMPACT,大对象时只存指针，指针指向大对象的行溢出叶
+
+
 
 数据的块存储|PAGE的大小
 
@@ -1888,12 +1898,21 @@ MYSQL默认存储引擎是基于行（记录）存储
 
 压缩能提升性能，节省IO，但是CPU负载会变高
 
+通过row_format设置
+
+| row_format   | 说明                                                         |
+| ------------ | ------------------------------------------------------------ |
+| `Redundant`  | mysql5.0版本之前的行记录存储方式                             |
+| `Compact`    | 比`Redundant`格式消耗的磁盘空间和备份耗时更小，溢出列存储前768字节， |
+| `Dynamic`    | 默认，对比`Compact`只存储一个指针，长字段(发生行溢出)完全off-page存储 |
+| `Compressed` | key_block_size每个压缩页的大小，可选（1,2,4,8,16）,16不压缩<br/>设置的前提是:<br/>innodb_file_per_table=ON<br/>innodb_file_format = Barracuda |
+
 叶到buffer pool只需要一次解压，更新操作时会解压数据写一份，压缩数据写日志，压缩日志写不下时，解压数据才进行压缩，写回磁盘
 
 ```sql
 show variables like 'innodb_file_per_table'
 set global innodb_file_per_table
-alter table table_name row_format=compressed,key_block_size=8;  #默认16K压缩到8K
+alter table table_name row_format=compressed key_block_size=8;  #默认16K压缩到8K
 ```
 
 透明叶压缩|Transparent Page Compression
@@ -4098,3 +4117,37 @@ GRANT SELECT, REPLICATION CLIENT ON *.* TO 'lxw'@'localhost' IDENTIFIED BY PASSW
 ```sql
 REVOKE ALL PRIVILEGES on  *.* from 'lxw'@'localhost';
 ```
+
+## 二十八、DDL
+
+### DDL相关关键词
+
+| 关键词     | 作用                            |
+| ---------- | ------------------------------- |
+| `CREATE`   | 创建                            |
+| `ALTER`    | 修改                            |
+| `ADD`      | `ALTER`时添加`FILE`、`COLUMN`等 |
+| `DROP`     | 删除(包括表结构)                |
+| `TRUNCATE` | 删除(不包括表结构)              |
+
+### 示例
+
+```sql
+set names utf8mb4;
+-- 设置当前session的四个字符参数，character_set_client, character_set_results, character_set_connection, collation_connection
+use db;
+-- 切换库
+SET FOREIGN_KEY_CHECKS=0;
+-- 不使用外键检查
+CREATE TABLE `user` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '用户id:主键+自增+无符号',
+  `uid` varchar(128) NOT NULL COMMENT '用户名',
+  `ctime` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '无符号整型默认值0',
+  `status` tinyint(1) UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常|0删除|2停止统计',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uid_IDX` (`uid`) USING BTREE,
+  INDEX `status_IDX` (`status`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8 COMMENT='utf8mb4且排序规则为utf8mb4_general_ci，uid使用Btree索引，status索引，采用压缩';
+
+```
+
