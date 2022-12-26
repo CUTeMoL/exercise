@@ -4157,10 +4157,13 @@ CREATE TABLE `user` (
 
 ```sql
 -- 添加字段
-ALTER TABLE t1
+ALTER TABLE t1 
 ADD column_name1 datatype;
 -- 修改字段
-ALTER TABLE emp 
-MODIFY COLUMN col_tmp varchar(10);
+ALTER TABLE t1 
+MODIFY COLUMN col varchar(10);
+-- 删除字段
+ALTER TABLE t1 
+DROP COLUMN col;
 ```
 
