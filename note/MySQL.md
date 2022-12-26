@@ -4132,6 +4132,8 @@ REVOKE ALL PRIVILEGES on  *.* from 'lxw'@'localhost';
 
 ### 示例
 
+建表
+
 ```sql
 set names utf8mb4;
 -- 设置当前session的四个字符参数，character_set_client, character_set_results, character_set_connection, collation_connection
@@ -4149,5 +4151,16 @@ CREATE TABLE `user` (
   INDEX `status_IDX` (`status`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8 COMMENT='utf8mb4且排序规则为utf8mb4_general_ci，uid使用Btree索引，status索引，采用压缩';
 
+```
+
+表的修改
+
+```sql
+-- 添加字段
+ALTER TABLE t1
+ADD column_name1 datatype;
+-- 修改字段
+ALTER TABLE emp 
+MODIFY COLUMN col_tmp varchar(10);
 ```
 
