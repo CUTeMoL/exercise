@@ -4153,17 +4153,25 @@ CREATE TABLE `user` (
 
 ```
 
-表的修改
+字段的修改
 
 ```sql
 -- 添加字段
 ALTER TABLE t1 
-ADD column_name1 datatype;
+  ADD column_name1 datatype;
 -- 修改字段
 ALTER TABLE t1 
-MODIFY COLUMN col varchar(10);
+  MODIFY COLUMN col varchar(10);
 -- 删除字段
 ALTER TABLE t1 
-DROP COLUMN col;
+  DROP COLUMN col;
+```
+
+外键约束
+
+```sql
+ALTER TABLE test01
+  ADD CONSTRAINT fk_name foreign key(column1)
+    REFERENCES test02(column2_fk);
 ```
 
