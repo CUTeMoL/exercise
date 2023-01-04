@@ -3067,6 +3067,9 @@ mysqldump --single-transaction --master-data=1 -R --triggers -E -B database_name
 --hex-blob # 二进制数据已十六进制的形式导出
 --set-gtid-purged=OFF # 取消标记GTID,备份后导入到其他数据库会生成新的GTID,迁移或还原单个库时用,做从库时不要使用
 --column-statistics=0 # 不导出分析
+--no-data # 仅导出表结构
+--no-create-db # 不创建库
+--no-create-info # 不创建表结构
 ```
 
 一步备份并压缩
@@ -4132,7 +4135,7 @@ REVOKE ALL PRIVILEGES on  *.* from 'lxw'@'localhost';
 
 ### 示例
 
-建表
+#### 建表
 
 ```sql
 set names utf8mb4;
@@ -4150,10 +4153,14 @@ CREATE TABLE `user` (
   UNIQUE INDEX `uid_IDX` (`uid`) USING BTREE,
   INDEX `status_IDX` (`status`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8 COMMENT='utf8mb4且排序规则为utf8mb4_general_ci，uid使用Btree索引，status索引，采用压缩';
-
+SET FOREIGN_KEY_CHECKS=1;
+-- 复制表为新表
+CREATE TABLE new_table_name (
+    SELECT * FROM old_table_name
+);
 ```
 
-字段的修改
+#### 字段的修改
 
 ```sql
 -- 添加字段
@@ -4165,13 +4172,111 @@ ALTER TABLE t1
 -- 删除字段
 ALTER TABLE t1 
   DROP COLUMN col;
+-- 字段改名
+ALTER TABLE t1
+  RENAME COLUMN old_col_name TO new_col_name;
 ```
 
-外键约束
+#### 外键约束
 
 ```sql
 ALTER TABLE test01
-  ADD CONSTRAINT fk_name foreign key(column1)
-    REFERENCES test02(column2_fk);
+  ADD CONSTRAINT fk_name FOREIGN KEY(column1)
+    REFERENCES test02(column2_fk)
+      ON DELETE RESTRICT ON UPDATE RESTRICT;
+```
+
+| 约束级别    | 说明                 |
+| ----------- | -------------------- |
+| `restrict`  | 存在外键则禁止删除   |
+| `no action` | 存在外键则禁止删除   |
+| `cascade`   | 存在外键则一起删除   |
+| `set null`  | 存在外键则设置为Null |
+
+#### 检查约束
+
+```sql
+ALTER TABLE test01
+  ADD CONSTRAINT ck_name CHECK(column>=1);
+```
+
+`MySQL`可以运行但不生效
+
+#### 索引
+
+```SQL
+-- 添加索引
+ALTER TABLE test01 ADD INDEX KEY_COL5(col5);
+ALTER TABLE test01 ADD UNIQUE INDEX KEY_COL4(col4);
+ALTER TABLE test03 ADD PRIMARY KEY(id);
+-- 删除索引
+DROP INDEX index_name ON table_object;
+```
+
+清空表
+
+```sql
+TRUNCATE TABLE t1;
+```
+
+
+
+## 二十九、DML
+
+### DML关键词
+
+| 关键词   | 功能 |
+| -------- | ---- |
+| `INSERT` | 插入 |
+| `UPDATE` | 更新 |
+| `DELETE` | 删除 |
+
+### 示例
+
+#### 插入
+
+```sql
+-- 常规
+INSERT INTO table_object (
+    column1, column2, column3
+)
+  VALUES(
+    value1, value2, value3
+);
+-- 从一个查询结果插入
+INSERT INTO table_name1
+  SELECT * FROM table_name2;
+-- 从一个查询结果插入(指定字段)
+INSERT INTO table_name1(
+    column1, column2
+) SELECT column1, column2 FROM table_name2;
+```
+
+#### 行记录更新
+
+```sql
+UPDATE table_name 
+  SET column_name1=value1, column_name2=value2
+    WHERE column_name3=value3;
+-- 表连接更新
+UPDATE table_name1
+  SET table_name1.column_name1=table_name2.column_name1
+  FROM table_name1 t1, table_name2 t2
+    WHERE t1.column_name2=t2.column_name2;
+-- 设置字段为Null
+UPDATE table_name1
+  SET column_name1=NULL
+    WHERE column_name2=value2;
+```
+
+#### 行记录删除
+
+```sql
+DELETE FROM table_name
+  WHERE column_name1=value1;
+-- 通过表连接条件筛选数据
+DELETE table_name1
+  FROM table_name1 t1, table_name2 t2
+    WHERE t1.column1=t2.column1 AND t1.column1=value1;
 ```
 

@@ -24,20 +24,20 @@ LIMIT begin_num count_num;
 FROM > WHERE > GROUP BY > HAVING > SELECT创建的新字段 > ORDER BY > LIMIT > SELECT
 ```
 
-| 关键词             | 作用                                      |
-| --------------- | --------------------------------------- |
-| `SELECT`        | 定义查询字段                                  |
-| `TOP`           | 限制显示前`n`行，或前`n percent`的数据，仅SQLServer使用 |
-| `INTO`          | 查询结果插入到新表，MySQL中`OUTFILE`可以导出到文件        |
-| `FROM`          | 来自哪张表(如果来自子查询则要添加临时表名)                  |
-| `INNER JOIN ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null`   |
-| `LEFT JOIN ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`      |
-| `RIGHT JOIN ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`      |
-| `WHERE`         | 筛选条件                                    |
-| `GROUP BY`      | 分组,去重                                   |
-| `HAVING`        | 过滤                                      |
-| `ORDER BY`      | 排序 `asc`升序 `desc`降序                     |
-| `LIMIT x, n`    | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数,仅MySQL  |
+| 关键词              | 作用                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| `SELECT`            | 定义查询字段                                                 |
+| `TOP`               | 限制显示前`n`行，或前`n percent`的数据，仅SQLServer使用      |
+| `INTO`              | 查询结果插入到新表，MySQL中`OUTFILE`可以导出到文件           |
+| `FROM`              | 来自哪张表(如果来自子查询则要添加临时表名)                   |
+| `INNER JOIN ... ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null` |
+| `LEFT JOIN ... ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`          |
+| `RIGHT JOIN ... ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`          |
+| `WHERE`             | 筛选条件                                                     |
+| `GROUP BY`          | 分组,去重                                                    |
+| `HAVING`            | 过滤                                                         |
+| `ORDER BY`          | 排序 `asc`升序 `desc`降序                                    |
+| `LIMIT x, n`        | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数,仅MySQL |
 
 ### 示例
 
@@ -293,7 +293,6 @@ FROM old_table_name;
 CREATE TABLE new_table_name (
     SELECT * FROM old_table_name
 );
--- 仅sqlserver
 ```
 
 ### 查询存在的视图
@@ -846,46 +845,46 @@ TRUNCATE TABLE t1;
 
 ## 八、函数
 
-| 类型                   | 函数                                                        | 作用                                                         |
-| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
-| 计算                   | `sum()`                                                     | 总和，忽略`null`                                             |
-|                        | `avg()`                                                     | 平均，忽略`null`                                             |
-|                        | `max()`                                                     | 最大，忽略`null`                                             |
-|                        | `min()`                                                     | 最小，忽略`null`                                             |
-|                        | `count()`                                                   | 统计次数，忽略`null`                                         |
-|                        | `round(x, y)`                                               | 对`x`四舍五入, 保留小数点`y`位（y可以是负数）                |
-|                        | `floor(x)`                                                  | 对`x`进行向下取整,如`-1.9`取整为`-2`                         |
-|                        |                                                             |                                                              |
-| 字符串                 | `concat('str1', 'str2')`                                    | 连接字符串                                                   |
-|                        | `replace('str', 'old', 'new')`                              | 替换                                                         |
-|                        | `left('str', n)`                                            | 截取左边的`n`个字符                                          |
-|                        | `right('str', n)`                                           | 截取右边的`n`个字符                                          |
-|                        | `substring('str', n, len)`                                  | 从左边的`n`个字符开始，截取`len`个字符                       |
-|                        |                                                             |                                                              |
-| 数据类型转换           | `cast(x as type)`                                           | 将`x`转换成新类型`type`                                      |
-|                        | `convert(type(length), data_to_beconverted, style)`         | 数据类型转换，通常用于时间格式的转换，参考地址 ： https://www.w3school.com.cn/sql/func_convert.asp |
-| 日期时间函数           | `year(date)`                                                | 获取年份                                                     |
-|                        | `month(date)`                                               | 获取月份                                                     |
-|                        | `day(date)`                                                 | 获取日                                                       |
-|                        | `week(date)`                                                | 获取一年中的第几个周,仅MySQL                                 |
-|                        | `weekday(date)`                                             | 获取周几(0-6)                                                |
-|                        | `getdate()`                                                 | SQLServer获取当前日期时间                                    |
-|                        | `now()`                                                     | MySQL获取当前日期时间(2022-12-25 21:33:43)                   |
-|                        | `current_timestamp()`                                       | MySQL获取当前日期时间(2022-12-25 21:33:43)                   |
-|                        | `date_add(date, INTERVAL expr type)`                        | 时间加操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR` |
-|                        | `date_sub(date, INTERVAL expr type)`                        | 时间减操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR` |
-|                        | `datediff(date1, date2)`                                    | 对比两个日期之间的间隔天数                                   |
-|                        | `date_format(date, format)`                                 | 将日期和时间格式化`format`可以是`%Y/%M/%d %H:%i:S`           |
-|                        | `datename(type, date)`                                      | 获取日期和时间的一部分，格式化后返回为字符串，仅SQLServer    |
-| 条件判断函数           | `if(expr, 'v1', 'v2')`                                      | 如果表达式`expr`结果为`True`返回`v1`,`False`返回`v2`         |
-|                        | `case expr when v1 then r1 [when v2 then r2] [else rn] end` | 如果表达式`expr`结果为`v1`返回`r1`,`v2`返回`r2`其它返回`rn`  |
-|                        | `case when expr then r1 [when expr then r2] [else rn] end`  | 如果表达式`expr`成立，返回`r1`，匹配一条后，就不继续匹配了   |
-| 窗口函数               | `rank() over(PARTITION BY col1 ORDER BY col2 DESC)`         | 在`ORDER BY`之前生效,根据`PARTITION BY`分区(不去重，可选则不分区，则对整张表排序)，排序时`ORDER BY`会赋值序号，窗口函数只能在`SELECT`中使用 |
-| 窗口函数赋值序号的方式 | `rank()`                                                    | 跳跃排序, 如`1,1,3,4`                                        |
-|                        | `dense_rank()`                                              | 并列连续, 如`1,1,2,3`                                        |
-|                        | `row_number()`                                              | 连续累加, 如`1,2,3,4`                                        |
-| 窗口函数偏移分析函数   | `lag(col1, n) over(partition by col2 order by col3)`        | `lag()`根据字段`col1`, 向上偏移`n`位                         |
-|                        | `lead(col1, n)`                                             | 向下偏移                                                     |
+| 类型                   | 函数                                                         | 作用                                                         |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 计算                   | `sum()`                                                      | 总和，忽略`null`                                             |
+|                        | `avg()`                                                      | 平均，忽略`null`                                             |
+|                        | `max()`                                                      | 最大，忽略`null`                                             |
+|                        | `min()`                                                      | 最小，忽略`null`                                             |
+|                        | `count()`                                                    | 统计次数，忽略`null`                                         |
+|                        | `round(x, y)`                                                | 对`x`四舍五入, 保留小数点`y`位（y可以是负数）                |
+|                        | `floor(x)`                                                   | 对`x`进行向下取整,如`-1.9`取整为`-2`                         |
+|                        |                                                              |                                                              |
+| 字符串                 | `concat('str1', 'str2')`                                     | 连接字符串                                                   |
+|                        | `replace('str', 'old', 'new')`                               | 替换                                                         |
+|                        | `left('str', n)`                                             | 截取左边的`n`个字符                                          |
+|                        | `right('str', n)`                                            | 截取右边的`n`个字符                                          |
+|                        | `substring('str', n, len)`                                   | 从左边的`n`个字符开始，截取`len`个字符                       |
+|                        |                                                              |                                                              |
+| 数据类型转换           | `cast(x as type)`                                            | 将`x`转换成新类型`type`                                      |
+|                        | `convert(type(length), data_to_beconverted, style)`          | 数据类型转换，通常用于时间格式的转换，参考地址 ： https://www.w3school.com.cn/sql/func_convert.asp |
+| 日期时间函数           | `year(date)`                                                 | 获取年份                                                     |
+|                        | `month(date)`                                                | 获取月份                                                     |
+|                        | `day(date)`                                                  | 获取日                                                       |
+|                        | `week(date)`                                                 | 获取一年中的第几个周,仅MySQL                                 |
+|                        | `weekday(date)`                                              | 获取周几(0-6)                                                |
+|                        | `getdate()`                                                  | SQLServer获取当前日期时间                                    |
+|                        | `now()`                                                      | MySQL获取当前日期时间(2022-12-25 21:33:43)                   |
+|                        | `current_timestamp()`                                        | MySQL获取当前日期时间(2022-12-25 21:33:43)                   |
+|                        | `date_add(date, INTERVAL expr type)`                         | 时间加操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR` |
+|                        | `date_sub(date, INTERVAL expr type)`                         | 时间减操作, `expr`是间隔`n`, `type`值`SECOND`,`MINUTE`,`HOUR`,`DAY`,`WEEK`,`MONTH`,`QUARTER`,`YEAR` |
+|                        | `datediff(date1, date2)`                                     | 对比两个日期之间的间隔天数                                   |
+|                        | `date_format(date, format)`                                  | 将日期和时间格式化`format`可以是`%Y/%M/%d %H:%i:S`           |
+|                        | `datename(type, date)`                                       | 获取日期和时间的一部分，格式化后返回为字符串，仅SQLServer    |
+| 条件判断函数           | `if(expr, 'v1', 'v2')`                                       | 如果表达式`expr`结果为`True`返回`v1`,`False`返回`v2`         |
+|                        | `case object when v1 then r1 [when v2 then r2] [else rn] end` | 如果对象`object`结果为`v1`返回`r1`,`v2`返回`r2`其它返回`rn`  |
+|                        | `case when expr then r1 [when expr then r2] [else rn] end`   | 如果表达式`expr`成立，返回`r1`，匹配一条后，就不继续匹配了   |
+| 窗口函数               | `rank() over(PARTITION BY col1 ORDER BY col2 DESC)`          | 在`ORDER BY`之前生效,根据`PARTITION BY`分区(不去重，可选则不分区，则对整张表排序)，排序时`ORDER BY`会赋值序号，窗口函数只能在`SELECT`中使用 |
+| 窗口函数赋值序号的方式 | `rank()`                                                     | 跳跃排序, 如`1,1,3,4`                                        |
+|                        | `dense_rank()`                                               | 并列连续, 如`1,1,2,3`                                        |
+|                        | `row_number()`                                               | 连续累加, 如`1,2,3,4`                                        |
+| 窗口函数偏移分析函数   | `lag(col1, n) over(partition by col2 order by col3)`         | `lag()`根据字段`col1`, 向上偏移`n`位                         |
+|                        | `lead(col1, n)`                                              | 向下偏移                                                     |
 
 ## 九、数据类型
 
