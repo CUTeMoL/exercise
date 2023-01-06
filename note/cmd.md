@@ -257,6 +257,23 @@ xcopy /E /Q /I /Y src dest
 /Y # 确认覆盖
 ```
 
+### 24.tree
+
+```cmd
+TREE
+显示当前文件夹下所有子目录
+/F 显示文件名
+/A 使用 ASCII 字符,而不使用扩展字符
+```
+
+### 25.chkdsk
+
+```cmd
+CHKDSK
+/F 将检查所有磁盘，并修复磁盘错误
+
+```
+
 ## 二、管理工具
 
 ### 1. `secpol.msc`
@@ -389,6 +406,10 @@ tzutil.exe /s "China Standard Time" # 设定时区
 
 已经弃用，可以使用`Get-WmiObject`替代
 
+```cmd
+wmic process where name="process name" # 查询运行程序
+```
+
 ### 15.`regedit`
 
 注册表,树形数据库管理配置文件
@@ -410,4 +431,3 @@ reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit /v 
 auditpol.exe /set /subcategory:"{0CCE922B-69AE-11D9-BED3-505054503030}" /success:enable /failure:enable
 gpupdate /force
 ```
-
