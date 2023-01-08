@@ -552,6 +552,7 @@ AS
 -- output可以输出这个变量
 -- CREATE改ALTER为修改存储过程
 -- SQLServer
+
 CREATE PROCEDURE procedure_name(
     IN variable1 int,
     OUT variable2 varchar(20),
@@ -559,9 +560,12 @@ CREATE PROCEDURE procedure_name(
 )
 BEGIN
     code
-END
+END;
+call procedure_name;
 -- IN|OUT|INOUT,输入|输出|输入输出
 -- MySQL
+
+
 ```
 
 SQLServer创建自定义标量值函数
