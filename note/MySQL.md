@@ -4213,7 +4213,58 @@ ALTER TABLE test03 ADD PRIMARY KEY(id);
 DROP INDEX index_name ON table_object;
 ```
 
-清空表
+#### 视图
+
+```sql
+CREATE VIEW view_name(
+    column_name1, column_name2
+) AS (
+    SELECT * FROM table_name
+);
+-- 示例
+CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER = `root`@`localhost` SQL SECURITY DEFINER VIEW `test`.`event_history` AS SELECT
+	`performance_schema`.`events_statements_history`.`EVENT_ID` AS `EVENT_ID`,
+	from_unixtime(((
+				unix_timestamp(
+					sysdate()) - (
+				SELECT
+					`performance_schema`.`global_status`.`VARIABLE_VALUE` 
+				FROM
+					`performance_schema`.`global_status` 
+				WHERE
+				( `performance_schema`.`global_status`.`VARIABLE_NAME` = 'Uptime' ))) + ( `performance_schema`.`events_statements_history`.`TIMER_START` / 1000000000000 ))) AS `Name_exp_2`,
+	from_unixtime(((
+				unix_timestamp(
+					sysdate()) - (
+				SELECT
+					`performance_schema`.`global_status`.`VARIABLE_VALUE` 
+				FROM
+					`performance_schema`.`global_status` 
+				WHERE
+				( `performance_schema`.`global_status`.`VARIABLE_NAME` = 'Uptime' ))) + ( `performance_schema`.`events_statements_history`.`TIMER_END` / 1000000000000 ))) AS `Name_exp_3`,
+	`performance_schema`.`events_statements_history`.`SQL_TEXT` AS `SQL_TEXT` 
+FROM
+	`performance_schema`.`events_statements_history`;
+```
+
+#### 存储过程
+
+```sql
+CREATE PROCEDURE procedure_name(
+    IN variable1 int,
+    OUT variable2 varchar(20),
+    INOUT variable3 char(20)
+)
+BEGIN
+    code
+END;
+-- 调用存储过程
+call procedure_name(@variable1, @variable2, @variable3);
+```
+
+
+
+#### 清空表
 
 ```sql
 TRUNCATE TABLE t1;
