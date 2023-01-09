@@ -1301,8 +1301,6 @@ show variables like 'innodb%row%';
 
 通常等于COMPACT,大对象时只存指针，指针指向大对象的行溢出叶
 
-
-
 数据的块存储|PAGE的大小
 
 类似文件系统 以16K为一单位存放数据，不满16K的数据也要占16K
@@ -1900,11 +1898,11 @@ MYSQL默认存储引擎是基于行（记录）存储
 
 通过row_format设置
 
-| row_format   | 说明                                                         |
-| ------------ | ------------------------------------------------------------ |
-| `Redundant`  | mysql5.0版本之前的行记录存储方式                             |
-| `Compact`    | 比`Redundant`格式消耗的磁盘空间和备份耗时更小，溢出列存储前768字节， |
-| `Dynamic`    | 默认，对比`Compact`只存储一个指针，长字段(发生行溢出)完全off-page存储 |
+| row_format   | 说明                                                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `Redundant`  | mysql5.0版本之前的行记录存储方式                                                                                                    |
+| `Compact`    | 比`Redundant`格式消耗的磁盘空间和备份耗时更小，溢出列存储前768字节，                                                                               |
+| `Dynamic`    | 默认，对比`Compact`只存储一个指针，长字段(发生行溢出)完全off-page存储                                                                            |
 | `Compressed` | key_block_size每个压缩页的大小，可选（1,2,4,8,16）,16不压缩<br/>设置的前提是:<br/>innodb_file_per_table=ON<br/>innodb_file_format = Barracuda |
 
 叶到buffer pool只需要一次解压，更新操作时会解压数据写一份，压缩数据写日志，压缩日志写不下时，解压数据才进行压缩，写回磁盘
@@ -4033,16 +4031,12 @@ mysql --login-path=root_3306
 | `mysqldump: Couldn’t execute 'SELECT COLUMN_NAME, JSON_EXTRACT(HISTOGRAM, ‘$.“number-of-buckets-specified”’) FROM information_schema.COLUMN_STATISTICS` | `mysqldump`8.0以上版本会默认导出`information_schema`的分析表 | 使用`--column-statistics=0`来禁用这一功能 |
 |                                                                                                                                                         |                                                 |                                  |
 
-
-
 ### 还原
 
 | 错误                                                                      | 原因             | 处理                                            |
 | ----------------------------------------------------------------------- | -------------- | --------------------------------------------- |
 | 使用binlog还原数据库时`mysqlbinlog: error writing file “UNOPENED” <errcode 22>` | `binlog`文件读取失败 | 先将`binlog`还原成`.sql`文件,然后在MySQL连接中使用`source`还原 |
 |                                                                         |                |                                               |
-
-
 
 ### 主从同步
 
@@ -4087,7 +4081,6 @@ mysql --login-path=root_3306
 select concat(user,"@",host) as account,plugin from mysql.user;
 -- 5.7以上(包括5.7)
 select concat(user,"@",host) as account,plugin,authentication_string from mysql.user;
-
 ```
 
 ### 显示用户权限
@@ -4125,13 +4118,13 @@ REVOKE ALL PRIVILEGES on  *.* from 'lxw'@'localhost';
 
 ### DDL相关关键词
 
-| 关键词     | 作用                            |
-| ---------- | ------------------------------- |
-| `CREATE`   | 创建                            |
-| `ALTER`    | 修改                            |
+| 关键词        | 作用                         |
+| ---------- | -------------------------- |
+| `CREATE`   | 创建                         |
+| `ALTER`    | 修改                         |
 | `ADD`      | `ALTER`时添加`FILE`、`COLUMN`等 |
-| `DROP`     | 删除(包括表结构)                |
-| `TRUNCATE` | 删除(不包括表结构)              |
+| `DROP`     | 删除(包括表结构)                  |
+| `TRUNCATE` | 删除(不包括表结构)                 |
 
 ### 示例
 
@@ -4186,11 +4179,11 @@ ALTER TABLE test01
       ON DELETE RESTRICT ON UPDATE RESTRICT;
 ```
 
-| 约束级别    | 说明                 |
-| ----------- | -------------------- |
-| `restrict`  | 存在外键则禁止删除   |
-| `no action` | 存在外键则禁止删除   |
-| `cascade`   | 存在外键则一起删除   |
+| 约束级别        | 说明           |
+| ----------- | ------------ |
+| `restrict`  | 存在外键则禁止删除    |
+| `no action` | 存在外键则禁止删除    |
+| `cascade`   | 存在外键则一起删除    |
 | `set null`  | 存在外键则设置为Null |
 
 #### 检查约束
@@ -4223,28 +4216,28 @@ CREATE VIEW view_name(
 );
 -- 示例
 CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER = `root`@`localhost` SQL SECURITY DEFINER VIEW `test`.`event_history` AS SELECT
-	`performance_schema`.`events_statements_history`.`EVENT_ID` AS `EVENT_ID`,
-	from_unixtime(((
-				unix_timestamp(
-					sysdate()) - (
-				SELECT
-					`performance_schema`.`global_status`.`VARIABLE_VALUE` 
-				FROM
-					`performance_schema`.`global_status` 
-				WHERE
-				( `performance_schema`.`global_status`.`VARIABLE_NAME` = 'Uptime' ))) + ( `performance_schema`.`events_statements_history`.`TIMER_START` / 1000000000000 ))) AS `Name_exp_2`,
-	from_unixtime(((
-				unix_timestamp(
-					sysdate()) - (
-				SELECT
-					`performance_schema`.`global_status`.`VARIABLE_VALUE` 
-				FROM
-					`performance_schema`.`global_status` 
-				WHERE
-				( `performance_schema`.`global_status`.`VARIABLE_NAME` = 'Uptime' ))) + ( `performance_schema`.`events_statements_history`.`TIMER_END` / 1000000000000 ))) AS `Name_exp_3`,
-	`performance_schema`.`events_statements_history`.`SQL_TEXT` AS `SQL_TEXT` 
+    `performance_schema`.`events_statements_history`.`EVENT_ID` AS `EVENT_ID`,
+    from_unixtime(((
+                unix_timestamp(
+                    sysdate()) - (
+                SELECT
+                    `performance_schema`.`global_status`.`VARIABLE_VALUE` 
+                FROM
+                    `performance_schema`.`global_status` 
+                WHERE
+                ( `performance_schema`.`global_status`.`VARIABLE_NAME` = 'Uptime' ))) + ( `performance_schema`.`events_statements_history`.`TIMER_START` / 1000000000000 ))) AS `Name_exp_2`,
+    from_unixtime(((
+                unix_timestamp(
+                    sysdate()) - (
+                SELECT
+                    `performance_schema`.`global_status`.`VARIABLE_VALUE` 
+                FROM
+                    `performance_schema`.`global_status` 
+                WHERE
+                ( `performance_schema`.`global_status`.`VARIABLE_NAME` = 'Uptime' ))) + ( `performance_schema`.`events_statements_history`.`TIMER_END` / 1000000000000 ))) AS `Name_exp_3`,
+    `performance_schema`.`events_statements_history`.`SQL_TEXT` AS `SQL_TEXT` 
 FROM
-	`performance_schema`.`events_statements_history`;
+    `performance_schema`.`events_statements_history`;
 ```
 
 #### 存储过程
@@ -4262,25 +4255,21 @@ END;
 call procedure_name(@variable1, @variable2, @variable3);
 ```
 
-
-
 #### 清空表
 
 ```sql
 TRUNCATE TABLE t1;
 ```
 
-
-
 ## 二十九、DML
 
 ### DML关键词
 
-| 关键词   | 功能 |
-| -------- | ---- |
-| `INSERT` | 插入 |
-| `UPDATE` | 更新 |
-| `DELETE` | 删除 |
+| 关键词      | 功能  |
+| -------- | --- |
+| `INSERT` | 插入  |
+| `UPDATE` | 更新  |
+| `DELETE` | 删除  |
 
 ### 示例
 
@@ -4330,4 +4319,3 @@ DELETE table_name1
   FROM table_name1 t1, table_name2 t2
     WHERE t1.column1=t2.column1 AND t1.column1=value1;
 ```
-
