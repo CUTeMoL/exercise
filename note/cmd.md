@@ -346,6 +346,29 @@ netsh ipsec static exportpolicy secpol.ipsec
 
 查看服务以及编辑服务属性
 
+#### 查询服务
+
+```cmd
+sc [<ServerName>] query [<ServiceName>] [type= {driver | service | all}] [type= {own | share | interact | kernel | filesys | rec | adapt}] [state= {active | inactive | all}] [bufsize= <BufferSize>] [ri= <ResumeIndex>] [group= <GroupName>]
+state:
+active # 已启动的服务
+inactive # 未启动的服务
+all # 所有状态的服务
+type:
+driver # 驱动
+service # 服务,默认
+all # 所有类型
+type:
+own # 不与其他服务共享可执行文件
+share # 它与其他服务共享可执行文件
+interact # 交互式服务
+kernel # 指定驱动程序
+filesys # 指定文件系统驱动程序
+rec 
+adapt
+
+```
+
 #### 编辑服务属性
 
 ```cmd
@@ -357,6 +380,8 @@ sc config service_name start= auto # 自动启动
 sc delete service_name # 卸载命令
 # 所有等号后面必须空一格！！！
 ```
+
+
 
 ### 4. `gpedit.msc`
 
@@ -470,13 +495,12 @@ COMPARE
 EXPORT
 IMPORT
 FLAGS
-
 ```
 
 ##### 请求
 
 ```cmd
-sc query "KeyName" [Parameter]
+reg query "KeyName" [Parameter]
 Parameter:
 /v 具体的注册表项值的查询
 

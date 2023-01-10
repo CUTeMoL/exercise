@@ -41,8 +41,6 @@ man
 | Unrestricted | 允许所有脚本运行，但会报警                                     |
 |              |                                                   |
 
-
-
 ```powershell
 Set-ExecutionPolicy Unrestricted # 改变默认执行策略以执行脚本
 ```
@@ -73,28 +71,29 @@ cmdlet |FT <key1>,<key2> -autosize
 
 `command-lets`是`powershell`的轻量级命令通常遵守`verb-noun`的规律
 
-| 命令                                                                      | 说明                                         |
-| ----------------------------------------------------------------------- | ------------------------------------------ |
-| `Get-Help cmdlet_object`                                                | 帮助文档                                       |
-| `Get-Command`                                                           | 查看cmdlet、function、alias信息，支持通配符*匹配         |
-| `Get-Service`                                                           | 获取服务                                       |
-| `Set-Variable object value`                                             | 设置变量                                       |
-| `Start-Process`                                                         | 打开文件                                       |
-| `Add-content file_object message`                                       | 将内容添加到指定的文件                                |
-| `Add-Computer`                                                          | 将本地计算机添加到域或工作组                             |
-| `Add-jobTrigger`                                                        | 将作业触发器添加到计划的作业中                            |
-| `Clear-Content`                                                         | 删除文件的内容，但不删除该文件。                           |
-| `Add-member`                                                            | 将自定义方法或属性添加到PowerShell对象的实例                |
-| `Add-type`                                                              | 将Microsoft .NET框架类添加到Windows PowerShell会话中 |
-| `(New-Object System.Net.WebClient).DownloadFile("src_path","filename")` | 下载文件                                       |
-|                                                                         |                                            |
-|                                                                         |                                            |
-|                                                                         |                                            |
-|                                                                         |                                            |
-|                                                                         |                                            |
-|                                                                         |                                            |
-|                                                                         |                                            |
-|                                                                         |                                            |
+| 命令                                                                      | 说明                                                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `Get-Help cmdlet_object`                                                | 帮助文档                                                                                        |
+| `Get-Command`                                                           | 查看cmdlet、function、alias信息，支持通配符*匹配                                                          |
+| `Get-Service`                                                           | 获取服务                                                                                        |
+| `Get-WmiObject`                                                         | `获取对象信息<br/>例如<br/>`-class Win32_Product,获取已安装软件信息<br/>`Get-WmiObject -Class Win32_Process` |
+| `Set-Variable object value`                                             | 设置变量                                                                                        |
+| `Start-Process`                                                         | 打开文件                                                                                        |
+| `Add-content file_object message`                                       | 将内容添加到指定的文件                                                                                 |
+| `Add-Computer`                                                          | 将本地计算机添加到域或工作组                                                                              |
+| `Add-jobTrigger`                                                        | 将作业触发器添加到计划的作业中                                                                             |
+| `Clear-Content`                                                         | 删除文件的内容，但不删除该文件。                                                                            |
+| `Add-member`                                                            | 将自定义方法或属性添加到PowerShell对象的实例                                                                 |
+| `Add-type`                                                              | 将Microsoft .NET框架类添加到Windows PowerShell会话中                                                  |
+| `(New-Object System.Net.WebClient).DownloadFile("src_path","filename")` | 下载文件                                                                                        |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
+|                                                                         |                                                                                             |
 
 `PowerShell`可以运行`Shell`的命令
 
