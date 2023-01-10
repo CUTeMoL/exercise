@@ -453,6 +453,37 @@ wmic process where name="process name" # 查询运行程序
 | `HKEY_USERS`          |     |
 | `HKEY_CURRENT_CONFIG` |     |
 
+### 命令行用法
+
+```cmd
+reg Operation [Parameter List]
+Operation:
+QUERY # 查询
+ADD # 添加
+DELETE # 删除
+COPY # 复制
+SAVE
+LOAD
+UNLOAD
+RESTORE
+COMPARE
+EXPORT
+IMPORT
+FLAGS
+
+```
+
+##### 请求
+
+```cmd
+sc query "KeyName" [Parameter]
+Parameter:
+/v 具体的注册表项值的查询
+
+# 示例
+reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\3.10\PythonPath"
+```
+
 # tmp
 
 如果是非常驻进程修改了系统时间，那么通过上面步骤查看到的进程ID在任务管理器中是查看不到的，因为他们执行后就结束了，那么我们需要增加下系统日志的进程审核记录来获取到这些进程的信息。
