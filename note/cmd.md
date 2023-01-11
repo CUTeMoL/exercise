@@ -460,7 +460,7 @@ tzutil.exe /s "China Standard Time" # 设定时区
 已经弃用，可以使用`Get-WmiObject`替代
 
 ```cmd
-wmic process where name="process name" # 查询运行程序，可以查询commandline
+wmic process where name="process name" get "item1,item2" # 查询运行程序，可以查询commandline
 ```
 
 ### 15.`regedit`
