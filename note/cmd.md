@@ -366,7 +366,6 @@ kernel # 指定驱动程序
 filesys # 指定文件系统驱动程序
 rec 
 adapt
-
 ```
 
 #### 编辑服务属性
@@ -380,8 +379,6 @@ sc config service_name start= auto # 自动启动
 sc delete service_name # 卸载命令
 # 所有等号后面必须空一格！！！
 ```
-
-
 
 ### 4. `gpedit.msc`
 
@@ -463,7 +460,7 @@ tzutil.exe /s "China Standard Time" # 设定时区
 已经弃用，可以使用`Get-WmiObject`替代
 
 ```cmd
-wmic process where name="process name" # 查询运行程序
+wmic process where name="process name" # 查询运行程序，可以查询commandline
 ```
 
 ### 15.`regedit`
@@ -497,15 +494,31 @@ IMPORT
 FLAGS
 ```
 
-##### 请求
+#### 查询
 
 ```cmd
 reg query "KeyName" [Parameter]
 Parameter:
-/v 具体的注册表项值的查询
-
+/v # 具体的注册表项值的查询
+/ve # 查询默认值与/f冲突
+/s # 循环查询所有子项,最后一位不能是"\"
+/se # 为 REG_MULTI_SZ 在数据字符串中指定分隔符(长度只为 1 个字符),默认分隔符为 "\0"
+/f # 指定包含的字符,如果字符串包含空格,请使用双引号。默认为 "*"
+/k # 指定只在项名称中搜索,与/f配合使用
+/d # 指定只在数据中搜索,与/f配合使用
+/c # 指定搜索时区分大小写,与/f配合使用,默认不区分大小写
+/e # 指定只返回完全匹配,默认返回所有匹配
+/t # 指定数据类型,默认为所有类型
+数据类型:
+REG_SZ, REG_MULTI_SZ, REG_EXPAND_SZ, REG_DWORD, REG_QWORD, REG_BINARY, REG_NONE
+/z # 详细: 显示值名称类型的数字等值
+/reg:32 # 指定应该使用 32 位注册表视图访问的注册表项
+/reg:64 # 指定应该使用 64 位注册表视图访问的注册表项
 # 示例
 reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\3.10\PythonPath"
+reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\3.10\InstallPath"  /v ExecutablePath
+reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\3.10\InstallPath"  /ve
+
 ```
 
 # tmp
