@@ -553,7 +553,7 @@ printf   定义输出格式
 awk函数:
 length()   字符数量
 可以用来统计    
-awk'{ nc = nc + length($0) + 1 nw = nw + NF}END { print NR, "lines,", nw, "words,", nc, "characters" }'
+awk '{nc=nc+length($0)+1;nw=nw+NF};END{print NR, "lines,", nw, "words,", nc, "characters" }'
 
 例如：
 用BEGIN定义文件的格式
@@ -756,6 +756,7 @@ option:
 
 ```shell
 xargs  # 从管道接收参数
+
 ```
 
 #### rsync
@@ -1846,6 +1847,26 @@ IP地址 “\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}”
 ```
 
 ## 十四、案例
+
+### 统计文件夹下对应月份文件的大小
+
+```shell
+# 方法1：无法递归统计到子文件夹
+for y in {2021..2023};do
+    for m in {01,02,03,04,05,06,07,08,09,10,11,12};do
+        ll --time-style="+%Y-%m-%d %H:%M"  -S -t|grep  "$y-$m"|grep -v -E "^d.*"|awk -v m="$m" -v y="$y" '{size=size+$5};END{print y "-" m,size}'
+    done
+done
+# 方法2
+begin_time='2010-10-25 16:30:00'
+end_time='2023-01-13 19:30:00'
+size=0
+path="/e/tmp"
+for i in `find ${path} -type f \( -newermt "${begin_time}" -a -not -newermt "${end_time}" \) |xargs -I{} du -sb {} | awk '{print $1}'`; do size=$((size+i)); done
+echo ${size}
+
+
+```
 
 ### 检测文件夹内容改动
 
