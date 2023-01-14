@@ -26,8 +26,8 @@ $(command)
 read
 -p  提示信息
 -n  限制在N字符数以内
--s  不显示（密码）
--t   超时时间（秒）
+-s  不显示(密码)
+-t   超时时间(秒)
 ```
 
 临时全局生效
@@ -183,7 +183,7 @@ test -e file
 ```shell
 [ file1 -nt file2 ]  比较是否更新
 [ file1 -ot file2 ]  比较是否更旧
-[ file1 -ef file2 ]  是否为同一个文件（硬链接相同inode）
+[ file1 -ef file2 ]  是否为同一个文件(硬链接相同inode)
 ```
 
 整数之间比较：
@@ -379,17 +379,17 @@ END
 grep  [option]  [file]
 # 行 文本 匹配
 -i:不区分大小写
--v:查找不包含指定内容的行（取反）
+-v:查找不包含指定内容的行(取反)
 -w:按单词搜索
 -o:仅打印匹配关键字
--c:统计匹配到的次数（行数）
+-c:统计匹配到的次数(行数)
 -n:显示行号
--r:逐层遍历目录查找（这样grep就可对目录使用）
+-r:逐层遍历目录查找(这样grep就可对目录使用)
 -A:显示匹配行及后面n行
 -B:显示匹配行及前面n行
 -C:显示匹配行及前后后n行
--l:只列出匹配的文件名（配合-r）
--L:列出不匹配的文件名（配合-r）
+-l:只列出匹配的文件名(配合-r)
+-L:列出不匹配的文件名(配合-r)
 -e:使用正则匹配
 -E:使用拓展正则
 ^key:以关键字开头
@@ -416,7 +416,7 @@ option:
 3，5   定位3到5行
 $   最后一行
 !   反向选择
-/key/   匹配/key/中的内容（可以使用正则）
+/key/   匹配/key/中的内容(可以使用正则)
 /key1/,/key2/   两个关键词之间的行
 /key1\|key2/   包含关键词1或关键词2的行
 /key/,n   关键词到n行之间
@@ -429,7 +429,7 @@ n,m!   不包含n~m之间的行
 
 sed命令
 p   打印行
-=   打印行号（类似p，与p不兼容）
+=   打印行号(类似p，与p不兼容)
 d   删除行
 i   定位的行之前添加要添加的内容
 a   定位的行之后添加要添加的内容
@@ -660,7 +660,7 @@ diff  [option]  [file1] [file2]
 -B   ：不检查空行
 -i    ：不检查大小写
 -w  ：忽略所有的空格
---normal   ：正常格式显示（默认）
+--normal   ：正常格式显示(默认)
 -c   ：上下文格式显示
 -u   ：合并格式显示
 diff -uN file1 file2 > file.patch
@@ -681,19 +681,19 @@ printf "text%[标志][宽度][.精度][数据类型]text" text
 ''   为正数生成一个前导空格符
 
 宽度
-指定一个字段的最小宽度（定下限）
+指定一个字段的最小宽度(定下限)
 
 精度
 保留小数点后的位数
-在字符串中限制字符串的长度（定上限）
+在字符串中限制字符串的长度(定上限)
 
 数据类型
 d  格式化为有符号的十进制数
 f   格式化为浮点数
 o  格式化为八进制数
 s   格式化字符串
-x   格式化为16进制数（小写字母）
-X   格式化为16进制数（大写字母）
+x   格式化为16进制数(小写字母)
+X   格式化为16进制数(大写字母)
 %  普通
 
 一些示例：
@@ -719,6 +719,12 @@ ls # 列出目录
 -h # 高可读
 -t # 按建立时间
 -a # 显示隐藏
+-A # 不显示"."和".."
+-S # 按大小排序输出,默认从大到小
+-t # 按修改时间排序,默认从新到旧
+-u # 按照文件访问时间,默认从新到旧
+--time=WORD # 配合-lt使用,access time (-u):atime, access, use;change time (-c):ctime, status;,birth time: birth, creation
+-1 # 一行一个文件
 --hide=PATTERN # 隐藏
 -F # *为可执行文件,/为目录
 --full-time # 完整实际格式相当于--time-style=full-iso
@@ -741,22 +747,38 @@ dirname # 取出目录名
 #### find
 
 ```shell
-find (dir) [option]=[value]
+find [path] [-option value] [experession] [action]
 # 文件查找
 option:
--name   名字    可用*作为通配符
--type   类型f、d
--mtime   修改日期   +3（3天之前） -3（3天之内）
--exec    扩展外部指令如rm -rf
+-name # 名字    可用*作为通配符
+-type # 类型f(文件)、d(文件夹)、c、b、I、p、
+-mtime # 修改日期   +3(3天之前) -3(3天之内)
+-exec # 扩展外部指令如rm -rf
     find /var/log -name "*.log" -mtime +10 -exec rm -rf {} \;
--size   文件大小  +5M(大于5m) -5m（小于5m）
+-size # 文件大小b,c,K,M,G  +5M(大于5m) -5m(小于5m)
+
+experession:
+-a # 同-and
+-o # 同-or
+-not # 同"!"
+
+-newerXY reference # reference通常是文件,XY是条件,可以为空,一共a(最后一次访问)、B(创建时间)、c(最后修改文件属性{包括名称}时间)、m(最后修改文件内容时间)、t(参照为时间),其中t只能用于Y代表和时间对比而不是文件
+
+action:
+exec # 使用拓展指令
+
+find ${path} -type f \( -newermt "${begin_time}" -a -not -newermt "${end_time}" \) |xargs -I{} du -sb {} 
 ```
 
 #### xargs
 
 ```shell
-xargs  # 从管道接收参数
+xargs [option] [command] # 从管道接收参数
+option:
+-I {} # 接受参数并重写为指定字符(不用{}指定为其他字符也可以)
 
+# 示例
+find /htmlIpFlow/files -name "*.tar.gz"|xargs -I {} echo "{} is a Compressed file"
 ```
 
 #### rsync
@@ -795,7 +817,7 @@ rsync -av $user@$IP::replication /mysqld_bak/data
 ```shell
 scp [option] root@$IP:/root/1.txt ./
 前 >> 后
--r   递归（文件夹）
+-r   递归(文件夹)
 -P   端口
 ```
 
@@ -1135,7 +1157,7 @@ crontab
 # 定时任务
 -l   查询当前计划
 -e   编辑计划
-# 分 时 日 月 周 执行的命令（要求使用完整路径,which命令）
+# 分 时 日 月 周 执行的命令(要求使用完整路径,which命令)
 ```
 
 ### 安全类
@@ -1228,7 +1250,7 @@ ssh-copy-id ${user}@${host}
 # 远程复制
 scp [option] root@$IP:/root/1.txt ./
 前 >> 后
--r   递归（文件夹）
+-r   递归(文件夹)
 -P   端口
 ```
 
@@ -1389,15 +1411,15 @@ UNTRACKED 未追踪的连接
 
 iptables动作target
 
-| target     | 意义                                        |
-| ---------- | ----------------------------------------- |
-| ACCEPT     | 允许                                        |
-| DROP       | 丢弃，不回应                                    |
-| REJECT     | 拒绝，发送回应信息                                 |
-| SNAT       | 源地址转换                                     |
-| MASQUERADE | 伪装，动态的（发送数据的网卡上的IP）替换IP地址                 |
-| DNAT       | 目标地址转换                                    |
-| REDIRECT   | 在本机做端口映射                                  |
+| target     | 意义                                                         |
+| ---------- | ------------------------------------------------------------ |
+| ACCEPT     | 允许                                                         |
+| DROP       | 丢弃，不回应                                                 |
+| REJECT     | 拒绝，发送回应信息                                           |
+| SNAT       | 源地址转换                                                   |
+| MASQUERADE | 伪装，动态的(发送数据的网卡上的IP)替换IP地址                 |
+| DNAT       | 目标地址转换                                                 |
+| REDIRECT   | 在本机做端口映射                                             |
 | LOG        | 在/var/log/message文件中记录日志信息，然后将数据包传递给下一条规则 |
 
 ```shell
@@ -1780,7 +1802,7 @@ rwx读、写、执行
 
 设置位S:为了让一般使用者临时具有该文件所属主/组的执行权限
 
-沾滞位T:只允许文件的创建者和root用户删除文件（防止误删除权限位）
+沾滞位T:只允许文件的创建者和root用户删除文件(防止误删除权限位)
 
 d   目录
 l   软连接
@@ -1815,8 +1837,8 @@ $  : 行的末尾
 [^]  ： 匹配不在指定字符组内的任意字符,仅单个
 ^[]  ： 匹配以指定字符组内任意字符开头，仅单个
 ^[^]  ： 匹配不以指定字符组内任意字符开头，仅单个
-\<  ：  取单词的头（类似^但只要单词的头）
-\>  ： 取单词的尾（类似$但只要单词的尾）
+\<  ：  取单词的头(类似^但只要单词的头)
+\>  ： 取单词的尾(类似$但只要单词的尾)
 \<\>  ：精确匹配单词
 \{n\}   ： 匹配前导字符连续n次
 \{n,\}   ：匹配前导字符至少n次
@@ -1824,7 +1846,7 @@ $  : 行的末尾
 \(strings\)   ：保存匹配的字符，后面用1，2，3……表示
 
 扩展正则^$.[]*(){}?+|
-+  ： 匹配一个或多个前导字符（前导字符的数量不再为1）
++  ： 匹配一个或多个前导字符(前导字符的数量不再为1)
 ？  ： 匹配0个或一个前导字符
 a|b  ：匹配a或b
 ()  ：组字符  (my|your)self
@@ -1832,7 +1854,7 @@ a|b  ：匹配a或b
 
 第二类正则
 [:alnum:]  :  字母与数字
-[:alpha:]  :字母字符（包括大小写字母）
+[:alpha:]  :字母字符(包括大小写字母)
 [:blank:]  : 空格与制表符
 [:digit:]  ： 数字
 [:lower:]  ： 小写字母
@@ -1854,18 +1876,14 @@ IP地址 “\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}”
 # 方法1：无法递归统计到子文件夹
 for y in {2021..2023};do
     for m in {01,02,03,04,05,06,07,08,09,10,11,12};do
-        ll --time-style="+%Y-%m-%d %H:%M"  -S -t|grep  "$y-$m"|grep -v -E "^d.*"|awk -v m="$m" -v y="$y" '{size=size+$5};END{print y "-" m,size}'
+        ls -la --time-style="+%Y-%m-%d %H:%M" -S -t |grep "$y-$m" | grep -v -E "^d.*"| awk -v m="$m" -v y="$y" '{size=size+$5};END{print y "-" m,size}'
     done
 done
 # 方法2
-begin_time='2010-10-25 16:30:00'
-end_time='2023-01-13 19:30:00'
-size=0
-path="/e/tmp"
-for i in `find ${path} -type f \( -newermt "${begin_time}" -a -not -newermt "${end_time}" \) |xargs -I{} du -sb {} | awk '{print $1}'`; do size=$((size+i)); done
-echo ${size}
-
-
+begin_time='2021-01-01 00:00:00'
+end_time='2023-12-31 23:59:59'
+path="./"
+find ${path} -type f \( -newermt "${begin_time}" -a -not -newermt "${end_time}" \) |xargs -I{} du -sb {} | awk '{size=size+$1};END{print size}'
 ```
 
 ### 检测文件夹内容改动
@@ -2187,7 +2205,7 @@ net.ipv4.tcp_wmem = 8192 131072 16777216 # 发送缓冲的内存最小值|默认
 net.ipv4.tcp_rmem = 32768 131072 16777216 # 接受缓存
 net.ipv4.tcp_mem = 786432 1048576 1572864 # 释放内存三个界值
 net.ipv4.ip_local_port_range = 1024 65000 # 表示用于向外连接的端口范围,存在/proc/sys/net/ipv4/ip_local_port_range,直接修改文件也行
-net.ipv4.ip_conntrack_max = 65536 # 系统支持的最大ipv4连接数，默认65536（事实上这也是理论最大值）
+net.ipv4.ip_conntrack_max = 65536 # 系统支持的最大ipv4连接数，默认65536(事实上这也是理论最大值)
 net.ipv4.netfilter.ip_conntrack_max=65536 # 防火墙的最大ipv4连接数
 net.ipv4.netfilter.ip_conntrack_tcp_timeout_established=180 # 已建立的tcp连接的超时时间，默认432000，也就是5天
 net.core.somaxconn = 16384 # 用来限制监听(LISTEN)队列最大数据包的数量，超过这个数量就会导致链接超时或者触发重传机制。
