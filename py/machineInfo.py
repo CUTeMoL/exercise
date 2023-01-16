@@ -2,10 +2,36 @@ import os
 import time
 import psutil
 import platform
+import logging
+import logging.handlers
+'''
+重写计划
+需求1:统计CPU占用最高的进程
+需求2:统计内存占用最高的进程
+需求3:占用端口的进程名及pid
+需求4:文件查找,按日期,按大小,按类别
+需求5:查询结果日志记录
+'''
 
 
-# WINDOWS
+os.chdir(os.path.dirname(__file__))
+log_path = "%s_%s.log" %(platform.node(),time.strftime('%Y-%m-%d', time.localtime()))
 
+formatter_object = logging.Formatter("%(message)s")
+
+streamhandler_object = logging.StreamHandler(stream=None)
+streamhandler_object.setLevel(logging.DEBUG)
+streamhandler_object.setFormatter(formatter_object)
+
+
+filehandler_object = logging.FileHandler(filename=log_path, mode='w', encoding="utf8", delay=False)
+filehandler_object.setLevel(logging.INFO)
+filehandler_object.setFormatter(formatter_object)
+
+logger_object = logging.getLogger("machineInfo_%s" %(time.strftime('%Y-%m-%d', time.localtime())))
+logger_object.setLevel(logging.DEBUG)
+logger_object.addHandler(streamhandler_object)
+logger_object.addHandler(filehandler_object)
 
 def platform_info():
     print("-----系统硬件信息-----")
@@ -20,62 +46,54 @@ def platform_info():
     print("\t开机时间为{}".format(format_boot_time))
     # print("包含上面所有的信息汇总:" , platform.uname())
 
+def total_info():
+    logger_object.info(
+'''
+%s的当前系统为%s %s
+
+当前cpu使用情况:
+用户进程占用 %.2f %%,系统占用 %.2f %%, 剩余空闲 %.2f %% 
+当前内存使用情况:
+总量 %.2f GB, 已使用 %.2f GB 占比 %.2f %%, 剩余 %.2f GB
+'''
+        %(platform.node(),
+        platform.system(), platform.architecture()[0],
+        psutil.cpu_times().user * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
+        psutil.cpu_times().system * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
+        psutil.cpu_times().idle * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
+        psutil.virtual_memory().total / 1024 / 1024 / 1024,
+        psutil.virtual_memory().used / 1024 / 1024 / 1024,
+        psutil.virtual_memory().percent,
+        psutil.virtual_memory().available / 1024 / 1024 / 1024
+        )
+    )
+    logger_object.info("分区使用情况:")
+    for partition in psutil.disk_partitions():
+        logger_object.info(
+            "分区: %s 挂载点: %s 文件系统: %s 总量: %.2f G 已用: %.2f G 占比 %.2f %% 剩余: %.2f G"
+            %(
+                partition.device,
+                partition.mountpoint,
+                partition.fstype,
+                psutil.disk_usage(partition.mountpoint).total / 1024 / 1024 / 1024,
+                psutil.disk_usage(partition.mountpoint).used / 1024 / 1024 / 1024,
+                psutil.disk_usage(partition.mountpoint).percent,
+                psutil.disk_usage(partition.mountpoint).free / 1024 / 1024 / 1024
+            )
+        )
+
+
 
 def cpu_info():
     print("-----CPU相关信息-----")
-    print(f"\tcpu核心数(包含逻辑cpu): {psutil.cpu_count(logical=True)}")
-    # print(f"总状态百分比: {psutil.cpu_times_percent()}")
-    # print(f"总状态: {psutil.cpu_times()}")
-    print("\t用户进程使用: %.2f, 百分比: %.2f " % (psutil.cpu_times().user,
-                                          psutil.cpu_times().user * 100 / (
-                                                      psutil.cpu_times().idle +
-                                                      psutil.cpu_times().user +
-                                                      psutil.cpu_times().system)))
-    print("\t系统进程使用: %.2f, 百分比: %.2f " % (psutil.cpu_times().system,
-                                          psutil.cpu_times().system * 100 / (
-                                                      psutil.cpu_times().idle +
-                                                      psutil.cpu_times().user +
-                                                      psutil.cpu_times().system)))
-    print("\t空闲: %.2f, 百分比: %.2f " % (psutil.cpu_times().idle,
-                                      psutil.cpu_times().idle * 100 / (
-                                                  psutil.cpu_times().idle +
-                                                  psutil.cpu_times().user +
-                                                  psutil.cpu_times().system)))
-    # print(f"进程等待: {psutil.cpu_times().iowait}, 百分比: {psutil.cpu_times_percent().iowait}")
-    # print(f"硬中断处理时间: {psutil.cpu_times().irq}, 百分比: {psutil.cpu_times_percent().irq}")
-    # print(f"软中断处理时间: {psutil.cpu_times().softirq}, 百分比: {psutil.cpu_times_percent().softirq}")
-    # print(f"系统运行在虚拟机中的时候，被其他虚拟机占用的 CPU 时间: {psutil.cpu_times().steal}, "
-    #       f"百分比: {psutil.cpu_times_percent().steal}")
-    # print(f"运行虚拟机占用的 CPU 时间: {psutil.cpu_times().guest}, "
-    #       f"百分比: {psutil.cpu_times_percent().guest}")
-    # print(f"以低优先级运行虚拟机的时间: {psutil.cpu_times().guest_nice}, "
-    #       f"百分比: {psutil.cpu_times_percent().guest_nice}")
-    print("---每一个cpu运行情况---")
-    for cpu_time in psutil.cpu_times(percpu=True):
-        print(f"\t用户进程使用: {cpu_time.user}, 系统进程使用: {cpu_time.system}, 空闲:{cpu_time.idle}")
-
 
 def mem_info():
     print("-----内存相关信息-----")
-    print("物理内存使用情况: ")
-    print(f"\t内存总量: {psutil.virtual_memory().total / 1024 / 1024} MB "
-          f"剩余可用量: {psutil.virtual_memory().available / 1024 / 1024} MB "
-          f"已使用百分比: {psutil.virtual_memory().percent} % \n"
-          f"swap内存使用情况：\n"
-          f"\tswap内存总量: {psutil.swap_memory().total / 1024 / 1024} MB   "
-          f"swap内存剩余可用: {psutil.swap_memory().free / 1024 / 1024} MB   "
-          f"swap内存已用: {psutil.swap_memory().used / 1024 / 1024} MB   "
-          f"百分比: {psutil.swap_memory().percent} % ")
 
 
 def disk_info():
     print("-----磁盘的分区相关信息-----")
-    for partition in psutil.disk_partitions():
-        print(f"分区: {partition.device}\t挂载点: {partition.mountpoint}\t文件系统: {partition.fstype}", end="\t")
-        print(f"总量: {psutil.disk_usage(partition.mountpoint).total / 1024 / 1024 / 1024} GB\t"
-              f"已用: {psutil.disk_usage(partition.mountpoint).used / 1024 / 1024 / 1024} GB\t"
-              f"已用百分比: {psutil.disk_usage(partition.mountpoint).percent} %\t"
-              f"剩余: {psutil.disk_usage(partition.mountpoint).free / 1024 / 1024 / 1024} GB\t")
+
     print("---挂载的硬盘的IO信息---")
     for disk in psutil.disk_io_counters(perdisk=True):
         print("{}\t{}".format(str(disk).ljust(10, " "), psutil.disk_io_counters(perdisk=True)[disk]))
@@ -152,7 +170,7 @@ def help_info():
     其他任意键退出
     ''')
 
-
+total_info()
 help_info()
 while True:
     print("\n")
