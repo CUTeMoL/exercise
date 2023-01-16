@@ -305,6 +305,44 @@ DIR
 /4 # 以四位数字显示年份
 ```
 
+### 27.rar.exe
+
+基础命令格式
+
+```cmd
+rar.exe <命令>  [ -<参数> ]  <压缩文件>  [ <@列表文件...> ] [ <文件...> ]  [ <解压路径\> ]
+命令:
+a rarfile file # 添加文件到压缩文件中
+d rarfile file # 从压缩文件中删除文件
+c "注释" # 添加注释到压缩文件
+e # 不带压缩路径解压文件(尽量使用x)
+i="string" rarfile file # 搜索压缩文件中的文件,不区分大小写
+c # 搜索压缩文件中的文件,区分大小写
+h # 十六进制搜索
+t # 使用 ANSI、UTF-8、UTF-16 和 OEM (仅 Windows) 字符表
+
+
+示例:
+rar "ic=first level" -r c:\*.rar *.txt # 查询字符串
+
+
+```
+
+压缩
+
+```cmd
+
+```
+
+解压
+
+```cmd
+rar.exe x -o+ %rarfile% %target_path%
+x # 带绝对路径解压
+-o # 覆盖前询问
+-o+ # 覆盖所有
+```
+
 ## 二、管理工具
 
 ### 1. `secpol.msc`
@@ -321,7 +359,7 @@ netsh ipsec static add policy name="reject"
 
 双击IP安全策略，不使用向导
 
-添加阻止所有，添加IP筛选器名为`拒绝所有`，属性编辑好源地址、目标地址、协议为`任意`，筛选器操作为`阻止`（需要自己新建）
+添加阻止所有，添加IP筛选器名为`拒绝所有`，属性编辑好源地址、目标地址、协议为`任意`，筛选器操作为`阻止`（需要自己新建)
 
 ```cmd
 netsh ipsec static add filteraction name="阻止" action=block # 添加筛选器操作
@@ -330,7 +368,7 @@ netsh ipsec static add filter filterlist="拒绝所有" srcaddr=any dstaddr=any 
 netsh ipsec static add rule name="rejectlist" policy="reject" filterlist="拒绝所有" filteraction="阻止" # 关联前面创建的policy、filteraction、filterlist命名为rejectlist
 ```
 
-然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建）
+然后放行个别添加IP筛选器名为`允许网段192.168.1.0`，属性编辑好源地址`192.168.1.0`、目标地址`我的IP地址`、协议为`TCP`，到端口`3389`筛选器操作为`允许`（需要自己新建)
 
 策略导出
 
