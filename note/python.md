@@ -1653,15 +1653,15 @@ with ThreadPoolExecutor() as pool:
 
 subprocess使用shell=True,来确定输入的命令为字符串形式,否则要以列表的形式输入每一个参数
 
-| 类型  | 函数                                | 功能                                               |
-| --- | --------------------------------- | ------------------------------------------------ |
-| 管道  | `subprocess.PIPE`                 | 可被 stdin, stdout 或者 stderr 参数使用的特殊值, 表示打开标准流的管道. |
-| 执行  | `subprocess.call("bash_command")` | 同`os.system("bash_command")`                     |
-|     |                                   |                                                  |
-|     |                                   |                                                  |
-|     |                                   |                                                  |
-|     |                                   |                                                  |
-|     |                                   |                                                  |
+| 类型 | 函数                                                         | 功能                                                         |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 管道 | `subprocess.PIPE`                                            | 可被 stdin, stdout 或者 stderr 参数使用的特殊值, 表示打开标准流的管道. |
+| 执行 | `subprocess.call("bash_command")`                            | 同`os.system("bash_command")`                                |
+|      | `subprocess.run("command", shell=True, capture_output=True)` | 运行命令                                                     |
+|      |                                                              |                                                              |
+|      |                                                              |                                                              |
+|      |                                                              |                                                              |
+|      |                                                              |                                                              |
 
 ### time|datetime|calendar:
 
