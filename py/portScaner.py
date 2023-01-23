@@ -14,6 +14,7 @@ import ipaddress
 __author__ = "lxw"
 __last_mod_date__ = "2022.11.28"
 __modify__ = "加入ipaddress模块,可以扫描网段"
+
 ip_addrs = []
 ports = [port for port in range(1, 65536)] # 多进程传多参数不支持列表推导式直接传参...
 
