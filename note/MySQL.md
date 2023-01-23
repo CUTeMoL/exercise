@@ -4319,3 +4319,249 @@ DELETE table_name1
   FROM table_name1 t1, table_name2 t2
     WHERE t1.column1=t2.column1 AND t1.column1=value1;
 ```
+
+## 三十、MyISAM转InnoDB
+
+### 2023.01.22
+
+配置:
+
+| 配置       | 参数                      |
+| ---------- | ------------------------- |
+| CPU        | i7-4790 CPU @ 3.60GHz,4核 |
+| 内存       | 16G                       |
+| 系统       | Windows10                 |
+| 数据库大小 | 12.1G                     |
+| 表数       | 546                       |
+
+my.ini
+
+```shell
+[mysqld]
+# base
+bind-address = 0.0.0.0
+server-id = 57
+port = 3312
+basedir = D:/Program Files/Sample/mysql-5.7.39/bin
+datadir = E:/data57
+tmpdir = C:/windows/temp
+lc-messages-dir = D:/Program Files/Sample/mysql-5.7.39/share
+character_set_server = utf8mb4
+collation_server = utf8mb4_general_ci
+sql_mode = ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+transaction_isolation=READ-COMMITTED
+open_files_limit=65535
+innodb_open_files=65535
+back_log=500
+max_connections=2048
+innodb_io_capacity=4000
+innodb_io_capacity_max=8000
+key_buffer_size=2048M
+max_allowed_packet=64M
+
+# binlog
+log-bin=E:/log_bin57/log-bin
+expire_logs_days=10
+max_binlog_size=1024M
+sync_binlog=1
+binlog_cache_size=64K
+max_binlog_cache_size=1024M
+binlog_format=ROW
+
+# redolog
+innodb_log_file_size=4G
+innodb_log_buffer_size=32M
+
+# undolog
+innodb_undo_tablespaces=4
+innodb_max_undo_log_size=4G
+innodb_log_files_in_group=2
+
+# slow query log
+slow_query_log=1
+log_queries_not_using_indexes=1
+log_throttle_queries_not_using_indexes=60
+min_examined_row_limit=100
+log_slow_admin_statements=1
+log_slow_slave_statements=1
+
+# MyISAM优化
+key_buffer_size=1024M
+myisam_max_sort_file_size=10G
+read_buffer_size=4M
+bulk_insert_buffer_size=64M
+myisam_sort_buffer_size=128M
+
+# innodb优化
+innodb_buffer_pool_size=2048M
+innodb_buffer_pool_instances=4
+innodb_buffer_pool_load_at_startup=1
+innodb_buffer_pool_dump_at_shutdown=1
+innodb_data_file_path=ibdata1:1G:autoextend
+innodb_write_io_threads=4
+innodb_read_io_threads=4
+innodb_flush_log_at_trx_commit=1
+innodb_flush_sync=0
+innodb_flush_neighbors=0
+innodb_purge_threads=4
+innodb_page_cleaners=4
+innodb_max_dirty_pages_pct=50
+innodb_lru_scan_depth=1024
+innodb_checksums=1
+innodb_checksum_algorithm=crc32
+innodb_lock_wait_timeout=10
+innodb_rollback_on_timeout=1
+innodb_print_all_deadlocks=1
+innodb_file_per_table=1
+innodb_online_alter_log_max_size=2048M
+innodb_stats_on_metadata=0
+internal_tmp_disk_storage_engine=InnoDB
+innodb_status_output_locks=0
+
+# sql优化
+read_rnd_buffer_size=8M
+join_buffer_size=8M
+sort_buffer_size=8M
+tmp_table_size=64M
+max_heap_table_size=1024M
+
+```
+
+script
+
+```python
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*- 
+import os
+import time
+import platform
+import logging
+import logging.handlers
+import functools
+import subprocess
+
+'''
+改进计划
+1.重写计时器
+2.logging配置文件化
+'''
+
+db_object = {
+    "dbhost": "localhost",
+    "dbport": 3312,
+    "dbuser": "root",
+    "dbpasswd": "123456",
+    "dbname": "cq1"
+}
+
+__author__ = "lxw"
+__last_modify_date__ = "2023.01.22"
+__modify__ = ""
+
+
+workpath=os.path.dirname(__file__)
+os.chdir(workpath)
+if platform.system() == "Windows":
+    mysql_path = r"{}/bin/mysql.exe".format(workpath)
+else:
+    mysql_path = r"{}/bin/mysql".format(workpath)
+
+log_path = r"%s/%s_%s.log" %(workpath, platform.node(),time.strftime('%Y-%m-%d', time.localtime()))
+
+formatter_object = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+
+streamhandler_object = logging.StreamHandler(stream=None)
+streamhandler_object.setLevel(logging.DEBUG)
+streamhandler_object.setFormatter(formatter_object)
+
+filehandler_object = logging.FileHandler(filename=log_path, mode='a', encoding="utf8", delay=False)
+filehandler_object.setLevel(logging.DEBUG)
+filehandler_object.setFormatter(formatter_object)
+
+logger_object = logging.getLogger("_%s" %(time.strftime('%Y-%m-%d', time.localtime())))
+logger_object.setLevel(logging.DEBUG)
+logger_object.addHandler(streamhandler_object)
+logger_object.addHandler(filehandler_object)
+
+
+def run_log(text):
+    def timecalc(func):
+        @functools.wraps(func)
+        def exectimes(*args, **kwargs):
+            starttime = time.time()
+            func_result = func(*args, **kwargs)
+            endtime = time.time()
+            running_time = endtime - starttime
+            return text, func_result, running_time
+        return exectimes
+    return timecalc 
+
+
+def get_MyISAM_tables(dbinfo, mysql, platform_system):
+    get_tables_command = '''\
+{} -h{} -P{} -u{} -p{} {} -s -N -e "SELECT TABLE_NAME from information_schema.TABLES WHERE TABLE_SCHEMA='{}' and ENGINE='MyISAM';"\
+'''.format(
+        mysql,
+        dbinfo["dbhost"],
+        dbinfo["dbport"],
+        dbinfo["dbuser"],
+        dbinfo["dbpasswd"],
+        dbinfo["dbname"],
+        dbinfo["dbname"]
+    )
+    if platform_system == "Windows":
+        get_tables = subprocess.run(get_tables_command, shell=True, capture_output=True, encoding="ansi")
+    else:
+        get_tables = subprocess.run(get_tables_command, shell=True, capture_output=True, encoding="utf-8")
+    if get_tables.returncode == 0:
+        MyISAM_tables = get_tables.stdout.split()
+    else:
+        logger_object.debug(get_tables.stderr)
+        MyISAM_tables = None
+    return MyISAM_tables
+
+
+@run_log(('alter table %s.' %(db_object["dbname"])))
+def MyISAM_to_InnoDB(dbinfo, mysql, platform_system, MyISAM_table):
+    alter_table_command = '''\
+{} -h{} -P{} -u{} -p{} -e "ALTER TABLE {}.{} ENGINE=InnoDB;"\
+        '''.format(
+                    mysql,
+                    dbinfo["dbhost"],
+                    dbinfo["dbport"],
+                    dbinfo["dbuser"],
+                    dbinfo["dbpasswd"],
+                    dbinfo["dbname"],
+                    MyISAM_table
+        )
+    if platform_system == "Windows":
+        alter_table_result = subprocess.run(alter_table_command, shell=True, capture_output=True, encoding="ansi")
+    else:
+        alter_table_result = subprocess.run(alter_table_command, shell=True, capture_output=True, encoding="utf-8")
+    if alter_table_result.returncode != 0:
+        logger_object.error(alter_table_result.stderr)
+    return alter_table_result.returncode
+
+
+if os.path.isfile(mysql_path):
+    logger_object.debug("PROCESS RUNNING")
+    tables = get_MyISAM_tables(db_object, mysql_path, platform.system())
+    for table in tables:
+        text, result, running_time = MyISAM_to_InnoDB(db_object, mysql_path, platform.system(), table)
+        logger_object.debug("%s%s ENGINE=InnoDB; return: %s Runtime: %.2fs" %(text, table, result, running_time))
+    logger_object.debug("PROCESS STOP")
+else:
+    logger_object.debug("mysql not found")
+
+```
+
+过程
+
+| 记录             | 参数                          |
+| ---------------- | ----------------------------- |
+| 开始时间         | 2023-01-22 22:07:40           |
+| 完成时间         | 2023-01-23 01:47:46           |
+| 历时             | 3小时47分06秒                 |
+| 原数据库大小     | 12.1 GB (12,994,827,428 字节) |
+| 转化后数据库大小 | 25.7 GB (27,691,326,523 字节) |
+

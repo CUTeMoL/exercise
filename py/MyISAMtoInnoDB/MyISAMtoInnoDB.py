@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*- 
 import os
 import time
 import platform
@@ -10,6 +12,7 @@ import subprocess
 改进计划
 1.重写计时器
 2.logging配置文件化
+3.多进程|多线程执行
 '''
 
 db_object = {
@@ -21,8 +24,8 @@ db_object = {
 }
 
 __author__ = "lxw"
-__last_modify_date__ = "2023.01.22"
-__modify__ = ""
+__last_modify_date__ = "2023.01.23"
+__modify__ = "日志显示"
 
 
 workpath=os.path.dirname(__file__)
