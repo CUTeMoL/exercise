@@ -117,7 +117,7 @@ if os.path.isfile(mysql_path):
     tables = get_MyISAM_tables(db_object, mysql_path, platform.system())
     for table in tables:
         text, result, running_time = MyISAM_to_InnoDB(db_object, mysql_path, platform.system(), table)
-        logger_object.debug("%s%s ENGINE=InnoDB; return: %s Runtime: %.2fs" %(text, table, result, running_time))
+        logger_object.debug("%s%s ENGINE=InnoDB; return: %s Runtime: %.2f s" %(text, table, result, running_time))
     logger_object.debug("PROCESS STOP")
 else:
     logger_object.debug("mysql not found")

@@ -3839,6 +3839,8 @@ dict_object = {"lxw": 27, "lgh": 58}
 
 `Decorator`相当于装饰器接收原来的函数,然后改造,返回新的函数
 
+装饰类方法时,需要传对象
+
 ```python
 def decorator(func):
     def wrapper(*args,**kwargs):
