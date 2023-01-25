@@ -4,11 +4,15 @@
 
 ### python
 
+
+
 #### arpScan.py
 
 arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
 
 ---
+
+
 
 #### machineInfo.py
 
@@ -16,11 +20,17 @@ arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
 
 ---
 
+**2023.01.26重写中**
+
+
+
 #### dirDiff.py
 
 查看文件夹内容是否存在不同
 
 ---
+
+
 
 #### dirBackup.py
 
@@ -28,11 +38,15 @@ arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
 
 ---
 
+
+
 #### PVcountWriteExcel.py
 
 统计IP的访问次数和url访问次数，并写入excel文件，绘制图表
 
 ---
+
+
 
 #### urlTest.py
 
@@ -40,11 +54,15 @@ arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
 
 ---
 
+
+
 #### mongoDBNginxLogs.py
 
 解析IP地址来源并将日志存储到到MongoDB中
 
 ---
+
+
 
 #### traceRouteAndIpGeo.py
 
@@ -52,11 +70,15 @@ arping出局域网的MAC地址，通过MAC地址匹配OUI网卡生产商
 
 ---
 
+
+
 #### myterminal.py
 
 paramiko模块使用
 
 ---
+
+
 
 #### fileDiff.py
 
@@ -64,11 +86,15 @@ paramiko模块使用
 
 ---
 
+
+
 #### warningMail.py
 
 监控内存，分区空间，超过后发送警告邮件
 
 ---
+
+
 
 #### findTruePid.py
 
@@ -76,17 +102,23 @@ paramiko模块使用
 
 ---
 
+
+
 #### md5check.py
 
 检测文件的MD5值
 
 ---
 
+
+
 #### ftpUpload.py
 
 上传文件到ftp服务器
 
 ---
+
+
 
 #### portScaner.py
 
@@ -106,7 +138,27 @@ paramiko模块使用
 
 `multiprocessing.Pool`改为使用`ProcessPoolExecutor`
 
+
+
+#### MyISAMtoInnoDB.py
+
+转化MySQL的库中以MyISAM为引擎的表为InnoDB引擎
+
+---
+
+**2022.11.22更新,简单实现计时和日志输出功能**
+
+使用函数式编程
+
+**2022.11.25更新,优化了日志输出**
+
+重写日志输出格式,由函数改为类
+
+
+
 ### shell
+
+
 
 #### inotifywait.sh
 
@@ -114,11 +166,15 @@ paramiko模块使用
 
 ---
 
+
+
 #### mysql_slave_status.sh
 
 主从同步监控
 
 ---
+
+
 
 #### my_iftop.sh
 
@@ -126,11 +182,15 @@ paramiko模块使用
 
 ---
 
+
+
 #### resource_top.sh
 
 进程资源占用排名
 
 ---
+
+
 
 #### web_quality.sh
 
@@ -138,11 +198,15 @@ paramiko模块使用
 
 ---
 
+
+
 #### create_user.sh
 
 批量创建用户
 
 ---
+
+
 
 #### total_resource_analyze.sh
 
@@ -150,11 +214,15 @@ paramiko模块使用
 
 ---
 
+
+
 #### accesslog_analyze.sh
 
 IP访问次数排名
 
 ---
+
+
 
 #### logrotate_acceslog.sh
 
@@ -162,17 +230,23 @@ IP访问次数排名
 
 ---
 
+
+
 #### send_ssh_key.sh
 
 发送ssh公钥
 
 ---
 
+
+
 #### kubernetes_manager.sh
 
 kubernetes一键二进制部署脚本，附带集群证书更新功能，添加新节点功能
 
 ---
+
+
 
 #### mysql_install.sh
 
@@ -192,17 +266,23 @@ _修改`basedir`路径,使得不同实例可以使用相同的`basedir`,节省�
 
 _修改`my.cnf`路径,方便多实例管理_
 
+
+
 #### mysql_replica_manager.sh
 
 主从同步工具,可以修复一些常见的主从同步错误
 
 ---
 
+
+
 #### mysql_backup.sh
 
 `mysql[5.7|8.0]`定时全库备份脚本
 
 ---
+
+
 
 #### ftp_install.sh
 
@@ -213,6 +293,8 @@ ftp的安装
 **2022.10.31**
 
 _升级到以虚拟用户的方式部署_
+
+
 
 ## 经验笔记（整理中）
 
