@@ -4093,11 +4093,22 @@ SHOW GRANTS FOR "root"@"localhost" ;
 
 ```sql
 -- 8.0以后
-CREATE USER 'native'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password!';
+CREATE USER 'native'@'localhost' IDENTIFIED WITH mysql_native_password BY '123456';
 CREATE USER 'native'@'localhost' IDENTIFIED WITH mysql_native_password BY PASSWORD '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9';
 -- 通用
 CREATE USER 'lxw'@'localhost' IDENTIFIED BY '123456';
 ```
+
+### 修改密码
+
+```sql
+-- 5.6以前
+UPDATE mysql.user SET PASSWORD=PASSWORD("123456") WHERE User="root" AND Host="localhost";
+-- 5.7以后
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '123456';
+```
+
+
 
 ### 授权用户
 
