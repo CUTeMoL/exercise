@@ -126,18 +126,26 @@ def net_info():
 def net_device():
     print("---每个网卡状态信息---")
     for if_name in psutil.net_if_addrs():
-        print(f"{if_name} 启用状态：{psutil.net_if_stats()[if_name].isup} ")
+        print("%s\nstatus: %s "%(if_name, psutil.net_if_stats()[if_name].isup), end="")
         for i in range(len(psutil.net_if_addrs()[if_name])):
-            print(f"\t{psutil.net_if_addrs()[if_name][i]}")
-            print(psutil.net_if_addrs()[if_name][i].family.value)
             if psutil.net_if_addrs()[if_name][i].family.value == -1:
-                print(psutil.net_if_addrs()[if_name][i].address)
-
+                print("MAC: %s "%(psutil.net_if_addrs()[if_name][i].address), end="")
+            elif psutil.net_if_addrs()[if_name][i].family.value == 2:
+                print("IPV4address: %s "%(psutil.net_if_addrs()[if_name][i].address), end="")
+            elif psutil.net_if_addrs()[if_name][i].family.value == 23:
+                print("IPV6address: %s "%(psutil.net_if_addrs()[if_name][i].address), end="")
+        print("\n")
 
 def connect_info():
     print("---当前连接情况---")
     for connection in psutil.net_connections():
-        print(connection)
+        # print(connection)
+        if connection.status == "LISTEN":
+            print("LISTEN",connection)
+        elif connection.status == "NONE":
+            print("NONE", connection)
+        elif connection.status == "ESTABLISHED":
+            print("ESTABLISHED", connection)
 
 
 def login_info():
