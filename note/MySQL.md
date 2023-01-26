@@ -4568,11 +4568,354 @@ else:
 
 过程
 
-| 记录             | 参数                          |
-| ---------------- | ----------------------------- |
-| 开始时间         | 2023-01-22 22:07:40           |
-| 完成时间         | 2023-01-23 01:47:46           |
-| 历时             | 3小时47分06秒                 |
-| 原数据库大小     | 12.1 GB (12,994,827,428 字节) |
-| 转化后数据库大小 | 25.7 GB (27,691,326,523 字节) |
+| 记录                       | 参数                          |
+| -------------------------- | ----------------------------- |
+| 开始时间                   | 2023-01-22 22:07:40           |
+| 完成时间                   | 2023-01-23 01:47:46           |
+| 历时                       | 3小时47分06秒                 |
+| 原数据库大小               | 12.1 GB (12,994,827,428 字节) |
+| 转化后数据库大小           | 25.7 GB (27,691,326,523 字节) |
+| 转化后表的格式(ROW_FORMAT) | Dynamic                       |
+
+### 2023.01.26
+
+配置:
+
+| 配置       | 参数                      |
+| ---------- | ------------------------- |
+| CPU        | i7-4790 CPU @ 3.60GHz,4核 |
+| 内存       | 16G                       |
+| 系统       | Windows10                 |
+| 数据库大小 | 12.1G                     |
+| 表数       | 546                       |
+
+my.ini
+
+```shell
+[mysqld]
+server-id=56
+port=3311
+basedir=D:/Program Files/Sample/mysql-5.6.51/bin
+datadir=E:/data56
+tmpdir=C:/windows/temp
+language=D:/Program Files/Sample/mysql-5.6.51/share
+character_set_server=utf8mb4
+collation_server=utf8mb4_general_ci
+transaction_isolation=READ-COMMITTED
+open_files_limit=65535
+innodb_open_files=65535
+#skip_name_resolve=1
+back_log=500
+max_connections=2048
+innodb_io_capacity=4000
+innodb_io_capacity_max=8000
+max_allowed_packet=64M
+
+# general-log
+general-log=1
+general_log_file=E:/mysql56_log/mysql_log.txt
+
+# binlog
+log-bin=E:/log_bin56/log-bin
+expire-logs-days=10
+sync-binlog=1
+max_binlog_size=1024M
+binlog_cache_size=64K
+max_binlog_cache_size=1024M
+binlog_format=ROW
+
+# redolog
+innodb_log_file_size=4G
+innodb_log_buffer_size=32M
+
+# undolog
+innodb_undo_tablespaces=4
+# innodb_max_undo_log_size=4G
+innodb_log_files_in_group=2
+
+# slow query log
+slow_query_log=1
+# log_query_time=2
+log_queries_not_using_indexes=1
+log_throttle_queries_not_using_indexes=60
+min_examined_row_limit=100
+log_slow_admin_statements=1
+log_slow_slave_statements=1
+
+# MyISAM优化
+key_buffer_size=1024M
+myisam_max_sort_file_size=10G
+# myisam_repair_threads=1
+read_buffer_size=4M
+bulk_insert_buffer_size=64M
+myisam_sort_buffer_size=128M
+
+# innodb优化
+innodb_buffer_pool_size=2048M
+innodb_buffer_pool_instances=4
+innodb_buffer_pool_load_at_startup=1
+innodb_buffer_pool_dump_at_shutdown=1
+innodb_data_file_path=ibdata1:1G:autoextend
+innodb_write_io_threads=4
+innodb_read_io_threads=4
+innodb_flush_log_at_trx_commit=1
+# innodb_flush_sync=0
+innodb_flush_neighbors=0
+innodb_purge_threads=4
+# innodb_page_cleaners=4
+innodb_max_dirty_pages_pct=50
+# innodb_flush_method=O_DIRECT
+innodb_lru_scan_depth=1024
+innodb_checksums=1
+innodb_checksum_algorithm=crc32
+innodb_lock_wait_timeout=10
+innodb_rollback_on_timeout=1
+innodb_print_all_deadlocks=1
+innodb_file_per_table=1
+innodb_online_alter_log_max_size=2048M
+innodb_stats_on_metadata=0
+# internal_tmp_disk_storage_engine=InnoDB
+innodb_status_output_locks=0
+
+
+# sql优化
+read_rnd_buffer_size=8M
+join_buffer_size=8M
+sort_buffer_size=8M
+tmp_table_size=64M
+max_heap_table_size=1024M
+sql_mode=ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+```
+
+script
+
+```python
+import os
+import time
+import platform
+import logging
+import logging.handlers
+import functools
+import subprocess
+import ipaddress
+
+'''
+改进计划
+1.logging配置文件化
+2.数据库对象使用配置文件或输入的方式
+3.日志写入mongodb
+'''
+
+__author__ = "lxw"
+__last_modify_date__ = "2023.01.25"
+__modify__ = "重写日志输出格式,函数改为类"
+
+
+
+log_path = r"%s/%s_%s.log" %(os.path.dirname(__file__), platform.node(),time.strftime('%Y-%m-%d', time.localtime()))
+
+formatter_object = logging.Formatter("{'datetime': '%(asctime)s', 'level': '%(levelname)s', 'message': %(message)s}")
+
+streamhandler_object = logging.StreamHandler(stream=None)
+streamhandler_object.setLevel(logging.INFO)
+streamhandler_object.setFormatter(formatter_object)
+
+filehandler_object = logging.FileHandler(filename=log_path, mode='a', encoding="utf8", delay=False)
+filehandler_object.setLevel(logging.DEBUG)
+filehandler_object.setFormatter(formatter_object)
+
+logger_object = logging.getLogger("_%s" %(time.strftime('%Y-%m-%d', time.localtime())))
+logger_object.setLevel(logging.DEBUG)
+logger_object.addHandler(streamhandler_object)
+logger_object.addHandler(filehandler_object)
+
+
+def run_log(text):
+    def timecalc(func):
+        @functools.wraps(func)
+        def exectimes(*args, **kwargs):
+            starttime = time.time()
+            func_result = func(*args, **kwargs)
+            endtime = time.time()
+            running_time = endtime - starttime
+            exec_result = {
+                "task": text,
+                "func_result": func_result,
+                "runnning_time": "%.3f" %(running_time)
+            }
+            return exec_result
+        return exectimes
+    return timecalc
+
+
+class database_object(object):
+    platform_system = platform.system()
+    def __init__(self, hostname, port, user, passwd, dbname):
+        self.__host = hostname
+        self.__port = port
+        self.__user = user
+        self.__passwd = passwd
+        self.__dbname = dbname
+
+
+    @property
+    def host(self):
+        return self.__host
+
+    @host.setter
+    def host(self, ipaddr):
+        if isinstance(ipaddr, (ipaddress.ip_address, str)):
+            self.__host = ipaddr
+        else:
+            raise ValueError('Must be an ipaddress.')
+
+
+    @property
+    def port(self):
+        return self.__port
+
+    @port.setter
+    def port(self, dbport):
+        if isinstance(dbport, (int, )) and dbport > 0 and dbport <= 65525 :
+            self.__port = dbport
+        else:
+            raise ValueError('Must be a number(1-65535).')
+
+
+    @property
+    def user(self):
+        return self.__user
+
+    @user.setter
+    def user(self, dbuser):
+        if isinstance(dbuser, (str, )):
+            self.__user = dbuser
+        else:
+            raise ValueError('Must be a string.')
+
+
+    @property
+    def passwd(self):
+        return self.__passwd
+
+    @passwd.setter
+    def passwd(self, dbpasswd):
+        if isinstance(dbpasswd, (str, )):
+            self.__passwd = dbpasswd
+        else:
+            raise ValueError('Must be a string.')
+
+
+    @property
+    def dbname(self):
+        return self.__dbname
+
+    @dbname.setter
+    def dbname(self, dbname):
+        if isinstance(dbname, (str, )):
+            self.__dbname = dbname
+        else:
+            raise ValueError('Must be a string.')
+
+
+    def query_dbinfo(self):
+        dbinfo = {
+            "dbhost": self.__host,
+            "dbport": self.__port,
+            "dbuser": self.__user,
+            "dbpasswd": self.__passwd,
+            "dbname":  self.__dbname
+        }
+        return dbinfo
+
+
+    def get_MyISAM_tables(self, mysql):
+        get_tables_command = '''{} -h{} -P{} -u{} -p{} {} -s -N -e "SELECT TABLE_NAME from information_schema.TABLES WHERE TABLE_SCHEMA='{}' and ENGINE='MyISAM';"'''.format(
+            mysql,
+            self.host,
+            self.port,
+            self.user,
+            self.passwd,
+            self.dbname,
+            self.dbname
+        )
+        if self.platform_system == "Windows":
+            get_tables = subprocess.run(get_tables_command, shell=True, capture_output=True, encoding="ansi")
+        else:
+            get_tables = subprocess.run(get_tables_command, shell=True, capture_output=True, encoding="utf-8")
+        if get_tables.returncode == 0:
+            self.MyISAM_tables = get_tables.stdout.split()
+        else:
+            self.MyISAM_tables = None
+            get_MyISAM_tables_result = {
+            "commandline": get_tables.args,
+            "returncode": get_tables.returncode,
+            "stdout": get_tables.stdout,
+            "stderr": get_tables.stderr
+        }
+            logger_object.error(get_MyISAM_tables_result)
+        return self.MyISAM_tables
+
+
+    @run_log(('CHANGE ENGINE=InnoDB'))
+    def MyISAM_to_InnoDB(self, mysql, MyISAM_table):
+        alter_table_command = '{} -h{} -P{} -u{} -p{} -e "ALTER TABLE {}.{} ENGINE=InnoDB;"'.format(
+            mysql,
+            self.host,
+            self.port,
+            self.user,
+            self.passwd,
+            self.dbname,
+            MyISAM_table
+        )
+        if self.platform_system == "Windows":
+            alter_table_result = subprocess.run(alter_table_command, shell=True, capture_output=True, encoding="ansi")
+        else:
+            alter_table_result = subprocess.run(alter_table_command, shell=True, capture_output=True, encoding="utf-8")
+        MyISAM_to_InnoDB_result = {
+            "commandline": alter_table_result.args,
+            "returncode": alter_table_result.returncode,
+            "stdout": alter_table_result.stdout,
+            "stderr": alter_table_result.stderr
+        }
+        return MyISAM_to_InnoDB_result
+
+
+
+
+if __name__ == "__main__":
+    workpath=os.path.dirname(__file__)
+    os.chdir(workpath)
+    db_object = database_object("localhost", 3311, "root", "123456", "cq1")
+    if platform.system() == "Windows":
+        mysql_path = r"{}/bin/mysql.exe".format(workpath)
+    else:
+        mysql_path = r"{}/bin/mysql".format(workpath)
+
+    if os.path.isfile(mysql_path):
+        logger_object.debug("{'PROCESS': 'RUNNING'}")
+        tables = db_object.get_MyISAM_tables(mysql_path)
+        if tables:
+            for table in tables:
+                result =  db_object.MyISAM_to_InnoDB(mysql_path, table)
+                if result["func_result"]["returncode"] != 0 :
+                    logger_object.error(result)
+                else:
+                    logger_object.debug(result)
+        logger_object.debug("{'PROCESS': 'STOP'}")
+    else:
+        logger_object.debug("mysql not found")
+
+```
+
+过程
+
+| 记录                       | 参数                          |
+| -------------------------- | ----------------------------- |
+| 开始时间                   | 2023-01-26 14:27:17           |
+| 完成时间                   | 2023-01-26 17:23:20           |
+| 历时                       | 2小时56分03秒                 |
+| 原数据库大小               | 12.1 GB (12,994,827,428 字节) |
+| 转化后数据库大小           | 25.7 GB (27,691,195,451 字节) |
+| 转化后表的格式(ROW_FORMAT) | Compact                       |
 
