@@ -189,8 +189,6 @@ class database_object(object):
         return MyISAM_to_InnoDB_result
 
 
-
-
 if __name__ == "__main__":
     workpath=os.path.dirname(__file__)
     os.chdir(workpath)

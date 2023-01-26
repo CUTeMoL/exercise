@@ -2,36 +2,16 @@ import os
 import time
 import psutil
 import platform
-import logging
-import logging.handlers
+
 '''
 重写计划
 需求1:统计CPU占用最高的进程
 需求2:统计内存占用最高的进程
 需求3:占用端口的进程名及pid
 需求4:文件查找,按日期,按大小,按类别
-需求5:查询结果日志记录
+
 '''
 
-
-os.chdir(os.path.dirname(__file__))
-log_path = "%s_%s.log" %(platform.node(),time.strftime('%Y-%m-%d', time.localtime()))
-
-formatter_object = logging.Formatter("%(message)s")
-
-streamhandler_object = logging.StreamHandler(stream=None)
-streamhandler_object.setLevel(logging.DEBUG)
-streamhandler_object.setFormatter(formatter_object)
-
-
-filehandler_object = logging.FileHandler(filename=log_path, mode='w', encoding="utf8", delay=False)
-filehandler_object.setLevel(logging.INFO)
-filehandler_object.setFormatter(formatter_object)
-
-logger_object = logging.getLogger("machineInfo_%s" %(time.strftime('%Y-%m-%d', time.localtime())))
-logger_object.setLevel(logging.DEBUG)
-logger_object.addHandler(streamhandler_object)
-logger_object.addHandler(filehandler_object)
 
 def platform_info():
     print("-----系统硬件信息-----")
@@ -47,8 +27,7 @@ def platform_info():
     # print("包含上面所有的信息汇总:" , platform.uname())
 
 def total_info():
-    logger_object.info(
-'''
+    print('''
 %s的当前系统为%s %s
 
 当前cpu使用情况:
@@ -56,7 +35,8 @@ def total_info():
 当前内存使用情况:
 总量 %.2f GB, 已使用 %.2f GB 占比 %.2f %%, 剩余 %.2f GB
 '''
-        %(platform.node(),
+        %(
+        platform.node(),
         platform.system(), platform.architecture()[0],
         psutil.cpu_times().user * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
         psutil.cpu_times().system * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
@@ -67,9 +47,9 @@ def total_info():
         psutil.virtual_memory().available / 1024 / 1024 / 1024
         )
     )
-    logger_object.info("分区使用情况:")
+    print("分区使用情况:")
     for partition in psutil.disk_partitions():
-        logger_object.info(
+        print(
             "分区: %s 挂载点: %s 文件系统: %s 总量: %.2f G 已用: %.2f G 占比 %.2f %% 剩余: %.2f G"
             %(
                 partition.device,
@@ -86,28 +66,61 @@ def total_info():
 
 def cpu_info():
     print("-----CPU相关信息-----")
-
+    print("CPU核心数: %d 逻辑线程数: %d 主频: %.2f Mhz"%(psutil.cpu_count(logical=False), psutil.cpu_count(logical=True), psutil.cpu_freq(percpu=False).current))
+    load_avg = [x / psutil.cpu_count() * 100 for x in psutil.getloadavg()]
+    print("CPU平均占用情况:\n1分钟: %.2f %% 5分钟: %.2f %% 15分钟: %.2f %%"%(load_avg[0], load_avg[1], load_avg[2]))
+    print("当前用户进程占用 %.2f %%,系统占用 %.2f %%, 剩余空闲 %.2f %%" 
+        %(
+            psutil.cpu_times().user * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
+            psutil.cpu_times().system * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
+            psutil.cpu_times().idle * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system)
+        )
+    )
 def mem_info():
     print("-----内存相关信息-----")
-
+    print("总量 %.2f GB, 已使用 %.2f GB 占比 %.2f %%, 剩余 %.2f GB" 
+        %(
+            psutil.virtual_memory().total / 1024 / 1024 / 1024,
+            psutil.virtual_memory().used / 1024 / 1024 / 1024,
+            psutil.virtual_memory().percent,
+            psutil.virtual_memory().available / 1024 / 1024 / 1024
+        )
+    )
 
 def disk_info():
     print("-----磁盘的分区相关信息-----")
-
-    print("---挂载的硬盘的IO信息---")
-    for disk in psutil.disk_io_counters(perdisk=True):
-        print("{}\t{}".format(str(disk).ljust(10, " "), psutil.disk_io_counters(perdisk=True)[disk]))
+    for partition in psutil.disk_partitions():
+        print(
+            "分区: %s 挂载点: %s 文件系统: %s 总量: %.2f G 已用: %.2f G 占比 %.2f %% 剩余: %.2f G"
+            %(
+                partition.device,
+                partition.mountpoint,
+                partition.fstype,
+                psutil.disk_usage(partition.mountpoint).total / 1024 / 1024 / 1024,
+                psutil.disk_usage(partition.mountpoint).used / 1024 / 1024 / 1024,
+                psutil.disk_usage(partition.mountpoint).percent,
+                psutil.disk_usage(partition.mountpoint).free / 1024 / 1024 / 1024
+            )
+        )
 
 
 def net_info():
     print("-----总网络流量信息-----")
-    print("\t共接受{}MB，发送{}MB".format(int(psutil.net_io_counters().bytes_recv) / 1024 / 1024,
-                                    int(psutil.net_io_counters().bytes_sent) / 1024 / 1024))
+    print("共接受 %.2f MB,发送 %.2f MB"
+        %(
+            int(psutil.net_io_counters().bytes_recv) / 1024 / 1024,
+            int(psutil.net_io_counters().bytes_sent) / 1024 / 1024
+        )
+    )
     print("--每个网卡流量信息---")
     for if_name in psutil.net_io_counters(pernic=True):
-        print("\t{}: 共接受{}MB，发送{}MB".format(str(if_name).ljust(15, " "),
-                                            int(psutil.net_io_counters(pernic=True)[if_name].bytes_recv) / 1024 / 1024,
-                                            int(psutil.net_io_counters(pernic=True)[if_name].bytes_sent) / 1024 / 1024))
+        print("%s: 共接受 %.2f MB,发送 %.2f MB"
+            %(
+                if_name,
+                int(psutil.net_io_counters(pernic=True)[if_name].bytes_recv) / 1024 / 1024,
+                int(psutil.net_io_counters(pernic=True)[if_name].bytes_sent) / 1024 / 1024
+            )
+        )
 
 
 def net_device():
@@ -116,6 +129,9 @@ def net_device():
         print(f"{if_name} 启用状态：{psutil.net_if_stats()[if_name].isup} ")
         for i in range(len(psutil.net_if_addrs()[if_name])):
             print(f"\t{psutil.net_if_addrs()[if_name][i]}")
+            print(psutil.net_if_addrs()[if_name][i].family.value)
+            if psutil.net_if_addrs()[if_name][i].family.value == -1:
+                print(psutil.net_if_addrs()[if_name][i].address)
 
 
 def connect_info():
