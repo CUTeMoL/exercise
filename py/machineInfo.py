@@ -11,8 +11,8 @@ import platform
 需求4:文件查找,按日期,按大小,按类别
 
 '''
-
-
+listen_list = []
+process_list = []
 def platform_info():
     print("-----系统硬件信息-----")
     print("\t您的系统为:" + platform.system())
@@ -27,6 +27,7 @@ def platform_info():
     # print("包含上面所有的信息汇总:" , platform.uname())
 
 def total_info():
+    cpu_percent = psutil.cpu_times_percent(interval=5)
     print('''
 %s的当前系统为%s %s
 
@@ -38,9 +39,9 @@ def total_info():
         %(
         platform.node(),
         platform.system(), platform.architecture()[0],
-        psutil.cpu_times().user * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
-        psutil.cpu_times().system * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
-        psutil.cpu_times().idle * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
+        cpu_percent.user,
+        cpu_percent.system,
+        cpu_percent.idle,
         psutil.virtual_memory().total / 1024 / 1024 / 1024,
         psutil.virtual_memory().used / 1024 / 1024 / 1024,
         psutil.virtual_memory().percent,
@@ -69,13 +70,29 @@ def cpu_info():
     print("CPU核心数: %d 逻辑线程数: %d 主频: %.2f Mhz"%(psutil.cpu_count(logical=False), psutil.cpu_count(logical=True), psutil.cpu_freq(percpu=False).current))
     load_avg = [x / psutil.cpu_count() * 100 for x in psutil.getloadavg()]
     print("CPU平均占用情况:\n1分钟: %.2f %% 5分钟: %.2f %% 15分钟: %.2f %%"%(load_avg[0], load_avg[1], load_avg[2]))
+    cpu_percent = psutil.cpu_times_percent(interval=5)
     print("当前用户进程占用 %.2f %%,系统占用 %.2f %%, 剩余空闲 %.2f %%" 
         %(
-            psutil.cpu_times().user * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
-            psutil.cpu_times().system * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system),
-            psutil.cpu_times().idle * 100 / (psutil.cpu_times().idle + psutil.cpu_times().user + psutil.cpu_times().system)
+            cpu_percent.user,
+            cpu_percent.system,
+            cpu_percent.idle
         )
     )
+    for process in psutil.process_iter():
+        # print(process.as_dict())
+        process_list.append(
+            {
+                "exe": process.as_dict()["exe"],
+                "memory_percent": process.as_dict()["memory_percent"],
+                "cpu_percent": process.as_dict()["cpu_percent"],
+                "create_time": process.as_dict()["create_time"]
+            }
+        )
+    process_list.sort(key=lambda x:(x["cpu_percent"], x["memory_percent"]), reverse=True)
+    print(process_list[0:10])
+
+
+                                                                                                                                       
 def mem_info():
     print("-----内存相关信息-----")
     print("总量 %.2f GB, 已使用 %.2f GB 占比 %.2f %%, 剩余 %.2f GB" 
@@ -139,13 +156,30 @@ def net_device():
 def connect_info():
     print("---当前连接情况---")
     for connection in psutil.net_connections():
-        # print(connection)
         if connection.status == "LISTEN":
-            print("LISTEN",connection)
-        elif connection.status == "NONE":
-            print("NONE", connection)
-        elif connection.status == "ESTABLISHED":
-            print("ESTABLISHED", connection)
+            if connection.family.name == "AF_INET":
+                listen_list.append(
+                    {
+                        "protocol": "TCP" if (connection.type.name == "SOCK_STREAM") else "UDP",
+                        "pid": connection.pid,
+                        "process": psutil.Process(connection.pid).name(),
+                        "port": "%s:%s"%(connection.laddr.ip,connection.laddr.port)
+                    }
+                )
+            elif connection.family.name == "AF_INET6":
+                listen_list.append(
+                    {
+                        "protocol": "TCP6" if (connection.type.name == "SOCK_STREAM") else "UDP6",
+                        "pid": connection.pid,
+                        "process": psutil.Process(connection.pid).name(),
+                        "port": "%s:%s"%(connection.laddr.ip,connection.laddr.port)
+                    }
+                )
+
+    listen_list.sort(key=lambda x:(x["protocol"],x["port"]))
+    print("%-10s %-20s %-10s %-6s"%("protocol","listen","pid","process"))
+    for listen_object in listen_list:
+        print("%-10s %-20s %-10s %-6s"%(listen_object["protocol"],listen_object["port"],listen_object["pid"],listen_object["process"]))
 
 
 def login_info():
