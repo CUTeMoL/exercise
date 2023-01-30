@@ -5,9 +5,9 @@ import platform
 
 '''
 重写计划
-需求1:统计CPU占用最高的进程
-需求2:统计内存占用最高的进程
-需求3:占用端口的进程名及pid
+需求1:统计CPU占用最高的进程,windows下因为调用API的方式获取,因此需要等待时间interval=5s后生效,放弃
+需求2:统计内存占用最高的进程(完成)
+需求3:模拟netstat占用端口的进程名及pid(完成)
 需求4:文件查找,按日期,按大小,按类别
 
 '''
@@ -27,7 +27,10 @@ def platform_info():
     # print("包含上面所有的信息汇总:" , platform.uname())
 
 def total_info():
-    cpu_percent = psutil.cpu_times_percent(interval=5)
+    if platform.system() == "Windows":
+        cpu_percent = psutil.cpu_times_percent(interval=5)
+    else:
+        cpu_percent = psutil.cpu_times_percent()
     print('''
 %s的当前系统为%s %s
 
@@ -70,7 +73,10 @@ def cpu_info():
     print("CPU核心数: %d 逻辑线程数: %d 主频: %.2f Mhz"%(psutil.cpu_count(logical=False), psutil.cpu_count(logical=True), psutil.cpu_freq(percpu=False).current))
     load_avg = [x / psutil.cpu_count() * 100 for x in psutil.getloadavg()]
     print("CPU平均占用情况:\n1分钟: %.2f %% 5分钟: %.2f %% 15分钟: %.2f %%"%(load_avg[0], load_avg[1], load_avg[2]))
-    cpu_percent = psutil.cpu_times_percent(interval=5)
+    if platform.system() == "Windows":
+        cpu_percent = psutil.cpu_times_percent(interval=5)
+    else:
+        cpu_percent = psutil.cpu_times_percent()
     print("当前用户进程占用 %.2f %%,系统占用 %.2f %%, 剩余空闲 %.2f %%" 
         %(
             cpu_percent.user,
@@ -80,14 +86,16 @@ def cpu_info():
     )
     for process in psutil.process_iter():
         # print(process.as_dict())
-        process_list.append(
-            {
-                "exe": process.as_dict()["exe"],
-                "memory_percent": process.as_dict()["memory_percent"],
-                "cpu_percent": process.as_dict()["cpu_percent"],
-                "create_time": process.as_dict()["create_time"]
-            }
-        )
+        if process.pid != 0:
+            process_list.append(
+                {
+                    "exe": process.exe(),
+                    "memory_percent": process.memory_percent(),
+                    "cpu_percent": process.cpu_percent(),
+                    "create_time": process.create_time(),
+                    "pid": process.pid
+                }
+            )
     process_list.sort(key=lambda x:(x["cpu_percent"], x["memory_percent"]), reverse=True)
     print(process_list[0:10])
 
@@ -103,6 +111,22 @@ def mem_info():
             psutil.virtual_memory().available / 1024 / 1024 / 1024
         )
     )
+    for process in psutil.process_iter():
+        # print(process.as_dict())
+        if process.pid != 0:
+            process_list.append(
+                {
+                    "exe": process.exe(),
+                    "memory_percent": process.memory_percent(),
+                    "cpu_percent": process.cpu_percent(),
+                    "create_time": process.create_time(),
+                    "pid": process.pid
+                }
+            )
+    process_list.sort(key=lambda x:(x["cpu_percent"], x["memory_percent"]), reverse=True)
+    print("%-10s %-10s %-20s %-6s %-30s"%("memory", "cpu", "create_time", "pid", "exe"))
+    for top10 in process_list[0:10]:
+        print("%-10.2f %-10.2f %-20s %-6s %-30s"%(top10["memory_percent"], top10["cpu_percent"], top10["create_time"], top10["pid"], top10["exe"]))
 
 def disk_info():
     print("-----磁盘的分区相关信息-----")
@@ -198,12 +222,12 @@ def login_info():
 
 def search_big_files():
     dir_input = input("检索路径(例如 c:/ ): ")
-    bytes_input = int(input("检索大于此大小的文件(MB)： "))
+    bytes_input = int(input("检索大于此大小的文件(MB): "))
     for root, dirs, files in os.walk(dir_input, topdown=False):
         for name in files:
             try:
                 if os.path.getsize(os.path.join(root, name)) >= (1024 * 1024 * bytes_input):
-                    print("大于 %d MB的文件：%s 大小：%.2f MB"
+                    print("大于 %d MB的文件%s 大小：%.2f MB"
                           % (bytes_input, os.path.join(root, name),
                              os.path.getsize(os.path.join(root, name)) / 1024 / 1024))
             except FileNotFoundError:
