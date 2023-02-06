@@ -2558,7 +2558,7 @@ serversocket.listen(5)
 
 while True:
     # 建立客户端连接实例
-    clientsocket,addr = serversocket.accept()      
+    clientsocket,addr = serversocket.accept()
 
     print("连接地址: %s" % str(clientsocket.getpeername()))
 
