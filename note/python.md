@@ -2546,8 +2546,7 @@ if __name__ == "__main__":
 ```python
 import socket
 # 创建 socket 对象
-serversocket = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM)
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # 设定监听的地址和端口
 host = socket.gethostname()
