@@ -2584,6 +2584,35 @@ while True:
 |                                                                        |                             |
 |                                                                        |                             |
 
+### optparse
+
+| 对象   |                                                              | 说明                                                         |
+| ------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Parser | `optparse.OptionParser()`                                    | 创建一个参数对象                                             |
+|        | `Parser.add_option("","", dest="", action="store_True", type=str, help="message")` | 添加选项<br/>`action`有三个值<br/>"store"接受选项后的一个参数为该选项的值,<br/>"store_true",该选项不接受参数,默认`dest`的值为`True`<br/>"store_false",该选项不接受参数,默认`dest`的值为`False`<br>`type`表明接受参数的类型<br/>`dest`赋值给对应的key<br/>`help`帮助信息<br/>`default`默认值 |
+|        | Parser.parse_args()                                          | 参数的接收<br/>返回(options, args)<br>`option`就是选项接受到的key和value参数<br/>`args`就是没被选项获取的参数 |
+|        |                                                              |                                                              |
+
+```python
+import optparse
+
+
+class Myparse(object):
+    def __init__(self):
+        parser = optparse.OptionParser()
+        parser.add_option("--user",dest="user",action="store",help="用户名",default="lxw")
+        parser.add_option("-v",dest="verbose",action="store_true",help="详细信息")
+        self.options, self.args = parser.parse_args()
+    
+
+
+if __name__ == "__main__":
+    askfjs = Myparse()
+    print(askfjs.options)
+    print(askfjs.args)
+
+```
+
 
 
 ### 第三方模块requests:
