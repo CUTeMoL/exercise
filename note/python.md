@@ -2318,6 +2318,32 @@ print(string.getvalue())
 | `struct.pack('>I', int_object)` | 任意数据类型变成`bytes` |
 |                                 |                 |
 
+#### 格式字符
+
+| 格式 | C 类型               | Python 类型       | 标准大小 | 备注     |
+| :--- | :------------------- | :---------------- | :------- | :------- |
+| `x`  | 填充字节             | 无                |          | (7)      |
+| `c`  | `char`               | 长度为 1 的字节串 | 1        |          |
+| `b`  | `signed char`        | 整数              | 1        | (1), (2) |
+| `B`  | `unsigned char`      | 整数              | 1        | (2)      |
+| `?`  | `_Bool`              | bool              | 1        | (1)      |
+| `h`  | `short`              | 整数              | 2        | (2)      |
+| `H`  | `unsigned short`     | 整数              | 2        | (2)      |
+| `i`  | `int`                | 整数              | 4        | (2)      |
+| `I`  | `unsigned int`       | 整数              | 4        | (2)      |
+| `l`  | `long`               | 整数              | 4        | (2)      |
+| `L`  | `unsigned long`      | 整数              | 4        | (2)      |
+| `q`  | `long long`          | 整数              | 8        | (2)      |
+| `Q`  | `unsigned long long` | 整数              | 8        | (2)      |
+| `n`  | `ssize_t`            | 整数              |          | (3)      |
+| `N`  | `size_t`             | 整数              |          | (3)      |
+| `e`  | (6)                  | float             | 2        | (4)      |
+| `f`  | `float`              | float             | 4        | (4)      |
+| `d`  | `double`             | float             | 8        | (4)      |
+| `s`  | `char[]`             | 字节串            |          | (9)      |
+| `p`  | `char[]`             | 字节串            |          | (8)      |
+| `P`  | `void*`              | 整数              |          | (5)      |
+
 ### hashlib:
 
 | 函数                                       | 说明             |
@@ -2360,14 +2386,14 @@ if __name__ == "__main__":
 
 ### itertools:
 
-| 函数                                              | 说明                                    |
-| ----------------------------------------------- | ------------------------------------- |
-| `itertools.count(x ,y)`                         | 创建一个从x开始无限的+y,`Iterator`对象            |
-| `itertools.cycle(Iterable)`                     | 创建一个基于有限的`Iterable`循环的`Iterator`对象    |
-| `itertools.repeat(Object, n)`                   | 创建一个将`Object`无限循环下去的`Iterator`对象      |
-| `itertools.takewhile(lamba x: x<=10, Iterator)` | 利用条件判断创建一个有限的`Iterable`               |
+| 函数                                            | 说明                                                   |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| `itertools.count(x ,y)`                         | 创建一个从x开始无限的+y,`Iterator`对象                 |
+| `itertools.cycle(Iterable)`                     | 创建一个基于有限的`Iterable`循环的`Iterator`对象       |
+| `itertools.repeat(Object, n)`                   | 创建一个将`Object`无限循环下去的`Iterator`对象         |
+| `itertools.takewhile(lamba x: x<=10, Iterator)` | 利用条件判断创建一个有限的`Iterable`                   |
 | `itertools.chain(Iterable, Iterable)`           | 可以把一组`Iterable`串联起来，形成一个更大的`Iterator` |
-|                                                 |                                       |
+| `itertools.product(Iterable,repeat=n)`          | 可以把一组`Iterable`相乘                               |
 
 ### contextlib:
 
@@ -3296,6 +3322,14 @@ f.close()
 ### 内存读写
 
 看io模块
+
+### 序列化
+
+把内存中的数据在不丢失其类型信息的情况下转成为对象的二进制形式的过程,经过正确的反序列化的过程可以准确无误的恢复为原来的对象
+
+常用模块pickle、struct
+
+
 
 ## 十四、异常处理
 
