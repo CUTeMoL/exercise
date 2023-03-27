@@ -458,6 +458,7 @@ socket=/tmp/mysql.sock
 log_timestamps=SYSTEM # log记录时采用系统时间
 explicit_defaults_for_timestamp=on # on时timestamp类型字段不自动更新为当前时间
 # bind-address=0.0.0.0
+lower_case_table_names=1 # 表名小写
 
 #### 字符集 ####
 # default-character-set=utf8 # 旧版本使用
