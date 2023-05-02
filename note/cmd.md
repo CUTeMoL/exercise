@@ -641,7 +641,7 @@ name="process name" get "item1,item2"
 reg Operation [Parameter List]
 Operation:
 QUERY # 查询
-ADD # 添加
+ADD # 添加配合/f可以修改
 DELETE # 删除
 COPY # 复制
 SAVE
