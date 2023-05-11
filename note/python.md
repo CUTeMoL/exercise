@@ -3255,12 +3255,12 @@ else:
 |                | `docker.from_env()`                                          | 快速创建一个连接docker的客户端/socket                        |
 |                | `docker.DockerClient(base_url='tcp://127.0.0.1:1234')`       | 创建一个连接docker的客户端/socket                            |
 | 客户端         |                                                              |                                                              |
-|                | `docker_socket.containers.list()`                            | 列出所有运行中的容器                                         |
+|                | `docker_socket.containers.list()`                            | 列出所有运行中的容器<br/>`all=True`列出所有创建的容器<br/>`filters=` |
 |                | `docker_socket.images.pull('image_name')`                    | 下载镜像                                                     |
 |                | `docker_socket.images.list()`                                | 列出所有镜像                                                 |
 |                | `docker_socket.info()`                                       | docker-service的信息                                         |
 |                | `docker_socket.login()`                                      | 登录docker,需要参数                                          |
-| 容器           | `docker_socket.containers.run("image", "CMD", detach=True)`  | 启动一个容器<br/>`detach=True`可以后台运行<br/>`remove|auto_remove=True`运行完成后自动删除·auto_remove·针对后台运行<br/>`entrypoint|CMD=[list]` 执行的命令<br/>`mounts=[list]` 挂载目录到容器,list为挂载对象<br/>`ports={dict}` 端口转发,list为端口转发的对应关系<br/>`restart_policy={dict}`重启策略 |
+| 容器           | `docker_socket.containers.run("image", "CMD", detach=True)`  | 启动一个容器<br/>`detach=True`可以后台运行<br/>`remove|auto_remove=True`运行完成后自动删除·auto_remove·针对后台运行<br/>`entrypoint|CMD=[list]` 执行的命令<br/>`mounts=[list]` 挂载目录到容器,list为挂载对象<br/>`ports={dict}` 端口转发,list为端口转发的对应关系<br/>`restart_policy={dict}`重启策略<br/>`labels={dict}|[list]`打标签<br/>`name`名称 |
 |                | `docker_socket.containers.get("containerID")`                | 一个容器对象                                                 |
 |                | `container.attrs`                                            | 获取容器信息<br/>["Config"]相关设置<br/>["NetworkSettings"]网络设置 |
 |                | `container.logs()`                                           | 获取容器日志输出                                             |
