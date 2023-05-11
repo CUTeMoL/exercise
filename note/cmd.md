@@ -538,6 +538,12 @@ sc delete service_name # 卸载命令
 
 组策略
 
+导出组策略
+
+```cmd
+secedit /export /cfg gpedit.inf
+```
+
 ### 5. `lusrmgr.msc`
 
 用户和组分配权利和权限管理
