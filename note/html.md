@@ -16,7 +16,7 @@
 | head        | `<meta charset="UTF-8">`                                     | 定义文本的编码                                               |
 | head        | `<meta name="keywords" content="关键字"/>`                   | 定义页面的关键字                                             |
 | head        | `<meta name="Description" content="简介"/>`                  | 简介                                                         |
-| head        | `<link type="text/css" rel="stylesheet" href="**.css"/>`     | 导入css文件                                                  |
+| head        | `<link type="text/css" rel="stylesheet" href="./my.css"/>`   | 引用/导入css文件                                             |
 | head        | `<style type="text/css">label {}</style>`                    | 定义渲染类型为CSS层叠样式表,中间定义显示效果                 |
 | html        | `<body></body>`                                              | 主题内容                                                     |
 | body        | `<h1></h1>`                                                  | 标题,一共6级                                                 |
@@ -54,27 +54,70 @@
 | table       | `<thead></thead>`                                            | 表头                                                         |
 | table       | `<tbody></tbody>`                                            | 表体                                                         |
 | table       | `<tfoot></tfoot>`                                            | 表尾                                                         |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
-|             |                                                              |                                                              |
+| body        | `<form action="h2.html" method="get"></form>`                | 表单标签<br/>action跳转页面<br/>method获取方式               |
+| form        | `<input type="text" name="uname"></input>`                   | 输入表单项<br/>type为输入框类型<br/>text明文输入<br/>password密文输入<br/>submit提交框,此时可以再定义value=""对提交框进行定义<br/>radio单选,checked可以默认选中<br/>checkbox多选,checked可以默认选中<br/>search 指定为可输入下拉选择框,需要再用list定义链接的datalist的id<br/>reset重置按钮<br/>name表单命名，提交时表单项变成参数 |
+| form        | `<select name="下拉选择" id=""></select>`                    | 下拉选择表单项                                               |
+| select      | `<option value="" selected></option>`                        | 定义下拉的选项<br/>selected为默认值                          |
+| form        | `<textarea rows="10" cols="100" name="contents"></textarea>` | 多行文本输入区域                                             |
+| form        | `<fieldset></fieldset>`                                      | 元素可将表单内的相关元素分组                                 |
+| form        | `<legend></legend>`                                          | 标签为`<fieldset>`、`<figure>`以及`<details>`元素定义标题    |
+| form        | `<datalist id="namelist" ></datalist>`                       | 标签定义可选数据的列表,类似下拉框,但是可以搜索               |
+| form        | `<optgroup><optgroup>`                                       | 标签定义选项组（即可以先分组再从组中挑选）                   |
+| optgroup    | `<option value="">`                                          | 可以插入到datalist/optgroup的选项                            |
+| body        | `<iframe src="a.html" name="aiframe" frameborder="1"  width="80%" height="500">` | 页面内嵌入一个子页面                                         |
+| body        | `<audio src="" controls></audio>`                            | 音频标签<br/>controls用户控制                                |
+| audio       | `<source src="" type="audio/mpeg">`                          | 如果audio没定义src可以用source定义                           |
+| body        | `<video src="" controls="controls" width="400" height="300" poster=""></video>` | 视频标签<br/>poster可以定义封面                              |
 |             |                                                              |                                                              |
 |             |                                                              |                                                              |
 |             |                                                              |                                                              |
 
-## 二、标签属性
+## 二、CSS层叠样式表
 
-可以通过`class=""`来给标签添加属性
+样式定义如何显示控制HTML元素,从而实现梅花HTML网页,多个样式定义可层叠为一,后者可以覆盖前者的样式
 
-## 三、javascript
+### 1.格式:
+
+```css
+/*注释内容*/
+selector {propery: value; property: value}
+/*selector可以是标签*/
+```
+
+### 2.引用方式:
+
+(1)外部样式表
+
+```html
+<head>
+    <link type="text/css" rel="stylesheet" href="./my.css"/>
+    <!-- 导入同级目录下的css文件 -->
+</head>
+```
+
+(2)内部样式表
+
+```html
+<style>
+	selector {propery:value;property:value}
+    <!-- 内部定义 -->
+</style>
+```
+
+(3)内联样式
+
+```html
+<label style="propery:value"></label>
+<!-- 内联样式 -->
+```
+
+优先级:内联>(内部样式表or外部样式表)
+
+内部样式表、外部样式表为后覆盖前
+
+### 3.常用选择器
+
+## 三、JavaScript
 
 函数采用小驼峰命名法
 
