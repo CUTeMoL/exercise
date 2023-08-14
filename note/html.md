@@ -81,7 +81,8 @@
 ```css
 /*注释内容*/
 selector {propery: value; property: value}
-/*selector可以是标签*/
+/* selector可以是标签 */
+/* selector可以是*,代表所有标签 */
 ```
 
 ### 2.引用方式:
@@ -116,6 +117,137 @@ selector {propery: value; property: value}
 内部样式表、外部样式表为后覆盖前
 
 ### 3.常用选择器
+
+(1)HTML标签
+
+(2)class
+
+定义class
+
+```html
+<label class="className1 className2">
+</label>
+```
+
+渲染class
+
+```css
+/* 所有标签中含className */
+.className{propery:value}
+/* html标签中含className */
+html.className{propery:value}
+```
+
+(3)id
+
+定义id
+
+```html
+<label id="idName">
+</label>
+```
+
+渲染id
+
+```
+/* 所有标签中含idName */
+#idName{propery:value}
+```
+
+优先级[ID]>[CLASS]>[HTML标签]
+
+(4)关联选择器
+
+```css
+/* label1标签中的label2标签(递归) */
+label1 label2{propery:value}
+/* label1标签中的label2标签(不递归) */
+label1 > label2{propery:value}
+/* label1标签后的紧邻的label2标签(仅一个) */
+label1+label2{propery:value}
+/* label1标签后的label2标签(所有) */
+label1~label2{propery:value}
+```
+
+(5)选择器组
+
+```css
+/* label1,label2标签都 */
+label1,label2{propery:value}
+```
+
+(6)伪类选择器
+
+```css
+/* 未访问 */
+a:link{propery:value}
+/* 已访问 */
+a:visited{propery:value}
+/* 鼠标在链接上 */
+a:hover{propery:value}
+/* 激活链接 */
+a:active{propery:value}
+```
+
+4.常用属性
+
+尺寸:"%"百分比、"px"像素、"em"当前字体的尺寸
+
+颜色color:"red"英文单词、"#rrggbb"十六进制数、"rgb(x,x,x)"RGB数值
+
+| 类型 | 属性                  | 说明                                                         |
+| ---- | --------------------- | ------------------------------------------------------------ |
+| 字体 | `font-size`           | 字体大小,单位参照尺寸                                        |
+| 字体 | `font-family`         | 字体                                                         |
+| 字体 | `font-weight`         | 加粗,默认400,通常加粗700                                     |
+| 字体 | `font-style`          | `normal`正常,`italic`斜体,`oblique`倾斜字体                  |
+| 文本 | `text-indent`         | 首行缩进                                                     |
+| 文本 | `text-overflow`       | 溢出是否省略                                                 |
+| 文本 | `text-align`          | 文本位置`left`,`center`,`right`                              |
+| 文本 | `text-decoration`     | 字体划线,`none`,`underline`,`line-through`                   |
+| 文本 | `text-shadow`         | 文本文字阴影                                                 |
+| 文本 | `vertical-align`      | 文本的垂直对齐方式                                           |
+| 文本 | `letter-spacing`      | 文字或字母间距                                               |
+| 文本 | `line-height`         | 行高                                                         |
+| 文本 | `color`               | 字体颜色                                                     |
+| 文本 | `white-space:nowrap`  | 强制显示在同一行                                             |
+| 背景 | `background-color`    | 背景颜色                                                     |
+| 背景 | `background-image`    | 背景图片<br/>url(路径)指定图片地址<br/>repeating-linear-gradient(to right,red,black)渐变色 |
+| 背景 | `background-repeat`   | 重复方式`no-repeat`不平铺,`repeat`全平铺,`repeat-x`X轴平铺,`repeat-y`y轴平铺 |
+| 背景 | `background-position` | 定位 x轴 y轴                                                 |
+| 背景 | `background-size`     | 背景大小                                                     |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+|      |                       |                                                              |
+
+
 
 ## 三、JavaScript
 
