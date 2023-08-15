@@ -216,23 +216,23 @@ a:active{propery:value}
 | 背景 | `background-repeat`   | 重复方式`no-repeat`不平铺,`repeat`全平铺,`repeat-x`X轴平铺,`repeat-y`y轴平铺 |
 | 背景 | `background-position` | 定位 x轴 y轴                                                 |
 | 背景 | `background-size`     | 背景大小                                                     |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
+| 边框 | `border-color`        | 颜色                                                         |
+| 边框 | `border-style`        | 边框样式`solid`实线,`dotted`点状线,`dashed`虚线              |
+| 边框 | `border-width`        | 边框厚度                                                     |
+| 边框 | `border-left-color`   | 左边框颜色                                                   |
+| 边框 | `border-left-width`   | 左边框厚度                                                   |
+| 边框 | `border-radius`       | 指定圆角`50%`时是一个圆                                      |
+| 边框 | `padding-top`         | 内填充(与边框的距离),上                                      |
+| 边框 | `padding-right`       | 内填充,右                                                    |
+| 边框 | `padding-bottom`      | 内填充,下                                                    |
+| 边框 | `padding-left`        | 内填充,左                                                    |
+| 边框 | `margin`              | 整个边框对外的间距                                           |
+| 定位 | `position`            | 定位,`absolute`绝对定位,`fixed`固定定位,`relative`指定内层左相对定位 |
+| 定位 | `z-index`             | z轴定位,决定图层                                             |
+| 定位 | `top`                 | 距离顶的位置                                                 |
+| 定位 | `left`                | 距离左的位置                                                 |
+| 定位 | `right`               | 距离右的位置                                                 |
+| 定位 | `bottom`              | 距离下的位置                                                 |
 |      |                       |                                                              |
 |      |                       |                                                              |
 |      |                       |                                                              |
