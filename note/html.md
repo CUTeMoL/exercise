@@ -72,6 +72,10 @@
 |             |                                                              |                                                              |
 |             |                                                              |                                                              |
 
+实体替换符(字符实体):
+
+
+
 ## 二、CSS层叠样式表
 
 样式定义如何显示控制HTML元素,从而实现梅花HTML网页,多个样式定义可层叠为一,后者可以覆盖前者的样式
@@ -195,57 +199,77 @@ a:active{propery:value}
 
 颜色color:"red"英文单词、"#rrggbb"十六进制数、"rgb(x,x,x)"RGB数值
 
-| 类型 | 属性                  | 说明                                                         |
-| ---- | --------------------- | ------------------------------------------------------------ |
-| 字体 | `font-size`           | 字体大小,单位参照尺寸                                        |
-| 字体 | `font-family`         | 字体                                                         |
-| 字体 | `font-weight`         | 加粗,默认400,通常加粗700                                     |
-| 字体 | `font-style`          | `normal`正常,`italic`斜体,`oblique`倾斜字体                  |
-| 文本 | `text-indent`         | 首行缩进                                                     |
-| 文本 | `text-overflow`       | 溢出是否省略                                                 |
-| 文本 | `text-align`          | 文本位置`left`,`center`,`right`                              |
-| 文本 | `text-decoration`     | 字体划线,`none`,`underline`,`line-through`                   |
-| 文本 | `text-shadow`         | 文本文字阴影                                                 |
-| 文本 | `vertical-align`      | 文本的垂直对齐方式                                           |
-| 文本 | `letter-spacing`      | 文字或字母间距                                               |
-| 文本 | `line-height`         | 行高                                                         |
-| 文本 | `color`               | 字体颜色                                                     |
-| 文本 | `white-space:nowrap`  | 强制显示在同一行                                             |
-| 背景 | `background-color`    | 背景颜色                                                     |
-| 背景 | `background-image`    | 背景图片<br/>url(路径)指定图片地址<br/>repeating-linear-gradient(to right,red,black)渐变色 |
-| 背景 | `background-repeat`   | 重复方式`no-repeat`不平铺,`repeat`全平铺,`repeat-x`X轴平铺,`repeat-y`y轴平铺 |
-| 背景 | `background-position` | 定位 x轴 y轴                                                 |
-| 背景 | `background-size`     | 背景大小                                                     |
-| 边框 | `border-color`        | 颜色                                                         |
-| 边框 | `border-style`        | 边框样式`solid`实线,`dotted`点状线,`dashed`虚线              |
-| 边框 | `border-width`        | 边框厚度                                                     |
-| 边框 | `border-left-color`   | 左边框颜色                                                   |
-| 边框 | `border-left-width`   | 左边框厚度                                                   |
-| 边框 | `border-radius`       | 指定圆角`50%`时是一个圆                                      |
-| 边框 | `padding-top`         | 内填充(与边框的距离),上                                      |
-| 边框 | `padding-right`       | 内填充,右                                                    |
-| 边框 | `padding-bottom`      | 内填充,下                                                    |
-| 边框 | `padding-left`        | 内填充,左                                                    |
-| 边框 | `margin`              | 整个边框对外的间距                                           |
-| 定位 | `position`            | 定位,`absolute`绝对定位,`fixed`固定定位,`relative`指定内层左相对定位 |
-| 定位 | `z-index`             | z轴定位,决定图层                                             |
-| 定位 | `top`                 | 距离顶的位置                                                 |
-| 定位 | `left`                | 距离左的位置                                                 |
-| 定位 | `right`               | 距离右的位置                                                 |
-| 定位 | `bottom`              | 距离下的位置                                                 |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
-|      |                       |                                                              |
+| 类型           | 属性                  | 说明                                                         |
+| -------------- | --------------------- | ------------------------------------------------------------ |
+| 字体           | `font-size`           | 字体大小,单位参照尺寸                                        |
+| 字体           | `font-family`         | 字体                                                         |
+| 字体           | `font-weight`         | 加粗,默认400,通常加粗700                                     |
+| 字体           | `font-style`          | `normal`正常,`italic`斜体,`oblique`倾斜字体                  |
+| 文本           | `text-indent`         | 首行缩进                                                     |
+| 文本           | `text-overflow`       | 溢出是否省略                                                 |
+| 文本           | `text-align`          | 文本位置`left`,`center`,`right`                              |
+| 文本           | `text-decoration`     | 字体划线,`none`,`underline`,`line-through`                   |
+| 文本           | `text-shadow`         | 文本文字阴影                                                 |
+| 文本           | `vertical-align`      | 文本的垂直对齐方式                                           |
+| 文本           | `letter-spacing`      | 文字或字母间距                                               |
+| 文本           | `line-height`         | 行高                                                         |
+| 文本           | `color`               | 字体颜色                                                     |
+| 文本           | `white-space:nowrap`  | 强制显示在同一行                                             |
+| 背景           | `background-color`    | 背景颜色                                                     |
+| 背景           | `background-image`    | 背景图片<br/>url(路径)指定图片地址<br/>repeating-linear-gradient(to right,red,black)渐变色 |
+| 背景           | `background-repeat`   | 重复方式`no-repeat`不平铺,`repeat`全平铺,`repeat-x`X轴平铺,`repeat-y`y轴平铺 |
+| 背景           | `background-position` | 定位 x轴 y轴                                                 |
+| 背景           | `background-size`     | 背景大小                                                     |
+| 边框           | `border-color`        | 颜色                                                         |
+| 边框           | `border-style`        | 边框样式`solid`实线,`dotted`点状线,`dashed`虚线              |
+| 边框           | `border-width`        | 边框厚度                                                     |
+| 边框           | `border-left-color`   | 左边框颜色                                                   |
+| 边框           | `border-left-width`   | 左边框厚度                                                   |
+| 边框           | `border-radius`       | 指定圆角`50%`时是一个圆                                      |
+| 边框           | `padding-top`         | 内填充(与边框的距离),上                                      |
+| 边框           | `padding-right`       | 内填充,右                                                    |
+| 边框           | `padding-bottom`      | 内填充,下                                                    |
+| 边框           | `padding-left`        | 内填充,左                                                    |
+| 边框           | `margin`              | 整个边框对外的间距                                           |
+| 定位           | `position`            | 定位,`absolute`绝对定位,`fixed`固定定位,`relative`指定内层左相对定位 |
+| 定位           | `z-index`             | z轴定位,决定图层                                             |
+| 定位           | `top`                 | 距离顶的位置                                                 |
+| 定位           | `left`                | 距离左的位置                                                 |
+| 定位           | `right`               | 距离右的位置                                                 |
+| 定位           | `bottom`              | 距离下的位置                                                 |
+| 布局           | `display`             | 是否以及如何显示`none`隐藏,`block`块状显示,`flex`创建`flex`块容器,`inline-flex`创建`flex`行容器 |
+| 布局           | `float`               | 浮动`none`不浮动,`left`靠左浮动,`right`右浮动                |
+| 布局           | `clear`               | 清除浮动`none`,`left`,`right`,`both`                         |
+| 弹性盒子(容器) | `flex-direction`      | 设置容器的主轴方向`row`左到右,`row-reverse`右到左,`column`上到下,`column-reverse`下到上 |
+| 弹性盒子(容器) | `flex-wrap`           | 是否允许flex项目换行,`nowrap`不允许换行显示,`wrap`允许换行   |
+| 弹性盒子(容器) | `flex-flow`           | 简化`flex-direction`和`flex-wrap`的设置                      |
+| 弹性盒子(容器) | `justify-content`     | 设置`flex`项目在主轴上的对齐方式<br/>`flex-start`默认所有项目和主轴起始线对齐<br/>`flex-end`所有项目与主轴终止线对齐<br/>`center`所有项目与主轴中间线对齐:居中对齐<br/>`space-between`两端对齐:头尾紧贴,其余自由分配<br/>`space-around`分散对齐:剩余空间在每个项目两侧平均分配<br/>`space-evenly`平均对齐:剩余空间在每个项目间分配 |
+| 弹性盒子(容器) | `align-items`         | 设置`flex`项目在交叉轴上的对齐方式<br/>`flex-start`默认所有项目和交叉轴起始线对齐<br/>`flex-end`所有项目与交叉轴终止线对齐<br/>`center`所有项目与交叉轴中间线对齐:居中对齐 |
+| 弹性盒子(容器) | `align-content`       | 多行容器中,项目在交叉轴上的对齐方式<br/>`stretch`默认:项目拉伸占据整个交叉轴<br/>`flex-start`默认所有项目和交叉轴起始线对齐<br/>`flex-end`所有项目与交叉轴终止线对齐<br/>`center`所有项目与交叉轴中间线对齐:居中对齐<br/>`space-between`两端对齐:头尾紧贴,其余自由分配<br/>`space-around`分散对齐:剩余空间在每个项目两侧平均分配<br/>`space-evenly`平均对齐:剩余空间在每个项目间分配 |
+| 弹性盒子(项目) | `flex-basis`          | 项目宽度:项目分配主轴剩余空间之前,项目所占据的主轴空间宽度,默认会收缩按比例缩减 |
+| 弹性盒子(项目) | `flex-grow`           | 项目的宽度拓展:将主轴上的剩余空间按比例分配给指定项目        |
+| 弹性盒子(项目) | `flex-shrink`         | 项目的宽度收缩:将项目上多出空间按比例在项目间进行缩减        |
+| 弹性盒子(项目) | `flex`                | 同时设置`flex: flex-grow flex-shrink flex-basis`             |
+| 弹性盒子(项目) | `align-self`          | 单独自定义某个项目在交叉轴上的对齐方式<br/>`auto`默认:继承`align-items`<br/>`flex-start`与交叉轴骑士线对齐<br/>`flex-end`与交叉轴终止线对齐<br/>`center`与交叉轴中间线对齐:居中对齐<br/>`stretch`在交叉轴方向上拉伸<br/>`baseline`与极限对齐<br/> |
+| 弹性盒子(项目) | `order`               | 自定义项目在主轴上的排列顺序,默认为0,书写顺序,值越小位置越靠前 |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
+|                |                       |                                                              |
 
 
 
