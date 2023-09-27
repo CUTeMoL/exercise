@@ -55,7 +55,7 @@
 | table       | `<tbody></tbody>`                                            | 表体                                                         |
 | table       | `<tfoot></tfoot>`                                            | 表尾                                                         |
 | body        | `<form action="h2.html" method="get"></form>`                | 表单标签<br/>action跳转页面<br/>method获取方式               |
-| form        | `<input type="text" name="uname"></input>`                   | 输入表单项<br/>type为输入框类型<br/>text明文输入<br/>password密文输入<br/>submit提交框,此时可以再定义value=""对提交框进行定义<br/>radio单选,checked可以默认选中<br/>checkbox多选,checked可以默认选中<br/>search 指定为可输入下拉选择框,需要再用list定义链接的datalist的id<br/>reset重置按钮<br/>name表单命名，提交时表单项变成参数 |
+| form        | `<input type="text" name="uname"></input>`                   | 输入表单项<br/>type为输入框类型<br/>text明文输入<br/>password密文输入<br/>submit提交框,此时可以再定义value=""对提交框进行定义和选择进行定义<br/>radio单选,checked可以默认选中<br/>checkbox多选,checked可以默认选中<br/>search 指定为可输入下拉选择框,需要再用list定义链接的datalist的id<br/>reset重置按钮<br/>name表单命名，提交时表单项变成参数<br/>required必填<br/>maxlength最大长度 |
 | form        | `<select name="下拉选择" id=""></select>`                    | 下拉选择表单项                                               |
 | select      | `<option value="" selected></option>`                        | 定义下拉的选项<br/>selected为默认值                          |
 | form        | `<textarea rows="10" cols="100" name="contents"></textarea>` | 多行文本输入区域                                             |

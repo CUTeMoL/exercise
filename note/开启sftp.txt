@@ -1,0 +1,26 @@
+groupadd sftp
+
+useradd -g sftp -s /sbin/nologin -M sftpuser
+passwd sftpuser
+
+mkdir /sftp -p
+usermod -d /sftp sftpuser
+
+chown root:root /sftp
+chmod 755 /sftp
+
+mkdir /sftp/sftpuser -p
+chown sftpuser:sftp /sftp/sftpuser
+
+注释掉X11Forwarding yes 这句话，大概在101行
+注释掉Subsystem sftp /usr/libexec/openssh/sftp-server 这句话，大概在132行
+
+并在文件末尾添加如下语句：
+Subsystem sftp internal-sftp
+Match User sftpuser
+ChrootDirectory /sftp
+ForceCommand    internal-sftp
+AllowTcpForwarding no
+X11Forwarding no
+
+systemctl restart sshd
