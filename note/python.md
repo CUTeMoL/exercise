@@ -2073,11 +2073,11 @@ smtp_server.quit()
 
 ### shutil:
 
-| 函数  | 功能  |
-| --- | --- |
-|     |     |
-|     |     |
-|     |     |
+| 函数                  | 功能     |
+| --------------------- | -------- |
+| shutil.rmtree("目录") | 删除目录 |
+|                       |          |
+|                       |          |
 
 ### functools:
 
@@ -3310,6 +3310,33 @@ else:
 | mountpoint     | docker.types.Mount("dest","src","bind")                      | 设置挂载对象                                                 |
 | port           | `{'container_port/tcp': host_port}`<br/> `{'container_port/tcp': (address, port)}`<br/>`{'container_port/tcp': [ports]}` | 设置端口转发对象                                             |
 | restart_policy | `{"Name": "on-failure", "MaximumRetryCount": 5}`             | 重启尝试次数的设置,如果Name为always,则会不停重试             |
+
+### 第三方模块pywin32.client:
+
+
+
+| 对象 | 函数                                            | 说明               |
+| :--- | ----------------------------------------------- | :----------------- |
+|      | `win32com.client.Dispatch("Excel.Application")` | 创建一个对应的应用 |
+|      |                                                 |                    |
+
+```python
+#!/bin/python2
+# -*- encoding: utf-8 -*-
+
+import win32com.client
+import traceback
+
+
+excel = win32com.client.Dispatch('Excel.Application')
+workbook = excel.Workbooks.Open('G:\\tmp\\yfz-machine.xlsx')
+worksheet = workbook.Worksheets('Sheet1')
+
+value = worksheet.Cells(1, 1).Value
+print(value.encode("utf8"))
+workbook.close
+
+```
 
 
 
