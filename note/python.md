@@ -2609,7 +2609,7 @@ if __name__ == "__main__":
 |        | `socket_object.getpeername()`                  | 获取对端远程地址,返回值通常式元组(ipaddr,port)                                                                                                                                          |
 |        | `socket_object.getsockname()`                  | 获取自身地址,返回值通常式元组(ipaddr,port)                                                                                                                                            |
 |        | `socket_object.gethostname()`                  | 获取本地主机名                                                                                                                                                                 |
-|        |                                                |                                                                                                                                                                         |
+|        |`socket.gethostbyname(socket.gethostname())`    |获取本地IP|
 |        |                                                |                                                                                                                                                                         |
 |        |                                                |                                                                                                                                                                         |
 |        |                                                |                                                                                                                                                                         |
