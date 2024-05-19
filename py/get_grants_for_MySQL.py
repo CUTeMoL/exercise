@@ -61,7 +61,7 @@ def main(host,port,user,passwd,socket):
             if _k == "port" and _v is None and socket is None:
                 raise ArgsError("%s error"%(_k))
         to_main_log.debug("Args: host=%s,port=%s,user=%s,passwd=%s,socket=%s"%(host,port,user,passwd,socket))
-        print(dir(pymysql.connect))
+
         db = pymysql.connect(host=host, user=user, password=passwd, port=int(port), unix_socket=socket, cursorclass=pymysql.cursors.DictCursor)
         cursor = db.cursor()
         msg = cursor.execute("select user,host,authentication_string from mysql.user where user not in ('root','mysql.sys','mysql.session','mysql.infoschema');")
@@ -69,7 +69,7 @@ def main(host,port,user,passwd,socket):
             result = (cursor.fetchone())
             account = "'%s'@'%s'"%(result["user"],result["host"])
             res[account] = {"passwd": result["authentication_string"], "grants": []}
-            # print()
+
         
         for account in res.keys():
             line = cursor.execute("show create user %s;"%(account))
