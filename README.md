@@ -154,7 +154,11 @@ paramiko模块使用
 
 重写日志输出格式,由函数改为类
 
+#### get_grants_for_MySQL
 
+获取MySQL权限,除root
+
+---
 
 ### shell
 
