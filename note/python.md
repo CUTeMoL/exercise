@@ -3313,8 +3313,6 @@ else:
 
 ### 第三方模块pywin32.client:
 
-
-
 | 对象 | 函数                                            | 说明               |
 | :--- | ----------------------------------------------- | :----------------- |
 |      | `win32com.client.Dispatch("Excel.Application")` | 创建一个对应的应用 |
@@ -3336,6 +3334,60 @@ value = worksheet.Cells(1, 1).Value
 print(value.encode("utf8"))
 workbook.close
 
+```
+
+### 第三方模块fastapi:
+
+#### 创建fastapi对象
+
+```shell
+pip install fastapi
+pip install "uvicorn[standard]"
+uvicorn main:app --reload
+```
+
+`FastAPI` 是一个为你的 API 提供了所有功能的 Python 类。
+
+`app = FastAPI()`可以创建一个fastapi对象
+
+```shell
+uvicorn main:app --reload --port 9955 --host 10.0.16.9
+```
+
+`main`:py文件名称
+
+`app`:py文件中fastapi对象
+
+`--reload`: 实时应用py文件的变化
+
+`--port`: 监听端口
+
+`--host`: 监听的IP地址
+
+#### 请求方法
+
+| HTTP标准 | 请求方法  | 说明                                                         |
+| -------- | --------- | ------------------------------------------------------------ |
+| 1..0     | `GET`     | 请求指定的页面信息,并返回实体主体(页面)<br/>安全性低,数据暴露在url上 |
+| 1.0      | `HEAD`    | 类似于 GET 请求,只不过返回的响应中没有具体的内容,用于获取报头 |
+| 1.0      | `POST`    | 向指定资源提交数据进行处理请求(例如提交表单或者上传文件)<br/>安全性高,数据被包含在请求体中<br/>POST 请求可能会导致新的资源的建立和/或已有资源的修改<br/>返回数据 |
+| 1.1      | `put`     | 从客户端向服务器传送的数据取代指定的文档的内容               |
+| 1.1      | `DELETE`  | 请求服务器删除指定的页面                                     |
+| 1.1      | `CONNECT` | HTTP/1.1 协议中预留给能够将连接改为管道方式的代理服务器      |
+| 1.1      | `OPTIONS` | 允许客户端查看服务器的性能                                   |
+| 1.1      | `TRACE`   | 回显服务器收到的请求,主要用于测试或诊断                      |
+| 1.1      | `PATCH`   | 是对 PUT 方法的补充,用来对已知资源进行局部更新               |
+
+只用`post`也行
+
+#### 路由
+
+`@app.get("/path")`代表url路径跳转到哪个函数去执行,路径操作是按顺序依次运行的,所以顺序很重要
+
+```python
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}
 ```
 
 
