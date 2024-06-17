@@ -2693,7 +2693,10 @@ if __name__ == "__main__":
 
 | 函数                           | 功能                               |
 | ------------------------------ | ---------------------------------- |
-| `Union[int,str,datetime.date]` | 于`or`类似1真为真,通常用于格式判断 |
+| `Union[int,str,datetime.date]` | 相当于`or`类似1真为真,通常用于格式判断 |
+| `Optional[str]` | 意为可选,除了自定义的类型格式,还一定会带有None这个类型 |
+| `Annotated[str, metadata]` | 为类型添加元数据(注释) |
+
 
 ```python
 from typing import Union
@@ -3367,6 +3370,7 @@ workbook.close
 | --------- | ------------------------------------------- |
 | `fastapi` | 是一个为你的 API 提供了所有功能的 Python 类 |
 | `Depends` | 声明函数依赖关系,运行函数前先执行此相关依赖 |
+| `Form(pattern="xxx")` | 声明表单中获取数据,会从表单中获取同名字段赋给变量<br/>pattern代表匹配的正则.必须按pattern填此表单字段 |
 |           |                                             |
 
 
@@ -3651,6 +3655,7 @@ oauth2_scheme = Oauth2ClientCredentials(tokenUrl="token")
 
 ```
 
+### 第三方模块starlette
 
 
 ## 十三、IO操作
