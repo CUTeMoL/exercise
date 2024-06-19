@@ -2713,7 +2713,37 @@ class User(BaseModel):
 ```
 ```
 
+### xml.etree.ElementTree
 
+`ElementTree`将整个XML文档表示为树，并且 `Element` 表示此树中的单个节点。
+
+| 类型              | 对象                                       | 说明                                                         |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------ |
+|                   | `ElementTree`                              | 元素树                                                       |
+| `ElementTree`对象 | `.parse(file_path: str)`                   | 从文件中获取配置,来生成一个元素树                            |
+| `ElementTree`对象 | `.write(file_path: str)`                   | 将xml配置写入文件保存                                        |
+| `ElementTree`对象 | `.remove(Element: Element）`               | 将一个元素从元素树中删除                                     |
+| `ElementTree`对象 | `SubElement(Element: Element, "tag": str)` | 为一个元素添加名为`tag`的子元素                              |
+| `ElementTree`对象 | `Comment("text":str)`                      | 为元素树添加注释                                             |
+| `ElementTree`对象 | `.getroot()`                               | 返回这个树的根元素                                           |
+| `Element`对象     | `.fromstring("xml": str)`                  | 从字符串中获取配置生成一个元素                               |
+| `Element`对象     | `.tag`                                     | 这个元素的标签相当于`<tag>`或`<tag>text</tag>`               |
+| `Element`对象     | `.attrib`                                  | 这个元素的属性`<label attribute=value>`,返回回来的是字典     |
+| `Element`对象     | `.text`                                    | 这个元素的文本内容`<label>text</label>`,可以修改这个值来达到修改文本的目的 |
+| `Element`对象     | `.iter('tag': str)`                        | 递归,所有此`tag`的元素                                       |
+| `Element`对象     | `.findall('tag': str)`                     | 当前元素中搜索所有此`tag`的子元素,返回列表,与`iter`的区别在于递归 |
+| `Element`对象     | `.iterfind('tag': str)`                    | 类似`findall`但是是返回一个生成器                            |
+| `Element`对象     | `.find('tag': str)`                        | 当前元素中搜索拥有此`tag`的子元素,返回第一个元素             |
+| `Element`对象     | `.findtext('tag': str)`                    | 当前元素中搜索拥有此`tag`的子元素,返回第一个元素的文本       |
+| `Element`对象     | `.set("attribute": str,"value": str)`      | 添加一个属性                                                 |
+| `Element`对象     | `tail`                                     | 存放元素的结束标记及下一个标记之间的文本                     |
+| `Element`对象     | `clear()`                                  | 重设一个元素。 此方法会移除所有子元素，清空所有属性，并将` text` 和` tail `属性设为 `None`。 |
+| `Element`对象     | `items()`                                  | 将元素属性以 (name, value) 对序列的形式返回。 所返回属性的顺序任意。 |
+| `Element`对象     | `keys()`                                   | 将元素属性名称以列表的形式返回。 所返回名称的顺序任意。      |
+| `Element`对象     | `set(key, value)`                          | 将元素的 key 属性设为 value。                                |
+| `Element`对象     | `append(subelement:Element)`               | 将元素 subelement 添加到此元素的子元素内部列表。             |
+| `Element`对象     | `extend(subelements: Element)`             | 使用具有零个或多个元素的序列对象添加 subelements             |
+| `Element`对象     | `insert(index, subelement)`                | 将 subelement 插入到此元素的给定位置中                       |
 
 
 
