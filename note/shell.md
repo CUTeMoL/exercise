@@ -1784,6 +1784,7 @@ sysctl # 配置内核参数
 6   无
 ```
 
+
 设置默认启动的级别
 
 ```shell
@@ -2213,15 +2214,90 @@ net.core.netdev_max_backlog = 16384 # 每个网络接口接收数据包的速率
 vm.swappiness=10 # 使用SWAP内存前可用内存剩余百分比，0不使用swap
 ```
 
-## 十七、服务自启动
+## 十七、服务相关
+
+### 1.init
+
+#### 通用开机自启动方式
 
 1.复制启动脚本到`/etc/init.d`或`/etc/rc.d/init.d`
 
 2.使用`chkconfig`设置开机启动
 
 ```shell
-chkconfig --add service_name # 加入自启动
-chkconfig --del service_name # 删除自启动
-chkconfig --list service_name # 查看运行级别
-chkconfig --levels 245 service_name off # 设置245下服务不自动启动
+chkconfig --add ${service_name} # 加入自启动
+chkconfig --del ${service_name} # 删除自启动
+chkconfig --list ${service_name} # 查看运行级别
+chkconfig --levels 245 ${service_name} off # 设置245下服务不自动启动
 ```
+
+### 2.systemd
+
+- systemd是替代init的进程管理系统
+- systemd 能够并行地启动系统服务，缩短系统启动时间。
+- 通过服务的依赖关系，确保必要的服务按正确的顺序启动
+
+### 添加配置
+
+/usr/lib/systemd/system/${service_name}.service
+
+```shell
+# 内容参考
+[Unit]
+Description=服务的相关说明
+Documentation=https://docs.service.org/manual # 服务的文档说明
+After=network-online.target # 指定服务之后启动(定义顺序)
+Requires=syslog.target # 在指定服务之后启动(依赖的服务启动失败则不会执行启动)
+Wants=network-online.target # 在指定服务之后启动(即使依赖的服务启动失败也会执行启动)
+
+[Service]
+User=lxw
+Group=lxw
+WorkingDirectory=/ # 设置工作路径
+Environment="OPTIONS=-f /etc/${service}.conf" # 设置环境变量
+EnvironmentFile=-/etc/sysconfig/${service}.env
+ExecStart=/usr/bin/mongod $OPTIONS # 指定启动服务时执行的命令或脚本
+ExecStartPre=/usr/bin/mkdir -p /usr/local/mongodb/data # 指定启动服务前执行的命令或脚本
+ExecReload=nginx -s reload # systemctl reload时执行的命令。
+PermissionsStartOnly=true # 指定启动服务前执行的命令或脚本将会是使用root权限
+PIDFile=/var/run/${service}.pid # 指定pid文件
+ExecStop=/bin/kill -15 $MAINPID # 停止时的命令
+Restart=on-failure # 定义服务的重启策略
+StandardOutput=append:/var/log/${service}_info.log # 服务输出日志
+StandardError=append:/var/log/${service}_error.log # 服务错误日志
+
+# no：不重启（默认）。
+# on-success：服务正常退出时重启。
+# on-failure：服务异常退出时重启。
+# always：无论退出状态如何，始终重启。
+Type=forking # 指定服务的启动类型
+# simple：默认类型，ExecStart 指定的命令为主进程
+# forking：ExecStart 指定的命令会派生出一个子进程，父进程会退出，服务的主进程为子进程
+# oneshot：适用于一次性运行的任务，systemd 会等待命令执行完成
+# notify：服务启动后，会发送通知信号告知 systemd，适用于支持 sd_notify 的程序
+# idle：服务会在其他任务执行完毕后再启动
+RestartSec=60s # 服务重启前的等待时间
+
+# file size
+LimitFSIZE=infinity
+# cpu time
+LimitCPU=infinity
+# virtual memory size
+LimitAS=infinity
+# open files
+LimitNOFILE=64000
+# processes/threads
+LimitNPROC=64000
+# locked memory
+LimitMEMLOCK=infinity
+# total threads (user+kernel)
+TasksMax=infinity
+TasksAccounting=false
+# Recommended limits for mongod as specified in
+# https://docs.mongodb.com/manual/reference/ulimit/#recommended-ulimit-settings
+
+[Install]
+WantedBy=multi-user.target # 指定服务所属的目标单元
+
+```
+
