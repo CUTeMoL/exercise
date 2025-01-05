@@ -2256,9 +2256,9 @@ Group=lxw
 WorkingDirectory=/ # 设置工作路径
 Environment="OPTIONS=-f /etc/${service}.conf" # 设置环境变量
 EnvironmentFile=-/etc/sysconfig/${service}.env
-ExecStart=/usr/bin/mongod $OPTIONS # 指定启动服务时执行的命令或脚本
-ExecStartPre=/usr/bin/mkdir -p /usr/local/mongodb/data # 指定启动服务前执行的命令或脚本
-ExecReload=nginx -s reload # systemctl reload时执行的命令。
+ExecStart=/usr/bin/${service} $OPTIONS # 指定启动服务时执行的命令或脚本
+ExecStartPre=/usr/bin/mkdir -p /usr/local/${service}/data # 指定启动服务前执行的命令或脚本
+ExecReload=/usr/bin/${service} -s reload # systemctl reload时执行的命令。
 PermissionsStartOnly=true # 指定启动服务前执行的命令或脚本将会是使用root权限
 PIDFile=/var/run/${service}.pid # 指定pid文件
 ExecStop=/bin/kill -15 $MAINPID # 停止时的命令
