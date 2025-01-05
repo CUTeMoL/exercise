@@ -3394,6 +3394,61 @@ workbook.close
 
 ```
 
+日志遍历
+
+```python
+#!/bin/python2
+# -*- encoding: utf-8 -*
+import win32evtlog  # 导入win32evtlog模块
+import win32evtlogutil
+server = "127.0.0.1"  # 本地服务器
+log_type = "System"    # 要查看的日志类型
+
+flags = win32evtlog.EVENTLOG_FORWARDS_READ|win32evtlog.EVENTLOG_SEQUENTIAL_READ
+# 打开事件日志
+hand = win32evtlog.OpenEventLog(server, log_type) 
+total=win32evtlog.GetNumberOfEventLogRecords(hand)
+    # 读取事件记录
+num = 0
+while num != total:
+    events = win32evtlog.ReadEventLog(hand,flags, 0,0)
+    # 遍历事件
+    for event in events:
+        msg=(win32evtlogutil.SafeFormatMessage(event, log_type)).encode("utf8")
+        print("事件ID: %s"%(event.EventID))  # 输出事件ID
+        print("事件类型: %s"%(event.EventType))  # 输出事件类型
+        print("时间: %s"%(event.TimeGenerated))  # 输出事件时间
+        print("内容: %s"%(msg))  # 输出事件时间
+        print("=" * 20)  # 分隔符
+        num += 1
+    print("************")
+print(total)
+# 关闭事件日志句柄
+win32evtlog.CloseEventLog(hand)
+
+```
+
+寻找日志
+
+```python
+#!/bin/python2
+# -*- encoding: utf-8 -*
+import win32evtlog  # 导入win32evtlog模块
+import win32evtlogutil
+server = "127.0.0.1"  # 本地服务器
+log_type = "System"    # 要查看的日志类型
+
+query = win32evtlog.EvtQuery(log_type,win32evtlog.EvtQueryReverseDirection,'*[System[Execution[@ProcessID=\'4\'] and (EventID=\'1\')]]',None)
+while True:
+    try:
+        record = win32evtlog.EvtNext(query, 1, -1, 0)
+        evt = win32evtlog.EvtRender(record[0], win32evtlog.EvtRenderEventXml)
+        print(evt)
+
+    except IndexError:
+        break
+```
+
 ### 第三方模块fastapi:
 
 | 函数      | 说明                                        |

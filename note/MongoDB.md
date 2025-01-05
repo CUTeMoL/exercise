@@ -275,7 +275,6 @@ db.stats() : 获取当前库的状态
     key_list: ["value","value"],
     key_dict: {"sub_key": "sub_value"}
 }
-
 ```
 
 ```javascript
