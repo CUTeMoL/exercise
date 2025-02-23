@@ -396,3 +396,260 @@ slmgr /skms 192.168.19.201 #设置KMS服务器地址
 slmgr /ato # 激活
 slmgr /xpr # #查看激活时间
 ```
+
+### 案例: python调用
+
+```python
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
+import docker
+import docker.types
+import optparse
+import json
+import re
+import os
+import platform
+import logging
+import traceback
+import subprocess
+import socket
+from logging.handlers import TimedRotatingFileHandler
+
+class InvalidResponse(Exception):
+    def __init__(self, param):
+        self.code = param['code']
+        self.message = param['message']
+        self.data = param.get('data', None)
+
+def error_format(error_raw):
+    return "{0};\r{1}".format(repr(error_raw), traceback.format_exc().replace("\n", ";\t"))
+
+# 更新异常信息
+def update_message(func):
+    """
+    logger增加一列脚本名
+    :param func:
+    :return:
+    """
+
+    def wrapper(self, msg, *args):
+        if self.name != "":
+            msg = "{0}: {1}".format(self.name, msg)
+        return func(self, msg, *args)
+
+    return wrapper
+
+# 执行外部命令类
+class ExternalCmd(object):
+    def __init__(self, loggger, passwd_list=None):
+        self.logger = loggger
+        self.passwd_list = []
+        if passwd_list is not None:
+            self.passwd_list = passwd_list
+
+    def execute_cmd(self, cmd, need_record=True):
+        """
+        执行命令的方法
+        :param cmd: string
+        :param need_record: bool
+        :return: int, string
+        """
+        if need_record is True:
+            # 脱敏处理
+            desensitization_cmd = cmd
+            for key_line in self.passwd_list:
+                desensitization_cmd = desensitization_cmd.replace(key_line, "xxxxxxxxxxxxxx")
+            if platform.uname()[0] == "Windows":
+                desensitization_cmd = desensitization_cmd.decode("cp936").encode("utf-8")
+            self.logger.info("execute_cmd: {0}".format(desensitization_cmd))
+        p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        stdout, stderr = p.communicate()
+        if need_record is True:
+            stdout = stdout.replace("\r\n", "\n")
+            stderr = stderr.replace("\r\n", "\n")
+            if platform.uname()[0] == "Windows":
+                stdout = stdout.decode("cp936").encode("utf-8")
+                stderr = stderr.decode("cp936").encode("utf-8")
+            self.logger.info("exec finish\n{3}\nreturn_code:{0}\nstdout: {1}\nstderr: {2}\n{3}".format(
+                p.returncode, stdout, stderr, "=" * 30)
+            )
+        if p.returncode != 0:
+            return p.returncode, stderr
+        return p.returncode, stdout
+
+
+# 日志类
+class GameLogger(object):
+    def __init__(self, file_path, level, interval, backup_count,
+                 fmt="[%(asctime)s] [%(process)d] [%(levelname)s] - %(message)s", script_name="", need_stdout=False):
+        file_dir = os.path.dirname(file_path)
+        if not os.path.exists(file_dir):
+            try:
+                os.makedirs(file_dir)
+            except Exception as err:
+                err_msg = "{0};\r{1}".format(repr(err), traceback.format_exc().replace("\n", ""))
+                raise SystemExit("Create log dir failed, {0}".format(err_msg))
+        self.name = script_name
+        self.logger = logging.getLogger(file_path)
+        # 增加该脚本屏幕日志输出
+        stream_handler = logging.StreamHandler()
+        if level.lower() == "debug":
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
+        file_handler = TimedRotatingFileHandler(
+            filename=file_path, when="MIDNIGHT", interval=interval, backupCount=backup_count, encoding="utf-8"
+        )
+        file_handler.suffix = "%Y-%m-%d.old"
+        file_handler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}.old$")
+        file_handler.setFormatter(
+            logging.Formatter(fmt)
+        )
+        if need_stdout is True:
+            # 设置屏幕输出格式
+            stream_handler.setFormatter(
+                logging.Formatter("[%(asctime)s] [%(process)d] [%(levelname)s] - %(message)s")
+            )
+            # 增加句柄
+            self.logger.addHandler(stream_handler)
+        self.logger.addHandler(file_handler)
+
+    @update_message
+    def error(self, msg):
+        self.logger.error(msg)
+
+    @update_message
+    def info(self, msg):
+        self.logger.info(msg)
+
+    @update_message
+    def debug(self, msg):
+        self.logger.debug(msg)
+
+    @update_message
+    def warning(self, msg):
+        self.logger.warning(msg)
+
+    @update_message
+    def critical(self, msg):
+        self.logger.critical(msg)
+
+def check_port(port):
+    '''
+    端口检查,0通,10035不通,用于检查进程是否停止
+    '''
+    telnet_object = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    telnet_object.settimeout(1)
+    result = telnet_object.connect_ex(("localhost", int(port)))
+    telnet_object.close()
+    return True if result == 0 else False
+
+
+# 工作目录: 配置文件存在这
+WORK_PATH = "/ndgame/restore_db"
+if not os.path.exists(WORK_PATH):
+    os.makedirs(WORK_PATH)
+
+# 定义日志
+generallog_path = os.path.join(WORK_PATH, "logs","general.log")
+general_logger = GameLogger(generallog_path, "info", 1, 30, script_name=os.path.basename(__file__), need_stdout=True)
+
+
+def docker_create(taskID, project, simpleID, date, stoptime=None):
+    '''
+    功能:
+        创建一个docker实例
+    参数:
+        taskID: 蓝鲸默认带有的全局变量,主日志general_logger标注任务用
+        project: 用来决定路径,从文件中读取数据库名和维护时间
+        simpleID: 用来决定路径
+        date: 用来决定路径
+        stoptime: 用来决定路径
+    '''
+    try:
+        # 如果不存在stoptime那么stoptime等于None
+        if stoptime == "" and stoptime == None:
+            stoptime = None
+
+        # 读取数据库恢复使用的的根路径
+        with open(os.path.join(WORK_PATH, "conf", "restore_db.json"), "r") as restore_conf:
+            restore_config = json.load(restore_conf)
+            restore_path = restore_config["path"]
+            restore_port_range = restore_config["port_range"]
+        # 读取维护时间
+        with open(os.path.join(WORK_PATH, "conf", "projectinfo.json"), "r") as project_conf:
+            project_info = json.load(project_conf)[project]
+            maintenance_time = project_info["Maintenance_time"]
+            mysql_version = project_info["mysqlversion"]
+
+        # 终点时间定义:如果存在stoptime参数则使用stoptime,不存在则使用维护时间
+        endtime = stoptime if stoptime else maintenance_time
+
+        # 当前任务的存储路径: "/ndgame/restore_db/项目名/simpleID_日期_终点时间"
+        store_path = os.path.join(restore_path, project, "{}_{}_{}".format(simpleID, date.replace("-", ""), endtime.replace(":", "")))
+        # 当前任务的datadir
+        datadir = os.path.join(store_path, "data")
+        # 创建docker的客户端
+        docker_socket = docker.from_env()
+        # 创建挂载关系
+        mountpoint = docker.types.Mount("/usr/local/mysql/data", datadir, "bind")
+        # 选择端口
+        port_start, port_end = restore_port_range.split("-")
+        for port in range(int(port_start), int(port_end)+1):
+            result = check_port(port)
+            # 如果端口不通,则选择这个端口启动
+            if not result:
+                mysql_port = port
+                general_logger.info("[%s] restore use port: %s"%(taskID, mysql_port))
+                break
+        if not mysql_port:
+            general_logger.error("[%s] No ports available"%(taskID))
+            raise InvalidResponse({'code': 1, 'message': "No ports available"})
+        # 创建容器
+        if mysql_version == "4.0":
+            container = docker_socket.containers.run(
+                "mysql:4.0.27",
+                detach=True,
+                mounts=[mountpoint, ],
+                restart_policy={"Name": "always"},
+                ports={"3306/tcp": mysql_port},
+                labels={"project": project, "simpleID": simpleID, "date": date, "time": endtime}
+            )
+        elif mysql_version == "5.6":
+            container = docker_socket.containers.run(
+                "mysql:5.6.21",
+                detach=True,
+                mounts=[mountpoint, ],
+                restart_policy={"Name": "always"},
+                ports={"3306/tcp": mysql_port},
+                labels={"project": project, "simpleID": simpleID, "date": date, "time": endtime}
+            )
+        container_id = container.attrs["Id"]
+        general_logger.info("[%s] Create container %s, project: %s simpleID: %s datetime: '%s %s'" %(taskID, container_id, project, simpleID, date, endtime))
+
+        return True
+    
+    except InvalidResponse as err:
+        raise err
+    except Exception as err:
+        raise InvalidResponse({'code': 1, 'message': "script crash, reason: {0}".format(error_format(err))})
+
+if __name__ == "__main__":
+    Parser = optparse.OptionParser()
+    Parser.add_option("--project", dest="project")
+    Parser.add_option("--simpleID", dest="simpleID")
+    Parser.add_option("--date", dest="date")
+    Parser.add_option("--taskID", dest="taskID")
+    Parser.add_option("--stoptime", dest="stoptime")
+    (opt, args) = Parser.parse_args()
+    docker_create(
+        getattr(opt, "taskID"),
+        getattr(opt, "project"),
+        getattr(opt, "simpleID"),
+        getattr(opt, "date"),
+        getattr(opt, "stoptime")
+    )
+
+```
