@@ -4062,10 +4062,9 @@ mysql --login-path=root_3306
 
 | `Last_SQL_Error`                                                                               | 原因                              | 处理                                                                                                               |
 | ---------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log` | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 通过`mysqlbinlog binlogfile`                                                                                       |
-|                                                                                                |                                 | `SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致 |
-|                                                                                                |                                 | 删除同步库数据，重新从主库备份出数据库，还原到从库上，然后重新开始主从同步                                                                            |
+| `Worker 1 failed executing transaction '0d90d68e-3775-11ed-b19a-000c29afe996:9' at master log` | 该事务出现冲突在从库无法执行，一般是因为主从库数据不一致造成的 | 1.重新制作同步库</br>2.`SET GTID_NEXT="${sql_error_id}";BEGIN;COMMIT;SET GTID_NEXT='AUTOMATIC'`直接跳过该事务，不推荐，冲突的可能不止这一个事务，而且更容易造成主从数据库不一致</br>|
 |                                                                                                | 主从库字符集不一致                       | 在`my.cnf`或`my.ini`中的`[mysqld]`添加`character_set_server=`或`default-character-set=`为主库使用的字符集                        |
+|`The incident LOST_EVENTS occured on the master. Message: error writing to the binary log`|有错误写进了binlog,MySQL5.6较低版本时主库回收不存在权限导致,属于MySQL5.6专属bug|升级MySQL到5.6.21以上版本|
 
 ### 建库建表
 
