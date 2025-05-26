@@ -336,7 +336,7 @@ db.collection.find(query, projection, options)
 |$not|反转查询表达式的效果，并返回与查询表达式不匹配的文档。|
 |$nor|使用逻辑 NOR 的联接查询子句会返回无法匹配这两个子句的所有文档。|
 |$or|使用逻辑 OR 连接多个查询子句会返回符合任一子句条件的所有文档。|
-
+|$all|查询某列表中的元素是否在指定的列表中存在|
 
 ```shell
 db.<table_name>.find({col_name1:'value1',col_name2:'value2'}) # 查询数据，括号中可填条件，也可以不填
@@ -359,11 +359,14 @@ db.<table_name>.find({col_name1:{'$lt':value1}}) # 查询数据，通过数值�
 db.<table_name>.find({'col_name1.col_name1.1':'value1.1'}) # 查询2级数据(多维),注意引号
 ```
 
-```shell
+```python
 db.<table_name>.find({col_name1:{'$all':['value1.1','value1.2']}}) : 查询2级数据(数组)//在[]中的条件都存在的
+
+
 ```
 
 ​	例如：`db.information.find({food:{'$all':['brief','water','fish']}})`
+
 
 ```shell
 db.<table_name>.find({'$or':[{条件1},{条件2}]}) # 查询符合条件1或条件2的数据
@@ -384,6 +387,55 @@ db.<table_name>.find({条件1，条件2}).sort({条件3}) # 查询符合条件1�
 ```
 
 ​	例如：`db.goods.find().sort({price:-1}) `     #-1为倒序（从大到小）
+
+  一个复杂的示范:
+```python
+# 查询 id为186或者满足一下条件的记录,最后按balance从大到小输出名字balance、is_vip
+# 条件1: 兴趣中存在游戏、音乐,且不存在电影、跑步
+# 条件2: 年龄小于80岁
+# 条件3: 地址在杭州
+# 条件4: 记录创建于2025-01-01到2025-02-30之间
+# 先按is_vip为false在前,最后按balance从大到小
+# 输出名字balance、is_vip
+db.users.find(
+   {
+      "$or": [
+         {
+            "$and": [
+               {
+                  "interests": {
+                     "$all": ["游戏","音乐"]
+                  }
+               },
+               {
+                  "interests": {
+                     "$nin": ["电影","跑步"]
+                  }
+               },
+               {
+                  "age" : {"$lt": 80}
+               },
+               {
+                  "address.city": "杭州"
+               },
+               {
+                  "created_at":{
+                     "$gte": ISODate("2025-01-01T00:00:00Z"), 
+                     "$lte": ISODate("2025-12-30T23:59:59Z") 
+                  }
+               }
+            ]
+         },
+         {
+            "_id": 186
+         }
+      ]
+   },
+   {"_id":0,"name":1,"balance":1,"is_vip":1,"interests":1}
+).sort({"is_vip":1,"balance":-1})
+
+```
+
 
 ### 更新数据
 
