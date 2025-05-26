@@ -271,9 +271,9 @@ db.stats() : 获取当前库的状态
 
 ```json
 {
-    key_str: "value",
-    key_list: ["value","value"],
-    key_dict: {"sub_key": "sub_value"}
+   key_str: "value",
+   key_list: ["value","value"],
+   key_dict: {"sub_key": "sub_value"}
 }
 ```
 
@@ -283,7 +283,7 @@ db.collection.action1({条件},{列筛选}).action2({条件})
 
 #### 2.插入数据
 
-```shell
+```python
 # 插入数据支持嵌套
 db.collection.insert(
     {
@@ -292,10 +292,12 @@ db.collection.insert(
         'col_name3': {
             'col_name3.1': 'value3.1',
             'col_name3.2': 'value3.2'
-        },
+         },
         'col_name4': ['value4.1','value4.2','value4.3']
     }
 )
+```
+```shell
 
 # 多行插入
 db.collection.insertMany(
