@@ -525,13 +525,19 @@ db.auth('root','123456')
 ### 备份还原
 
 仅数据导入导出为JSON
-
+--fields=name,balance,is_vip,interests
 ```shell
 /usr/local/mongotools/bin/mongoexport -d lxw_test_db -c information_collection -u root -p123456 --authenticationDatabase=admin -o ./mongo_bak_lxw_test_information.json
 -d   # 指定数据库
 -c   # 指定集合
 --authenticationDatabase   # 认证的库名
 -o   # 输出到的路径
+--jsonArray # 列表格式而不是每行一个{}
+--jsonFormat=canonical # 输出带类型,不建议加
+--pretty # 输出带缩进
+--queryFile=query.json # 查询条件所在路径
+--sort='{}' # 排序条件
+--fields=<field>[,<field>]* # 指定要导出的字段
 ```
 
 ```shell
