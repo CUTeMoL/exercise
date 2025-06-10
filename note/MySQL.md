@@ -3572,6 +3572,154 @@ auto_increment_increment=2；  #两台都要，一共N台主，就设置auto_inc
 auto_increment_offset=2；    #其一，每一台都要设置不同的偏移量
 ```
 
+### 基本格式
+
+设置相关
+
+```sql
+-- 设置相关
+CHANGE MASTER TO option [, option] ... [ channel_option ]
+
+option: {
+    MASTER_BIND = 'interface_name'
+  | MASTER_HOST = 'host_name'
+  | MASTER_USER = 'user_name'
+  | MASTER_PASSWORD = 'password'
+  | MASTER_PORT = port_num
+  | MASTER_CONNECT_RETRY = interval
+  | MASTER_RETRY_COUNT = count
+  | MASTER_DELAY = interval
+  | MASTER_HEARTBEAT_PERIOD = interval
+  | MASTER_LOG_FILE = 'source_log_name'
+  | MASTER_LOG_POS = source_log_pos
+  | MASTER_AUTO_POSITION = {0|1}
+  | RELAY_LOG_FILE = 'relay_log_name'
+  | RELAY_LOG_POS = relay_log_pos
+  | MASTER_SSL = {0|1}
+  | MASTER_SSL_CA = 'ca_file_name'
+  | MASTER_SSL_CAPATH = 'ca_directory_name'
+  | MASTER_SSL_CERT = 'cert_file_name'
+  | MASTER_SSL_CRL = 'crl_file_name'
+  | MASTER_SSL_CRLPATH = 'crl_directory_name'
+  | MASTER_SSL_KEY = 'key_file_name'
+  | MASTER_SSL_CIPHER = 'cipher_list'
+  | MASTER_SSL_VERIFY_SERVER_CERT = {0|1}
+  | MASTER_TLS_VERSION = 'protocol_list'
+  | IGNORE_SERVER_IDS = (server_id_list)
+}
+
+channel_option:
+    FOR CHANNEL channel
+
+server_id_list:
+    [server_id [, server_id] ... ]
+```
+
+过滤相关
+
+```sql
+-- 过滤相关
+CHANGE REPLICATION FILTER filter[, filter][, ...]
+
+filter: {
+    REPLICATE_DO_DB = (db_list)
+  | REPLICATE_IGNORE_DB = (db_list)
+  | REPLICATE_DO_TABLE = (tbl_list)
+  | REPLICATE_IGNORE_TABLE = (tbl_list)
+  | REPLICATE_WILD_DO_TABLE = (wild_tbl_list)
+  | REPLICATE_WILD_IGNORE_TABLE = (wild_tbl_list)
+  | REPLICATE_REWRITE_DB = (db_pair_list)
+}
+
+db_list:
+    db_name[, db_name][, ...]
+
+tbl_list:
+    db_name.table_name[, db_table_name][, ...]
+wild_tbl_list:
+    'db_pattern.table_pattern'[, 'db_pattern.table_pattern'][, ...]
+
+db_pair_list:
+    (db_pair)[, (db_pair)][, ...]
+
+db_pair:
+    from_db, to_db
+```
+
+清空设置
+
+```sql
+-- 清空设置
+RESET SLAVE [ALL] [channel_option]
+
+channel_option:
+    FOR CHANNEL channel
+```
+
+```sql
+-- 跳过
+SET GLOBAL sql_slave_skip_counter = N
+```
+
+停止同步
+
+```sql
+-- 停止同步
+STOP SLAVE [thread_types] [channel_option]
+
+thread_types:
+    [thread_type [, thread_type] ... ]
+
+thread_type: IO_THREAD | SQL_THREAD
+
+channel_option:
+    FOR CHANNEL channel
+```
+
+开始同步
+
+```sql
+-- 开始同步
+START SLAVE [thread_types] [until_option] [connection_options] [channel_option]
+
+thread_types:
+    [thread_type [, thread_type] ... ]
+
+thread_type:
+    IO_THREAD | SQL_THREAD
+
+until_option:
+    UNTIL {   {SQL_BEFORE_GTIDS | SQL_AFTER_GTIDS} = gtid_set
+          |   MASTER_LOG_FILE = 'log_name', MASTER_LOG_POS = log_pos
+          |   RELAY_LOG_FILE = 'log_name', RELAY_LOG_POS = log_pos
+          |   SQL_AFTER_MTS_GAPS  }
+
+connection_options:
+    [USER='user_name'] [PASSWORD='user_pass'] [DEFAULT_AUTH='plugin_name'] [PLUGIN_DIR='plugin_dir']
+
+
+channel_option:
+    FOR CHANNEL channel
+
+gtid_set:
+    uuid_set [, uuid_set] ...
+    | ''
+
+uuid_set:
+    uuid:interval[:interval]...
+
+uuid:
+    hhhhhhhh-hhhh-hhhh-hhhh-hhhhhhhhhhhh
+
+h:
+    [0-9,A-F]
+
+interval:
+    n[-n]
+
+    (n >= 1)
+```
+
 ### 主从复制
 
 master
@@ -3879,6 +4027,53 @@ SET GLOBAL gtid_mode=ON;
 ```
 
 5.配置文件修改永久生效
+
+### 多源复制(5.7+)
+
+1.主库参考配置
+```my.cnf
+[mysqld]
+server-id = 1 # 与从库要不一样
+binlog_format = row # 其实可以不用,但是多源复制如果主库涉及了多库join类型的数据修改,就会数据不一致或报错,保证万无一失的话一定要开
+binlog-do-db = master_db  # 只同步指定库,多个的话另起一行
+binlog-ignore-db = mysql # 权限库不同步
+
+```
+
+2.从库参考配置
+```my.cnf
+[mysqld]
+server-id = 2 # 与主库要不一样
+replicate-rewrite-db = master_db->slave_db # 修改库名,其实不是必要
+replicate-do-db = slave_db # 指定要同步的库名,多个的话另起一行
+```
+
+3.执行同步语句
+```sql
+-- 设置过滤器
+CHANGE REPLICATION FILTER REPLICATE_WILD_IGNORE_TABLE = ('mysql.%','test.%'); 
+-- 设置channel1主库连接信息
+change master to 
+  master_host='192.168.2.171',
+  master_user='rpl',
+  master_password='rpl',
+  master_port=3306,
+  master_log_file='mysql-bin.000001',
+  master_log_pos=4 for channel 'master-1';
+-- 开始同步channel-1
+start slave for channel 'master-1';
+-- 设置channel2主库连接信息
+change master to 
+  master_host='192.168.2.170',
+  master_user='rpl',
+  master_password='rpl',
+  master_port=3306,
+  master_log_file='mysql-bin.000001',
+  master_log_pos=12 for channel 'master-2';
+-- 开始同步channel-2
+start slave for channel 'master-2';
+```
+
 
 ### 组复制
 
