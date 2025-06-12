@@ -4051,7 +4051,9 @@ replicate-do-db = slave_db # 指定要同步的库名,多个的话另起一行
 3.执行同步语句
 ```sql
 -- 设置过滤器
-CHANGE REPLICATION FILTER REPLICATE_WILD_IGNORE_TABLE = ('mysql.%','test.%'); 
+CHANGE REPLICATION FILTER 
+  REPLICATE_WILD_IGNORE_TABLE = ('mysql.%','test.%'),
+; 
 -- 设置channel1主库连接信息
 change master to 
   master_host='192.168.2.171',
@@ -5113,4 +5115,52 @@ if __name__ == "__main__":
 | 原数据库大小               | 12.1 GB (12,994,827,428 字节) |
 | 转化后数据库大小           | 25.7 GB (27,691,195,451 字节) |
 | 转化后表的格式(ROW_FORMAT) | Compact                       |
+
+## 三十一、percona Toolkit
+
+### 文档:
+```
+https://docs.percona.com/percona-toolkit/index.html
+```
+
+### 下载安装:
+```
+sudo apt-get install percona-toolkit
+```
+
+### pt-table-checksum使用步骤
+
+pt-table-checksum 校验数据一致性
+
+1.主库服务器上需要开通访问从库的权限
+
+```sql
+-- 授权到同步库
+grant select,insert,update,delete,create,drop,super,process,replication slave on *.* to 'root'@'%' identified by '123456';
+```
+
+2.如果从库账号密码和主库不一致时使用dsn方式确定从库
+
+```sql
+-- 建立从库信息表
+use test
+
+CREATE TABLE dsns (
+`id` int(11) NOT NULL AUTO_INCREMENT,
+`parent_id` int(11) DEFAULT NULL,
+`dsn` varchar(255) NOT NULL,
+PRIMARY KEY (`id`)
+);
+
+insert into  test.dsns select 1,1,'h=192.168.1.122,u=root,p=123456,P=3306';
+
+```
+
+3.获取结果
+
+```shell
+pt-table-checksum  --host=127.0.0.1 --port=3306 --databases=test -uroot -p123456 --recursion-method="dsn=h=127.0.0.1,D=test,t=dsns"  --no-check-binlog-format
+  --recursion-method="" # 查询从库的方式,默认是processlist,可以用hosts(需要从实例配置report_host,report_port)、cluster、dsn、None
+  --no-check-binlog-format # 如果binlog_format=row 则会报错,所以不检查binlog格式
+```
 
