@@ -5128,6 +5128,22 @@ https://docs.percona.com/percona-toolkit/index.html
 sudo apt-get install percona-toolkit
 ```
 
+```
+https://www.percona.com/downloads
+```
+
+### 功能简介
+
+|功能|描述|
+|-|-|
+|pt-config-diff|配置文件差异对比|
+|pt-table-checksum|主从数据库一致性校验|
+|pt-align|表格对齐输出工具|
+|pt-archiver|数据转移到另一张表(可以是其他实例)|
+|pt-deadlock-logger|记录死锁|
+|pt-diskstats|显示磁盘IO信息|
+|pt-duplicate-key-checker|检查重复索引给出清除建议|
+
 ### pt-table-checksum使用步骤
 
 pt-table-checksum 校验数据一致性
@@ -5151,7 +5167,8 @@ CREATE TABLE dsns (
 `dsn` varchar(255) NOT NULL,
 PRIMARY KEY (`id`)
 );
-
+""
+-- insert 的内容为从库的信息 h="从库的host",u="用户名",p="密码",P="端口"
 insert into  test.dsns select 1,1,'h=192.168.1.122,u=root,p=123456,P=3306';
 
 ```
