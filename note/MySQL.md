@@ -5143,6 +5143,32 @@ https://www.percona.com/downloads
 |pt-deadlock-logger|记录死锁|
 |pt-diskstats|显示磁盘IO信息|
 |pt-duplicate-key-checker|检查重复索引给出清除建议|
+|pt-eustack-resolver|捕获进程的详细堆栈信息并进行符号解析|
+|pt-fifo-split|大文件分割|
+|pt-find|查询/操作MySQL中的表类似GNU中的findG工具|
+
+### pt-fifo-split使用步骤
+
+1.会话1执行
+
+```shell
+pt-fifo-split --lines 1000 --statistics /code/exercise/note/MySQL.md
+  --lines 1000 # 分割行数
+  --fifo # 指定管道
+  --statistics # 输出统计信息
+```
+
+2.会话2执行
+
+```shell
+filename=/code/exercise/note/MySQL.md
+n=1
+while [ -e /tmp/pt-fifo-split ];
+do 
+        cat /tmp/pt-fifo-split > "$filename"_"$n".txt ;
+        let n++
+done
+```
 
 ### pt-table-checksum使用步骤
 
