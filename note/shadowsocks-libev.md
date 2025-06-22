@@ -5,7 +5,7 @@
 ### 1. Ubuntu20.04安装
 
 ```
-apt install shadowsocks-libev
+apt install shadowsocks-libev -y
 ```
 
 ### 2. 配置文件修改
