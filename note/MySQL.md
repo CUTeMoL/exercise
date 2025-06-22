@@ -5155,11 +5155,13 @@ https://www.percona.com/downloads
 |pt-kill|用于监控和终止 MySQL 中符合特定条件的查询或连接，以保护数据库性能|
 |pt-mext|用于格式化 mysqladmin extended-status 多轮采样输出的工具‌|
 |pt-mongodb-index-check|用于MongoDB的索引检查|
-|pt-mongodb-query-digest|慢查询分析|
+|pt-mongodb-query-digest|MongoDB慢查询分析|
 |pt-mongodb-summary|MongoDB集群健康诊断工具|
 |pt-mysql-summary|MySQL实例健康诊断工具|
 |pt-pg-summary|PostgreSQL实例健康诊断工具|
 |pt-online-schema-change|MySQL在线修改表结构(无锁表结构)|
+|pt-pmp|用于收集和分析进程的堆栈信息，帮助诊断程序（尤其是 MySQL 等数据库）的性能问题或阻塞状态|
+|pt-query-digest|MySQL慢查询分析|
 
 
 ### pt-fifo-split使用步骤
