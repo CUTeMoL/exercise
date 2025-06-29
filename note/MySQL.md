@@ -5137,7 +5137,6 @@ https://www.percona.com/downloads
 |功能|描述|
 |-|-|
 |pt-config-diff|配置文件差异对比|
-|pt-table-checksum|主从数据库一致性校验|
 |pt-align|表格对齐输出工具|
 |pt-archiver|数据转移到另一张表(可以是其他实例)|
 |pt-deadlock-logger|记录死锁|
@@ -5156,12 +5155,28 @@ https://www.percona.com/downloads
 |pt-mext|用于格式化 mysqladmin extended-status 多轮采样输出的工具‌|
 |pt-mongodb-index-check|用于MongoDB的索引检查|
 |pt-mongodb-query-digest|MongoDB慢查询分析|
+|pt-summary|服务器性能采集|
 |pt-mongodb-summary|MongoDB集群健康诊断工具|
 |pt-mysql-summary|MySQL实例健康诊断工具|
 |pt-pg-summary|PostgreSQL实例健康诊断工具|
 |pt-online-schema-change|MySQL在线修改表结构(无锁表结构)|
 |pt-pmp|用于收集和分析进程的堆栈信息，帮助诊断程序（尤其是 MySQL 等数据库）的性能问题或阻塞状态|
 |pt-query-digest|MySQL慢查询分析|
+|pt-replica-find|主从信息输出|
+|pt-replica-restart|重启同步(自动跳过错误)|
+|pt-secure-collect|数据采集(支持数据加密)|
+|pt-show-grants|权限展示|
+|pt-sift|分析pt-stack产生的结果文件|
+|pt-slave-delay|主动制造主从延迟的情况,5.7后MySQL自身主从复制已支持|
+|pt-slave-find|=pt-replica-find|
+|pt-slave-restart|=pt-replica-restart|
+|pt-stalk|变量监控捕获|
+|pt-table-checksum|主从数据库一致性校验|
+|pt-table-sync|主从数据库不一致性修复|
+|pt-table-usage|前推荐使用，分析 SQL 查询中表的使用关系,类似原生MySQL的EXPLAIN功能(8.0后直接用EXPLAIN)|
+|pt-upgrade|MySQL升级, SQL 兼容性验证|
+|pt-variable-advisor|配置风险评估|
+|pt-visual-explain|explain输出的日志再排版解析|
 
 
 ### pt-fifo-split使用步骤
