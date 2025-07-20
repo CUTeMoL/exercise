@@ -1,0 +1,23 @@
+make>=3.81
+gcc>=9.3.0
+tar>=0
+gzip>=0
+bzip2>=0
+flex>=2.5.35
+bison>=2.3
+# icu4c?
+# icu-devtools>=4.6
+perl>=5.14
+readline-common>=5.0
+libreadline-dev>=5.0
+python3>=3.2
+tcl>=8.4
+OpenSSL>=1.0.2
+lz4>=1.0
+liblz4-1>=1.0
+libzstd1>=1.4.0
+zstd>=1.4.0
+pkg-config>=0
+zlib1g-dev>=0
+zlib1g>=0
+sysstat>=0
