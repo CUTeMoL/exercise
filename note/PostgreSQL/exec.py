@@ -12,7 +12,7 @@ def exec_cmd(cmd, stdin=None):
     tty_coding = locale.getdefaultlocale()[1]
     if sys.version_info.major == 2:
         cmd = cmd.encode(tty_coding)
-    cmd = cmd.split()
+    cmd = cmd.split() if type(cmd) is str else cmd
     p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate(input=stdin)
     if p.returncode != 0:
@@ -29,7 +29,7 @@ def exec_cmd_timeout(cmd, stdin=None, timeout=None):
         stderr = b""
         pool = ThreadPoolExecutor(2)
         tty_coding = locale.getdefaultlocale()[1]
-        cmd = cmd.encode(tty_coding).split()
+        cmd = cmd.split() if type(cmd) is str else cmd
         p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         pool.submit(p.wait).result(int(timeout))
