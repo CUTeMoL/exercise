@@ -13,6 +13,7 @@ def exec_cmd(cmd, stdin=None):
     if sys.version_info.major == 2:
         cmd = cmd.encode(tty_coding)
     cmd = cmd.split() if type(cmd) is str else cmd
+    # print(cmd)
     p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate(input=stdin)
     if p.returncode != 0:
