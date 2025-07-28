@@ -46,3 +46,5 @@ docbook-xml>=4.5-11
 docbook-xsl>=1.79.2
 xsltproc>=1.0.0
 libsystemd-dev>=200.11
+python3-requests>=2.0
+python3-tqdm>=4.50

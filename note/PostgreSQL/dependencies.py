@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 import re
 from version_utils import VersionUtils
-from exec_cmd import exec_cmd
+from exec_command import exec_cmd
 import os
 
 def check_dependencies():
