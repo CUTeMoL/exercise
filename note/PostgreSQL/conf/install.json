@@ -1,5 +1,6 @@
 {
     "version": "17.5",
     "base_url": "https://ftp.postgresql.org/pub/source/",
-    "file_name_extension": ".tar.gz"
+    "file_name_extension": ".tar.gz",
+    "tmp_path": "/data"
 }

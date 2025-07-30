@@ -1,6 +1,6 @@
 #!/bin/python3
 # -*- encoding: utf-8 -*-
-import unittest
+import subprocess
 import sys
 import os
 import re
@@ -8,25 +8,45 @@ import logging
 import logging.config
 import json
 import traceback
-from exec_command import exec_cmd,Command
+from exec_command import exec_cmd, Command
 from dependencies import Soft
-from exec_error import DependenciesListError, DependenciesMismatched, DownloadError, ExtractError
+from exec_error import DependenciesListError, DependenciesMismatched, DownloadError, ExtractError, InstallError
 from file_processing import File
 
+
 ## 全局变量设置 ##
+
+# 脚本工作路径
 WORK_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 os.chdir(WORK_PATH)
-TMP_PATH = os.path.join(WORK_PATH,"tmp")
-if not os.path.exists(TMP_PATH):
-    os.makedirs(TMP_PATH)
-logging.config.fileConfig('conf/logging.conf')
-LOGGER = logging.getLogger('POSTGRESQL_INSTALL')
+
+# 安装设置读取
 INSTALL_CONFIG_FILE = os.path.join(WORK_PATH,"conf/install.json")
 with open(INSTALL_CONFIG_FILE, "r") as INSTALL_CONFIG_FILE_HANDLER:
     INSTALL_CONFIG = json.loads(INSTALL_CONFIG_FILE_HANDLER.read())
+
+# 编译参数
 PARAMETER_CONFIG_FILE = os.path.join(WORK_PATH,"conf/configure_parameter.conf")
 with open(PARAMETER_CONFIG_FILE, "r") as PARAMETER_CONFIG_FILE_HANDLER:
     PARAMETER_CONFIG = PARAMETER_CONFIG_FILE_HANDLER.read().strip().replace("\r\n","\n").split("\n")
+
+PREFIX_REGULAR = re.compile("['|\"]?--prefix=(?P<prefix>.*)['|\"]?")
+PREFIX = [PREFIX_REGULAR.search(i).group("prefix")  for i in PARAMETER_CONFIG if PREFIX_REGULAR.match(i) ][-1]
+
+# 下载包临时保存目录设置,主要为了代码和下载包分开来
+TMP_PATH = os.path.join(WORK_PATH,"tmp") if not INSTALL_CONFIG.get("tmp_path", None) else INSTALL_CONFIG["tmp_path"]
+if not os.path.exists(TMP_PATH):
+    os.makedirs(TMP_PATH)
+
+# 日志
+logging.config.fileConfig('conf/logging.conf')
+LOGGER = logging.getLogger('POSTGRESQL_INSTALL')
+
+# 编译工作路径
+COMPILE_PATH = os.path.join(TMP_PATH, "postgresql-%s"%(INSTALL_CONFIG["version"]))
+# 源码包信息生成
+PACKAGE_NAME = "postgresql-%s%s"%(INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
+PACKAGE_PATH = os.path.join(TMP_PATH, PACKAGE_NAME)
 
 
 ## 函数 ##
@@ -82,54 +102,83 @@ def download_package(base_url,version,file_name_extension):
     destination: 保存路径
     '''
     try:
-        package_name = "postgresql-%s%s"%(version,file_name_extension)
-        package_path = os.path.join(TMP_PATH,package_name)
+        # package_name = "postgresql-%s%s"%(version,file_name_extension)
+        # package_path = os.path.join(TMP_PATH,package_name)
         package_md5file_name = "postgresql-%s%s.md5"%(version,file_name_extension)
         package_md5file_path = os.path.join(TMP_PATH,package_md5file_name)
-        download_package_url = "%sv%s/%s"%(base_url,version,package_name)
+        download_package_url = "%sv%s/%s"%(base_url,version,PACKAGE_NAME)
         download_md5_url = "%sv%s/%s"%(base_url,version,package_md5file_name)
         package_md5file = File(package_md5file_path)
-        package = File(package_path)
-        LOGGER.info("开始下载源码包MD5文件%s"%(package_path))
+        package = File(PACKAGE_PATH)
+        LOGGER.info("开始下载源码包MD5文件%s"%(package_md5file_path))
         package_md5file.download(download_md5_url)
         with open(package_md5file_path,"r") as package_md5_f:
             package_md5_require = package_md5_f.read().split()[0].strip().lower()
-        LOGGER.info("开始下载源码包文件%s"%(package_path))
+        LOGGER.info("开始下载源码包文件%s"%(PACKAGE_PATH))
         package.download(download_package_url)
+        LOGGER.info("下载源码包文件%s完成"%(PACKAGE_PATH))
     except Exception as err:
         error_msg = traceback.format_exc()
         for line in error_msg.replace("\r\n","\n").split("\n"):
             LOGGER.error(line)
-        raise DownloadError(10001,str(err),package_path)
-    LOGGER.info("源码包%s验证MD5"%(package_path))
+        raise DownloadError(10001,str(err),PACKAGE_PATH)
+    LOGGER.info("源码包%s开始验证MD5"%(PACKAGE_PATH))
     if package.md5sum() == package_md5_require:
-        LOGGER.info("源码包%s验证MD5:[%s]通过"%(package_path,package_md5_require))
+        LOGGER.info("源码包%s验证MD5:[%s]通过"%(PACKAGE_PATH,package_md5_require))
         return True
     else:
         raise DownloadError(10002,"md5sum neq %s"%(package_md5_require))
         
 
-def extract_source_package(package_path,version,file_name_extension):
+def extract_source_package(extract_path,file_name_extension):
     '''
     解压源码包
     '''
-    package = File(package_path)
+    package = File(PACKAGE_PATH)
     LOGGER.info("开始解压源码包")
-    code, msg = package.extract(TMP_PATH,file_name_extension)
+    code, msg = package.extract(extract_path,file_name_extension)
     if code != 0:
         LOGGER.error("解压失败,详见以下错误信息:")
-        LOGGER.error(msg)
-        raise ExtractError(10003,msg,package_path)
+        for line in msg.strip().split("\n"):
+            LOGGER.error(line)
+        raise ExtractError(10003,msg,PACKAGE_PATH)
     LOGGER.info("解压源码包完成")
     return True
 
+
+def install():
+    '''
+    编译安装
+    '''
+    if not os.path.exists(PREFIX):
+        os.makedirs(PREFIX)
+    PARAMETER_CONFIG.insert(0, os.path.join(COMPILE_PATH,"configure"))
+    for cmd in [PARAMETER_CONFIG,"make",["make", "all"],["make", "install"]]:
+        install_command = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=COMPILE_PATH)
+        for line in iter(install_command.stdout.readline, b""):
+            LOGGER.info(line.decode("utf8").replace("\n",""))
+        install_command.wait()
+        if install_command.returncode != 0:
+            LOGGER.error(install_command.returncode)
+            raise InstallError(10004," ".join(install_command.args),install_command.stderr.read())
+        
+    return True
+
 def main():
-    # requirements = read_dependencies()
-    check_dependencies(read_dependencies())
-    destination = os.path.join(TMP_PATH,"postgresql-%s%s"%(INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"]))
-    download_package(INSTALL_CONFIG["base_url"],INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
-    extract_source_package(destination,INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
+    try:
+        # 检查依赖
+        # check_dependencies(read_dependencies())
+        # 下载
+        # download_package(INSTALL_CONFIG["base_url"],INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
+        # 解压
+        # extract_source_package(TMP_PATH,INSTALL_CONFIG["file_name_extension"])
+        # 编译安装
+        install()
 
-
+    except Exception as err:
+        error_msg = traceback.format_exc()
+        for line in error_msg.strip().split("\n"):
+            LOGGER.error(line)
+        raise err
 if __name__ == '__main__':
     main()

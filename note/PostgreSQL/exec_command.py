@@ -15,7 +15,7 @@ class Command(subprocess.Popen):
     '''
     命令格式化后再提交
     '''
-    tty_coding = locale.getdefaultlocale()[1]
+
     def __init__(self, cmd: Union[str, List[AnyStr]], **kwargs):
         # 先把strings格式化成list
         cmd = self.check_args(cmd)
@@ -27,11 +27,13 @@ class Command(subprocess.Popen):
         if isinstance(cmd, list):
             cmd = cmd
         elif sys.version_info.major == 2 and isinstance(cmd, str):
+            tty_coding = locale.getdefaultlocale()[1]
             cmd = shlex.split(cmd.encode(tty_coding))
         elif isinstance(cmd, str):
             cmd = shlex.split(cmd)
         else:
             raise ValueError("Command please use [list] or 'strings'.")
+        # 判断执行的命令是否可以找到
         if shutil.which(cmd[0]) is None:
             raise ValueError("%s not found."%(cmd[0]))
         else:
@@ -47,9 +49,8 @@ def exec_cmd(cmd: Union[str, List[AnyStr]], stdin=None):
     tty_coding = locale.getdefaultlocale()[1]
     if sys.version_info.major == 2:
         cmd = cmd.encode(tty_coding)
-    cmd = shlex.split(cmd) if type(cmd) is str else cmd
     # print(cmd)
-    p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate(input=stdin)
     if p.returncode != 0:
         return p.returncode, stderr.decode(tty_coding).replace("\r\n","\n")
@@ -65,9 +66,9 @@ def exec_cmd_timeout(cmd: Union[str|List[AnyStr]], stdin=None, timeout=None):
         stderr = b""
         pool = ThreadPoolExecutor(2)
         tty_coding = locale.getdefaultlocale()[1]
-        cmd = shlex.split(cmd) if type(cmd) is str else cmd
+
         # stderr 重定向到 stdout
-        p = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         pool.submit(p.wait).result(timeout)
         stdout, stderr = p.communicate(input=stdin)
