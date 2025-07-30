@@ -29,6 +29,13 @@ class DownloadError(OSError):
 class ExtractError(OSError):
     def __init__(self,error_code,msg,filename):
         self.error_code = error_code
-        self.msg = "extract file failed."
+        self.msg = "extract %s failed:%s"%(filename,msg)
+        super().__init__(self.msg)
+
+
+class InstallError(BaseException):
+    def __init__(self,error_code,cmd,msg):
+        self.error_code = error_code
+        self.msg = "execute %s failed:%s"%(cmd,msg)
         super().__init__(self.msg)
 
