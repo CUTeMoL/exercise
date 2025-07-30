@@ -161,17 +161,16 @@ def install():
         if install_command.returncode != 0:
             LOGGER.error(install_command.returncode)
             raise InstallError(10004," ".join(install_command.args),install_command.stderr.read())
-        
     return True
 
 def main():
     try:
         # 检查依赖
-        # check_dependencies(read_dependencies())
+        check_dependencies(read_dependencies())
         # 下载
-        # download_package(INSTALL_CONFIG["base_url"],INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
+        download_package(INSTALL_CONFIG["base_url"],INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
         # 解压
-        # extract_source_package(TMP_PATH,INSTALL_CONFIG["file_name_extension"])
+        extract_source_package(TMP_PATH,INSTALL_CONFIG["file_name_extension"])
         # 编译安装
         install()
 
