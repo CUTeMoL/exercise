@@ -2,5 +2,10 @@
     "version": "17.5",
     "base_url": "https://ftp.postgresql.org/pub/source/",
     "file_name_extension": ".tar.gz",
-    "tmp_path": "/data"
+    "tmp_path": "/data",
+    "pgconfig": "postgresql.conf",
+    "systemd_name": "postgresql",
+    "superuser": "postgres",
+    "superuserpasswd": "123456",
+    "datadir": "/usr/local/pgsql/data"
 }

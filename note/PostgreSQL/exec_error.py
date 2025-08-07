@@ -26,6 +26,13 @@ class DownloadError(OSError):
         super().__init__(self.error_code,self.msg,filename)
 
 
+class NotEmptyError(OSError):
+    def __init__(self,error_code,path):
+        self.error_code = error_code
+        self.msg = "%s is not empty."%(path)
+        super().__init__(self.error_code,self.msg)
+
+
 class ExtractError(OSError):
     def __init__(self,error_code,msg,filename):
         self.error_code = error_code
@@ -34,6 +41,20 @@ class ExtractError(OSError):
 
 
 class InstallError(BaseException):
+    def __init__(self,error_code,cmd,msg):
+        self.error_code = error_code
+        self.msg = "execute %s failed:%s"%(cmd,msg)
+        super().__init__(self.msg)
+
+
+class CreateUserError(BaseException):
+    def __init__(self,error_code,cmd,msg):
+        self.error_code = error_code
+        self.msg = "execute %s failed:%s"%(cmd,msg)
+        super().__init__(self.msg)
+
+
+class ChownPathError(BaseException):
     def __init__(self,error_code,cmd,msg):
         self.error_code = error_code
         self.msg = "execute %s failed:%s"%(cmd,msg)

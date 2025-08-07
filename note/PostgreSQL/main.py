@@ -8,11 +8,13 @@ import logging
 import logging.config
 import json
 import traceback
+import pwd
+from read_conf import read_ini
 from exec_command import exec_cmd, Command
 from dependencies import Soft
-from exec_error import DependenciesListError, DependenciesMismatched, DownloadError, ExtractError, InstallError
+from exec_error import *
 from file_processing import File
-
+from string_convert import string_to_sha512
 
 ## 全局变量设置 ##
 
@@ -77,12 +79,16 @@ def check_dependencies(requirements):
             requirement_soft = Soft(match_soft.group("soft_name"))
             LOGGER.info("当前检查 %s: %s存在"%(requirement_soft.name, "" if requirement_soft.exist else "不"))
             for i in range(1,3):
-                if requirement_soft.exist is False or (not requirement_soft.compare_versions(match_soft.group("Required"),match_soft.group("operator")) and i <= 2):
+                if requirement_soft.exist is False or (not requirement_soft.compare_versions(match_soft.group("Required"),match_soft.group("operator")) and i < 2):
                     LOGGER.warning("依赖软件%s版本检查异常,执行安装依赖软件..."%(requirement_soft.name))
                     requirement_soft.install()
-                elif requirement_soft.exist is False or (not requirement_soft.compare_versions(match_soft.group("Required"),match_soft.group("operator")) and i == 2 ):
+                elif requirement_soft.exist is False and i == 2 :
                     LOGGER.error("依赖软件版本检查异常,执行安装依赖软件失败,退出.")
                     raise DependenciesMismatched(requirement_soft.name,requirement_soft.Version)
+                elif  not requirement_soft.compare_versions(match_soft.group("Required"),match_soft.group("operator")) and i == 2 :
+                    LOGGER.error("依赖软件版本检查失败,需求版本:%s%s,实际版本:%s,退出."%(match_soft.group("operator"),match_soft.group("Required"),requirement_soft.Version))
+                    raise DependenciesMismatched(requirement_soft.name,requirement_soft.Version)
+
                 elif requirement_soft.exist is True and requirement_soft.compare_versions(match_soft.group("Required"),match_soft.group("operator")):
                     LOGGER.info("[%s]%s %s %s"%(requirement_soft.name,requirement_soft.Version,match_soft.group("operator"),match_soft.group("Required")))
                     break
@@ -146,38 +152,109 @@ def extract_source_package(extract_path,file_name_extension):
     return True
 
 
-def install():
+def make_install():
     '''
     编译安装
     '''
-    if not os.path.exists(PREFIX):
-        os.makedirs(PREFIX)
+
     PARAMETER_CONFIG.insert(0, os.path.join(COMPILE_PATH,"configure"))
-    for cmd in [PARAMETER_CONFIG,"make",["make", "all"],["make", "install"]]:
+    for cmd in [PARAMETER_CONFIG,"make",["make", "all"],["make", "install"],["su",INSTALL_CONFIG["superuser"],"-c","%s/bin/initdb -D %s"%(PREFIX,INSTALL_CONFIG["datadir"])]]:
         install_command = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=COMPILE_PATH)
+        LOGGER.info(" ".join(install_command.args))
         for line in iter(install_command.stdout.readline, b""):
             LOGGER.info(line.decode("utf8").replace("\n",""))
         install_command.wait()
         if install_command.returncode != 0:
-            LOGGER.error(install_command.returncode)
-            raise InstallError(10004," ".join(install_command.args),install_command.stderr.read())
+            err_msg = install_command.stderr.read()
+            raise InstallError(10004," ".join(install_command.args),err_msg)
+
+    return True
+
+
+def systemd_contrl():
+    '''
+    建立systemd启动配置
+    '''
+    service_file = os.path.join("/etc/systemd/system/","%s.service"%(INSTALL_CONFIG["systemd_name"]))
+    config = read_ini("conf/postgresql.service")
+    config["User"] = INSTALL_CONFIG["superuser"]
+    config["ExecStart"] = "%s/bin/postgres -D %s "%(PREFIX,INSTALL_CONFIG["datadir"])
+    
+    with open(service_file, "w") as f:
+        config.write(f)
+    return True
+
+
+def create_superuser():
+    '''
+    创建一个系统用户,用来运行postgresql
+    '''
+    try:
+        superuser = pwd.getpwnam(INSTALL_CONFIG["superuser"])
+        if superuser.pw_shell not in  ["/usr/sbin/nologin","/sbin/nologin"]:
+            LOGGER.warning("%s是可登录用户,最好请另外选择一个用户或修改用户为不可登录(usermod -r -s /sbin/nologin %s)."%(INSTALL_CONFIG["superuser"],INSTALL_CONFIG["superuser"]))
+
+    except KeyError as err:
+        cmd = ["useradd","-r", "-s", "/bin/bash", INSTALL_CONFIG["superuser"], "-U", "-d", INSTALL_CONFIG["datadir"], "-p", string_to_sha512(INSTALL_CONFIG["superuserpasswd"])]
+        create_user_command = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=COMPILE_PATH)
+        LOGGER.info(" ".join(create_user_command.args))
+        for line in iter(create_user_command.stdout.readline, b""):
+            LOGGER.info(line.decode("utf8").replace("\n",""))
+        create_user_command.wait()
+        if create_user_command.returncode != 0:
+            err_msg = create_user_command.stderr.read()
+            LOGGER.error("code:%s,msg:%s"%(create_user_command.returncode,err_msg))
+            raise CreateUserError(10005," ".join(create_user_command.args),err_msg)
+
+
+def chown_path(p,u,g=None):
+    chown_cmd = "chown -R %s %s"%(u,":%s"%(g) if g else "",p)
+    code,msg = exec_cmd(chown_cmd)
+    if code != 0:
+        raise ChownPathError(10006," ".join(create_user_command.args),msg)
+    return True
+
+def env_ensure():
+    '''
+    检查系统环境因素(用户,数据目录是否已存在)
+    '''
+    # 用户
+    create_superuser()
+    for check_path in [INSTALL_CONFIG["datadir"],PREFIX]
+        if  os.path.exists(check_path) and len(check_path) >= 0:
+            raise NotEmptyError(10007,check_path)
+
+        if not  os.path.exists(check_path) :
+            os.makedirs(check_path)
+    # 启动项配置
+    if "--with-systemd" in PARAMETER_CONFIG:
+        systemd_contrl()
+    # 路径授权
+    chown_path(INSTALL_CONFIG["datadir"],INSTALL_CONFIG["superuser"])
+
     return True
 
 def main():
     try:
         # 检查依赖
         check_dependencies(read_dependencies())
+        # envcheck
+        envcheck()
         # 下载
         download_package(INSTALL_CONFIG["base_url"],INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
         # 解压
         extract_source_package(TMP_PATH,INSTALL_CONFIG["file_name_extension"])
         # 编译安装
-        install()
+        make_install()
+
 
     except Exception as err:
         error_msg = traceback.format_exc()
         for line in error_msg.strip().split("\n"):
             LOGGER.error(line)
         raise err
+
 if __name__ == '__main__':
-    main()
+    # main()
+    # create_superuser()
+

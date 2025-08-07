@@ -93,9 +93,7 @@ def exec_cmd_timeout(cmd: Union[str|List[AnyStr]], stdin=None, timeout=None):
 if __name__ == "__main__":
     # 一些测试数据
     print(exec_cmd_timeout("ping -c 15 127.0.0.1", stdin=None, timeout=1))
-    p = Command("ping -c 15 127.0.0.1",shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(p.stdout.readline())
-    import time
-    time.sleep(5)
-    print(p.stdout.readline())
+    p = Command(["su","postgres","-c","/usr/local/pgsql/bin/initdb -D /code/tmp/test"],shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    for line in iter(p.stdout.readline, b""):
+        print(line.decode("utf8").replace("\n",""))
     # print(p.communicate())

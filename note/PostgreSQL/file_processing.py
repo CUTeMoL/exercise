@@ -7,7 +7,7 @@ import requests
 import subprocess
 import locale
 from exec_command import exec_cmd,exec_cmd_timeout,Command
-from tqdm import tqdm
+
 
 
 class File():
@@ -24,7 +24,7 @@ class File():
             resume_header = {'Range': 'bytes=%s-'%(file_size)}
         response = requests.get(url, headers=resume_header, stream=True)
         total_size = int(response.headers.get('content-length', 0)) + (file_size if 'Range' in resume_header else 0)
-    
+        from tqdm import tqdm
         progress_bar = tqdm(
             total=total_size,
             unit='B',
