@@ -57,7 +57,7 @@ def exec_cmd(cmd: Union[str, List[AnyStr]], stdin=None):
     return p.returncode, stdout.decode(tty_coding).replace("\r\n","\n")
 
 
-def exec_cmd_timeout(cmd: Union[str|List[AnyStr]], stdin=None, timeout=None):
+def exec_cmd_timeout(cmd: Union[str,List[AnyStr]], stdin=None, timeout=None):
     '''
     快速执行外部命令(超时终止)
     '''

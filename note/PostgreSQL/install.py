@@ -158,8 +158,22 @@ def make_install():
     '''
 
     PARAMETER_CONFIG.insert(0, os.path.join(COMPILE_PATH,"configure"))
-    for cmd in [PARAMETER_CONFIG,"make",["make", "all"],["make", "install"],["su",INSTALL_CONFIG["superuser"],"-c","%s/bin/initdb -D %s"%(PREFIX,INSTALL_CONFIG["datadir"])]]:
-        install_command = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=COMPILE_PATH)
+    cmds = [
+        PARAMETER_CONFIG,
+        "make",
+        ["make", "all"],
+        ["make", "install"],
+        [
+            "su",INSTALL_CONFIG["superuser"],"-c","%s/bin/initdb -D %s"%(
+                PREFIX,INSTALL_CONFIG["datadir"]
+            )
+        ]
+    ]
+
+    for cmd in cmds:
+        install_command = Command(
+            cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=COMPILE_PATH
+        )
         LOGGER.info(" ".join(install_command.args))
         for line in iter(install_command.stdout.readline, b""):
             LOGGER.info(line.decode("utf8").replace("\n",""))
@@ -177,8 +191,8 @@ def systemd_contrl():
     '''
     service_file = os.path.join("/etc/systemd/system/","%s.service"%(INSTALL_CONFIG["systemd_name"]))
     config = read_ini("conf/postgresql.service")
-    config["User"] = INSTALL_CONFIG["superuser"]
-    config["ExecStart"] = "%s/bin/postgres -D %s "%(PREFIX,INSTALL_CONFIG["datadir"])
+    config["Service"]["User"] = INSTALL_CONFIG["superuser"]
+    config["Service"]["ExecStart"] = "%s/bin/postgres -D %s "%(PREFIX,INSTALL_CONFIG["datadir"])
     
     with open(service_file, "w") as f:
         config.write(f)
@@ -195,8 +209,8 @@ def create_superuser():
             LOGGER.warning("%s是可登录用户,最好请另外选择一个用户或修改用户为不可登录(usermod -r -s /sbin/nologin %s)."%(INSTALL_CONFIG["superuser"],INSTALL_CONFIG["superuser"]))
 
     except KeyError as err:
-        cmd = ["useradd","-r", "-s", "/bin/bash", INSTALL_CONFIG["superuser"], "-U", "-d", INSTALL_CONFIG["datadir"], "-p", string_to_sha512(INSTALL_CONFIG["superuserpasswd"])]
-        create_user_command = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=COMPILE_PATH)
+        cmd = ["useradd","-r", "-s", "/bin/bash", INSTALL_CONFIG["superuser"], "-U", "-p", string_to_sha512(INSTALL_CONFIG["superuserpasswd"])]
+        create_user_command = Command(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         LOGGER.info(" ".join(create_user_command.args))
         for line in iter(create_user_command.stdout.readline, b""):
             LOGGER.info(line.decode("utf8").replace("\n",""))
@@ -208,7 +222,7 @@ def create_superuser():
 
 
 def chown_path(p,u,g=None):
-    chown_cmd = "chown -R %s %s"%(u,":%s"%(g) if g else "",p)
+    chown_cmd = "chown -R %s %s %s"%(u,":%s"%(g) if g else "",p)
     code,msg = exec_cmd(chown_cmd)
     if code != 0:
         raise ChownPathError(10006," ".join(create_user_command.args),msg)
@@ -221,7 +235,7 @@ def env_ensure():
     # 用户
     create_superuser()
     for check_path in [INSTALL_CONFIG["datadir"],PREFIX]
-        if  os.path.exists(check_path) and len(check_path) >= 0:
+        if  os.path.exists(check_path) and len(os.listdir(check_path)) > 0:
             raise NotEmptyError(10007,check_path)
 
         if not  os.path.exists(check_path) :
@@ -239,7 +253,7 @@ def main():
         # 检查依赖
         check_dependencies(read_dependencies())
         # envcheck
-        envcheck()
+        env_ensure()
         # 下载
         download_package(INSTALL_CONFIG["base_url"],INSTALL_CONFIG["version"],INSTALL_CONFIG["file_name_extension"])
         # 解压
@@ -255,6 +269,6 @@ def main():
         raise err
 
 if __name__ == '__main__':
-    # main()
+    main()
     # create_superuser()
 
