@@ -6,7 +6,7 @@ import io
 
 def read_ini(file):
     '''
-    读取ini文件,输出字典格式的信息
+    读取ini文件
     '''
     config_dict = {}
     if not os.path.exists(file):
@@ -25,11 +25,9 @@ def read_ini(file):
                 config.readfp(f)
         except Exception as err:
             config.read(file)
-    for s in config.sections():
-        config_dict[s] = {}
-        for o in config.options(s):
-            config_dict[s][o] = config.get(s,o)
-    return config_dict
+
+    return config
 
 if __name__ == "__main__":
-    print(read_ini("/code/CUTeMoL/exercise/note/PostgreSQL/conf/postgresql.service"))
+    config = read_ini("/code/CUTeMoL/exercise/note/PostgreSQL/conf/postgresql.service")
+    print(config["Service"]["User"])
