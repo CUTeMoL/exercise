@@ -189,13 +189,16 @@ checkpoint_completion_target = 0.9 # 指定检查点完成的目标，作为检�
 checkpoint_flush_after = 256kB # 当执行检查点时写入的数据量超过此数量时，就尝试强制 OS 把这些写发送到底层存储
 max_wal_size = 1GB # 在自动检查点期间允许WAL增长的最大大小
 min_wal_size = 80MB # 只要 WAL 磁盘用量保持在这个设置之下，在检查点时旧的 WAL 文件总是 被回收以便未来使用，而不是直接被删除。这可以被用来确保有足够的 WAL 空间被保留来应付 WAL 使用的高峰，例如运行大型的批处理任务
-archive_mode = # 当启用archive_mode时，完成的WAL段会通过设置 archive_command或 archive_library发送到归档存储 [off|on|always],always从库也会执行归档(包括主库运行、recovery模式和standby模式),wal_level要大于minimal,归档才能启用
-archive_command = # 本地 shell 命令被执行来归档一个完成的 WAL 文件段。字符串中的任何%p被替换成要被归档的文件的路径名， 而%f只被文件名替换 参考 'rsync -av %p user@remote:/archive/%f'，与archive_library不能同时设置
-archive_library = # 用于归档已完成的WAL文件段的库,与archive_command不能同时设置
+archive_mode = '${shell_command}' # 当启用archive_mode时，完成的WAL段会通过设置 archive_command或 archive_library发送到归档存储 [off|on|always],always从库也会执行归档(包括主库运行、recovery模式和standby模式),wal_level要大于minimal,归档才能启用
+archive_command = '${shell_command}' # 本地 shell 命令被执行来归档一个完成的 WAL 文件段。字符串中的任何%p被替换成要被归档的文件的路径名， 而%f只被文件名替换 参考 'rsync -av %p user@remote:/archive/%f'，与archive_library不能同时设置
+archive_library = '' # 用于归档已完成的WAL文件段的库,与archive_command不能同时设置
 archive_timeout = 0 # 非0值代表日志切换的时间,没单位时默认单位为秒,也可以自己写单位
 ### 恢复
 recovery_prefetch = try # 是否在恢复期间尝试预取在WAL中引用但尚未在缓冲池中的块,[off|on|try]设置 try仅在操作系统提供 posix_fadvise函数时才启用 预取，该函数目前用于实现预取
 wal_decode_buffer_size = 512kB # 服务器可以在WAL中查找预取块的最大提前量限制,如果未指定单位，则将其视为字节。 默认值为512kB
+restore_command = '${shell_command}'# 用于获取 WAL 文件系列的一个已归档段的本地 shell 命令
+archive_cleanup_command = '${shell_command}' # 目的是提供一种清除不再被后备服务器需要的旧的已归档 WAL 文件的机制
+recovery_end_command = '${shell_command}' # 这个参数指定了一个将只在恢复末尾被执行一次的 shell 命令
 ```
 
 ## 四、特性
@@ -287,9 +290,10 @@ LANGUAGE plpgsql;
 
 ## 六、特色SQL
 
-### 0.psql
+### 1.psql
 
-shell命令行
+#### (1) shell命令行
+
 |选项|短格式|说明|
 |-|-|-|
 |--help[=options]|-?|帮助信息|
@@ -304,6 +308,26 @@ shell命令行
 |--echo-all|-a|从script中读取sql语句执行时也会打印SQL语句(无论对错)|
 |--echo-errors|-a|从script中读取sql语句执行时也会打印SQL语句(只有错误)|
 
+#### (2) 交互模式
+
+|选项|说明|
+|-|-|
+|\i|从文件中读取SQL执行|
+|\d|显示数据库对象(比如表`\dt`、视图`\dv`、序列`\ds`、索引`\di`、用户`\du`，模式`\n`、表空间`\db`、数据类型`\dT`、系统表`\dS`、函数`\df`、权限`\dp`等),`\d+`|
+|\conninfo|连接信息|
+|\c|连接数据库|
+|\l|显示当前数据库,`\l+`为加强模式,多显示大小和所处表空间|
+|\timing|切换是否显示执行SQL的运行时间|
+|\x|切换列/表格输出|
+|\t|表格输出时是否显示字段名|
+|\pset|输出格式|
+|\o|输出内容重定向到某个文件|
+|\H|html格式输出|
+|\e|使用外部编辑器编辑查询|
+|\g|执行前一个查询|
+|\set|设置内部变量|
+|\echo|结果输出到标准输出|
+|\q|退出|
 
 ### 查询
 
