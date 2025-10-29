@@ -139,10 +139,10 @@ Gruntfile.js
 
 ```json
 options: {
-                                        port: 9100,
-                                        base: '.',
-                                        keepalive: true,
-                                        hostname: '*'
+    port: 9100,
+    base: '.',
+    keepalive: true,
+    hostname: '*'
 }
 ```
 
@@ -461,20 +461,7 @@ input {
 filter {
 
 }
-output {
-    if [type] == "syslog" {
-        elasticsearch {
-            hosts => ["192.168.51.51:9200","192.168.51.52:9200","192.168.51.53:9200"]
-            index => "syslog-%{+YYYY.MM.dd}"
-        }
-    }
-    if [type] == "nc" {
-        elasticsearch {
-            hosts => ["192.168.51.51:9200","192.168.51.52:9200","192.168.51.53:9200"]
-            index => "nc-%{+YYYY.MM.dd}"
-        }
-    }
-}
+
 ```
 
 ### 4.Codec plugins
