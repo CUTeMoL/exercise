@@ -59,7 +59,7 @@ ${pgsql_prefix}/bin/postgres  -c config_file='filename'
 
 基本上保存在${data_directory},可以自己决定,
 
-有个`ALTER SYSTEM set ${key} = ${value};`命令提供了一种改变全局默认值的从SQL,实际不会立即生效,而是保存到数据目录的`postgresql.auto.conf`,下次重启会覆盖`${config_file}`的设置
+有个`ALTER SYSTEM set ${option} = ${value};`命令提供了一种改变全局默认值的从SQL,实际不会立即生效,而是保存到数据目录的`postgresql.auto.conf`,下次重启会覆盖`${config_file}`的设置
 
 ### 嵌套配置
 
@@ -297,11 +297,11 @@ LANGUAGE plpgsql;
 |选项|短格式|说明|
 |-|-|-|
 |--help[=options]|-?|帮助信息|
-|--command="${SQL}"|-c "${SQL}"|执行一句SQL后退出|
-|--dbname="${DBNAME}"|-d "${DBNAME}"|链接到的数据库|
-|-file="${filename}"|-f "${filename}"|从文件中执行SQL后退出|
+|--command="*SQL*"|-c "*SQL*"|执行一句SQL后退出|
+|--dbname="*DBNAME*"|-d "*DBNAME*"|链接到的数据库|
+|-file="*filename*"|-f "*filename*"|从文件中执行SQL后退出|
 |--list|-l|显示可用数据库|
-|--set="${key}=${value}"<br/>--variable="${key}=${value}"|-v "${key}=${value}"|设置变量|
+|--set="*option*=*value*"<br/>--variable="*option*=*value*"|-v "*option*=*value*"|设置变量|
 |--version|-V|显示版本|
 |--no-psqlrc|-X|不读启动配置|
 |--single-transaction|-1|已一个事务的方式运行,需要搭配-c/-f使用|
@@ -313,15 +313,15 @@ LANGUAGE plpgsql;
 |选项|说明|
 |-|-|
 |\i|从文件中读取SQL执行|
-|\d|显示数据库对象(比如表`\dt`、视图`\dv`、序列`\ds`、索引`\di`、用户`\du`，模式`\n`、表空间`\db`、数据类型`\dT`、系统表`\dS`、函数`\df`、权限`\dp`等),`\d+`|
+|\d|显示数据库对象(比如表`\dt`、视图`\dv`、序列`\ds`、索引`\di`、用户`\du`，模式`\n`、表空间`\db`、数据类型`\dT`、系统表`\dS`、函数`\df`、权限`\dp`等),`\d+`可以或获取详细信息|
 |\conninfo|连接信息|
-|\c|连接数据库|
+|\c *database* |连接数据库|
 |\l|显示当前数据库,`\l+`为加强模式,多显示大小和所处表空间|
 |\timing|切换是否显示执行SQL的运行时间|
 |\x|切换列/表格输出|
 |\t|表格输出时是否显示字段名|
-|\pset|输出格式|
-|\o|输出内容重定向到某个文件|
+|\pset *option* *value* |输出格式定义|
+|\o *file*|输出内容重定向到某个文件|
 |\H|html格式输出|
 |\e|使用外部编辑器编辑查询|
 |\g|执行前一个查询|
@@ -329,9 +329,40 @@ LANGUAGE plpgsql;
 |\echo|结果输出到标准输出|
 |\q|退出|
 
-### 查询
+### 2.数据类型
 
-1.jsonb基础查询操作
+|类型|名称|说明|存储尺寸|
+|-|-|-|-|
+|整数|smallint|范围区间[-32768,32767]|2字节|
+|整数|integer|范围区间[-2147483648,2147483647]|4字节|
+|整数|bigint|范围区间[-9223372036854775808,9223372036854775807]|8字节|
+|任意精度数字|decimal(*precision*,*scale*)<br/>numeric(*precision*,*scale*)|可以不指定精度<br/>指定精度(precision=总长度，scale=小数点后几位),最高小数点前131072位，以及小数点后16383位<br/>取整会圆到远离0的整数<br/>有三个特殊值['Infinity','-Infinity','NaN']代表无穷大,无穷小,未知|可变|
+|浮点数字|real|单精度,精度至少是 6 位小数<br/>支持 SQL 标准表示法float和float(p)用于声明非精确的数字类型,float(1)到float(24)<br/>有三个特殊值['Infinity','-Infinity','NaN']代表无穷大,无穷小,未知|4字节	|
+|浮点数字|double precision|双精度,精度至少是 15 位小数<br/>支持 SQL 标准表示法float和float(p)用于声明非精确的数字类型,float(25)到float(53)<br/>有三个特殊值['Infinity','-Infinity','NaN']代表无穷大,无穷小,未知|8字节|
+|序数|smallserial|自动增加的整数<br/>smallserial区间[1,32767]|2字节|
+|序数|serial|自动增加的整数<br/>serial区间[1,2147483647]|4字节|
+|序数|bigserial|自动增加的整数<br/>bigserial区间[1,9223372036854775807]|8字节|
+|货币|money|区间[-92233720368547758.08,+92233720368547758.07]|8字节|
+|字符|varchar(*n*)|有限可变长字符串,结尾的空格有意义|可变|
+|字符|text|无限可变长字符串,结尾的空格有意义|可变|
+|字符|char(*n*)|定长字符串,不足时结尾空格填充,pg文档声明char的性能没法快过varchar和text(char更加占用存储空间的导致)|固定长度(4字节加上实际的字串)|
+|字符|bpchar[(*n*)]|没有*n*就是无限可变字符串,接近text,不填充空格,同时结尾的空格也没有意义<br/>也可以设置*n*限制长度,此时相当于char(*n*),填充空格|固定长度|
+|二进制|bytea|变长二进制串|1或4字节外加真正的二进制串|
+|日期/时间|timestamp(*precision*) [ with time zone ]|时间格式"YYYY-MM-DD hh:mm:ss[tz]"<br/>*precision*可以控制秒(ss)的精度,区间[0,6]默认6|8字节|
+|日期/时间|date|日期|4字节|
+|日期/时间|time(*precision*) [ with time zone ]|时间<br/>*precision*可以控制秒(ss)的精度,区间[0,6]默认6|8字节|
+|日期/时间|interval [ filed ] (*precision*) |时间间隔|16字节|
+
+此外,还有一些仅实例内部使用的数据类型
+
+|类型|名称|说明|存储尺寸|
+|-|-|-|-|
+|字符|"char"|并不等于char(1),因为char(1)占|1字节|
+|字符|name|用于存储标识符|64字节|
+
+### 3.查询
+
+#### (1)jsonb基础查询操作
 
 以下是一些常用的 jsonb 查询操作符和函数，以及它们在纯SQL和SQLAlchemy中的用法：
 
@@ -342,6 +373,20 @@ LANGUAGE plpgsql;
 |检查是否包含键|`SELECT * FROM table WHERE data ? 'key';`|`session.query(MyModel).filter(MyModel.data.has_key('key'))`|
 |检查是否包含键值对|`SELECT * FROM table WHERE data @> '{"key": "value"}';`|`session.query(MyModel).filter(MyModel.data.contains({'key': 'value'}))`|
 |检查数组是否包含元素|`SELECT * FROM table WHERE data->'array' ? 'element';`|`session.query(MyModel).filter(MyModel.data['array'].contains(['element']))`|
+
+#### (2)时间格式转换
+
+时间格式转unix时间戳(有时区偏移一定要带时区)
+
+```sql
+select extract(epoch from  '2025-11-16 00:00:11+08:00'::timestamp with time zone)::decimal as unixtimestamp;
+```
+
+unix时间戳转时间格式
+
+```sql
+select to_char(to_timestamp(1763222411), 'YYYY-MM-DD HH24:MI:SS') as datetime;
+```
 
 ## 七、备份
 
