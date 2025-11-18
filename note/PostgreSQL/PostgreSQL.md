@@ -352,6 +352,25 @@ LANGUAGE plpgsql;
 |日期/时间|date|日期|4字节|
 |日期/时间|time(*precision*) [ with time zone ]|时间<br/>*precision*可以控制秒(ss)的精度,区间[0,6]默认6|8字节|
 |日期/时间|interval [ filed ] (*precision*) |时间间隔|16字节|
+|布尔|boolean|2选1的真/假值,输出时总是为[t|f]<br/>[true|yes|on|1]表示为真<br/>[false|no|off|0]表示为假<br/>null非真非假|1字节|
+|枚举|enum|一个静态、值的有序集合<br/>要先使用`CREATE TYPE enum_type_name AS ENUM (value1,value2);`创建类型|一个枚举值在磁盘上占据4个字节|
+|几何|point|平面上的点<br/>表示方式: `(x,y)`表示|16字节|
+|几何|line|平面上的线<br/>表示方式: `{A,B,C}`表示`Ax+By+C`<br/>还有使用经过的点来表示的方式:<br/>`[(x1,y1),(x2,y2)]`<br/>`((x1,y1),(x2,y2))`<br/>`(x1,y1),(x2,y2)`<br/>`x1,y1,x2,y2`|24字节|
+|几何|lseg|平面上的线段<br/>表示方式: `[(x1,y1),(x2,y2)]`表示从`(x1,y1)`开始到`(x2,y2)`为止的线段<br/>其余表示方式：<br/>`((x1,y1),(x2,y2))`<br/>`(x1,y1),(x2,y2)`<br/>`x1,y1,x2,y2`|32字节|
+|几何|box|平面上的矩形<br/>表示方式: `((x1,y1),(x2,y2))`表示以从`(x1,y1)`开始到`(x2,y2)`为止为矩形的斜线<br/>其余表示方式：<br/>`(x1,y1),(x2,y2)`<br/>`x1,y1,x2,y2`|32字节|
+|几何|path|平面上的路径<br/>表示方式: `[(x1,y1),...,(xn,yn)]`表示从`(x1,y1)`开始到`(xn,yn)`为止的开放路径<br/>`((x1,y1),...,(xn,yn))`表示从`(x1,yn)`开始到`(x2,yn)`为止的封闭路径<br/>其余封闭路径表示方式：<br/>`(x1,y1),...,(xn,yn)`<br/>`(x1,y1,...,xn,yn)`<br/>`x1,y1,xn,yn`|16+16n字节|
+|几何|polygon|平面上的多边形<br/>表示方式: `((x1,y1),...,(xn,yn))`表示从`(x1,yn)`开始到`(x2,yn)`为止的多边形<br/>其余多边形表示方式：<br/>`(x1,y1),...,(xn,yn)`<br/>`(x1,y1,...,xn,yn)`<br/>`x1,y1,xn,y`|40+16n字节|
+|几何|circle|平面上的圆形<br/>表示方式: `((x,y),r)`表示以`(x,y)`为圆心,`r`为半径的圆及其内部空间<br/>其余封闭路径表示方式：<br/>`((x1,y1),r)`<br/>`(x1,y1),r`<br/>`x,y,r`|24字节|
+|网络地址|cidr|IPv4和IPv6网络<br/>cidr更加严格检查IP地址和子网掩码是否规范|7或19字节|
+|网络地址|inet|IPv4和IPv6主机以及网络<br/>允许一个子网中的某个地址加子网掩码代表整个网段|7或19字节|
+|网络地址|macaddr|MAC地址|6字节|
+|网络地址|macaddr8|MAC地址（EUI-64格式）|8字节|
+|位串|bit(*n*)|定长,存储短些或者长一些的位串都是错误的<br/>没有长度意味着`bit(1)`|`n`bit|
+|位串|bit varying(*n*)|变长,超过`n`更长的串会被拒绝<br/>没有长度意味着没有长度限制|实际长度,最大`n`bit|
+|文本搜索|tsvector|用于存储已处理的文本数据,便于快速搜索|可变|
+|文本搜索|tsquery|用于表示用户的搜索条件,支持复杂的逻辑运算|可变|
+|UUID|uuid|通用唯一标识码<br/>适用于分布式场景<br/>部分算法由于生成无序,导致性能不好<br/>uuidv7使用时间戳+随机无序生成,可以一定程度上有序达到提升性能|16字节|
+|XML|xml|有检查结构的text|可变|
 
 此外,还有一些仅实例内部使用的数据类型
 
@@ -359,6 +378,8 @@ LANGUAGE plpgsql;
 |-|-|-|-|
 |字符|"char"|并不等于char(1),因为char(1)占|1字节|
 |字符|name|用于存储标识符|64字节|
+
+如果有自定义类型可以使用`CREATE TYPE`创建
 
 ### 3.查询
 
@@ -382,7 +403,7 @@ LANGUAGE plpgsql;
 select extract(epoch from  '2025-11-16 00:00:11+08:00'::timestamp with time zone)::decimal as unixtimestamp;
 ```
 
-unix时间戳转时间格式
+unix时间戳转自定义时间格式
 
 ```sql
 select to_char(to_timestamp(1763222411), 'YYYY-MM-DD HH24:MI:SS') as datetime;
