@@ -371,6 +371,8 @@ LANGUAGE plpgsql;
 |文本搜索|tsquery|用于表示用户的搜索条件,支持复杂的逻辑运算|可变|
 |UUID|uuid|通用唯一标识码<br/>适用于分布式场景<br/>部分算法由于生成无序,导致性能不好<br/>uuidv7使用时间戳+随机无序生成,可以一定程度上有序达到提升性能|16字节|
 |XML|xml|有检查结构的text|可变|
+|JSON|json|存储json格式的数据<br/>存储时比jsonb<br/>不够严格<br/>约等于text,只是有检查||
+|JSON|jsonb|解析并存储json格式的数据<br/>读取时比json更高效<br/>支持索引||
 
 此外,还有一些仅实例内部使用的数据类型
 
@@ -385,15 +387,34 @@ LANGUAGE plpgsql;
 
 #### (1)jsonb基础查询操作
 
-以下是一些常用的 jsonb 查询操作符和函数，以及它们在纯SQL和SQLAlchemy中的用法：
+以下是一些常用的 jsonb 查询操作符和函数，以及它们在SQL中的用法：
 
-|查询场景|PostgreSQL SQL 示例|SQLAlchemy|
+|查询场景|符号|PostgreSQL SQL 示例|
 |--|--|--|
-|提取JSON键值|`SELECT data->'key' FROM table;`|`session.query(MyModel.data['key'])`|
-|提取为文本|`SELECT data->>'key' FROM table;`|`session.query(MyModel.data['key'].astext)`|
-|检查是否包含键|`SELECT * FROM table WHERE data ? 'key';`|`session.query(MyModel).filter(MyModel.data.has_key('key'))`|
-|检查是否包含键值对|`SELECT * FROM table WHERE data @> '{"key": "value"}';`|`session.query(MyModel).filter(MyModel.data.contains({'key': 'value'}))`|
-|检查数组是否包含元素|`SELECT * FROM table WHERE data->'array' ? 'element';`|`session.query(MyModel).filter(MyModel.data['array'].contains(['element']))`|
+|提取`key`对应的`value`|`->`|`SELECT data->'key' FROM table;`|
+|提取`key`对应的`value`的文本|`->>`|`SELECT data->>'key' FROM table;`|
+|提取`key`对应的`value`,可以使用层级路径|`#>`|`SELECT data#>{'key1'，'key2'} FROM table;`|
+|提取`key`对应的`value`的文本,可以使用层级路径|`#>>`|`SELECT data#>>{'key1'，'key2'} FROM table;`|
+|检查是否存在键|`?`|`SELECT * FROM table WHERE data ? 'key';`|
+|检查包含键值对|`@>`|`SELECT * FROM table WHERE data @> '{"key": "value"}';`|
+
+一个简单的查询例子
+
+```sql
+CREATE TABLE api (
+    jdoc jsonb
+);
+CREATE INDEX idxgin ON public.api USING gin (jdoc);
+CREATE INDEX idxginp ON public.api USING gin (jdoc jsonb_path_ops);
+CREATE INDEX idxgintags ON api USING gin ((jdoc -> 'tags'));
+
+INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46061a", "name": "Angela Barton", "tags": ["enim", "aliquip", "qui"], "address": "178 Howard Place, Gulf, Washington, 702", "company": "Magnafone", "latitude": 19.793713, "is_active": true, "longitude": 86.513373, "registered": "2009-11-07T08:53:22 +08:00"}');
+
+INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46062b", "name": "lxw", "tags": ["shangbanzu", "erciyuan", "niuma"], "address": "fuzhou", "company": "nd", "latitude": 80.793713, "is_active": true, "longitude": 99.513373, "registered": "2025-11-20T04:25:00 +08:00"}');
+
+SELECT jdoc->'guid' as guid ,jdoc#>'{tags,1}' as tags,* FROM api WHERE (jdoc->'registered')::text::timestamp >= '2025-11-07T08:53:22 +08:00' and jdoc @> '{"name":"lxw"}';
+```
+
 
 #### (2)时间格式转换
 
