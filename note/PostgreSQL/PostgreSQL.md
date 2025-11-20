@@ -371,8 +371,8 @@ LANGUAGE plpgsql;
 |文本搜索|tsquery|用于表示用户的搜索条件,支持复杂的逻辑运算|可变|
 |UUID|uuid|通用唯一标识码<br/>适用于分布式场景<br/>部分算法由于生成无序,导致性能不好<br/>uuidv7使用时间戳+随机无序生成,可以一定程度上有序达到提升性能|16字节|
 |XML|xml|有检查结构的text|可变|
-|JSON|json|存储json格式的数据<br/>存储时比jsonb<br/>不够严格<br/>约等于text,只是有检查||
-|JSON|jsonb|解析并存储json格式的数据<br/>读取时比json更高效<br/>支持索引||
+|JSON|json|存储json格式的数据<br/>存储时比jsonb<br/>不够严格,同名的key可以存在,虽然最后一个生效,但是还是会显示<br/>约等于text,只是有简单检查|可变=text大小|
+|JSON|jsonb|解析并存储json格式的数据<br/>读取时比json更高效<br/>支持运算符更丰富<br/>支持索引<br/>解析后去除空隙并把同个key优化成最后一个同名key生效|可变,理论上会比json少占用,但实际情况相反<br/>可能的原因:<br/>1.嵌套层级<br/>2.类型,如(浮点数)存储方式json为文本,jsonb解析为对应类型|
 
 此外,还有一些仅实例内部使用的数据类型
 
@@ -389,16 +389,21 @@ LANGUAGE plpgsql;
 
 以下是一些常用的 jsonb 查询操作符和函数，以及它们在SQL中的用法：
 
-|查询场景|符号|PostgreSQL SQL 示例|
+|符号|查询场景|PostgreSQL SQL 示例|
 |--|--|--|
-|提取`key`对应的`value`|`->`|`SELECT data->'key' FROM table;`|
-|提取`key`对应的`value`的文本|`->>`|`SELECT data->>'key' FROM table;`|
-|提取`key`对应的`value`,可以使用层级路径|`#>`|`SELECT data#>{'key1'，'key2'} FROM table;`|
-|提取`key`对应的`value`的文本,可以使用层级路径|`#>>`|`SELECT data#>>{'key1'，'key2'} FROM table;`|
-|检查是否存在键|`?`|`SELECT * FROM table WHERE data ? 'key';`|
-|检查包含键值对|`@>`|`SELECT * FROM table WHERE data @> '{"key": "value"}';`|
+|`->`|提取`key`对应的`value`|`SELECT jdoc->'guid' FROM api;`|
+|`->>`|提取`key`对应的`value`并转为`text`|`SELECT jdoc->>'guid' FROM api;`|
+|`#>`|提取`key`对应的`value`,可以使用层级路径|`SELECT jdoc#>'{"tags",0}' FROM api;`|
+|`#>>`|提取`key`对应的`value`并转为`text,可以使用层级路径|`SELECT jdoc#>>'{"tags",0}' FROM api;`|
+|`?`|检查`jsonb`是否存在键|`SELECT jdoc FROM api WHERE jdoc ? 'address';`|
+|`?\|`|检查`jsonb`是否存在`array['b','d']`这个数组任意一个元素作为键|`SELECT jdoc FROM api WHERE jdoc ?\| array['name', 'non-existent'];`|
+|`?&`|检查`jsonb`是否存在`array['b','d']`这个数组所有元素作为键|`SELECT jdoc FROM api WHERE jdoc ?& array['name', 'non-existent'];`|
+|`@>`|检查`jsonb`包含键值对|`SELECT jdoc FROM api WHERE jdoc @> '{"address": "fuzhou"}';`|
 
-一个简单的查询例子
+
+##### 一些简单的查询例子
+
+创建数据
 
 ```sql
 CREATE TABLE api (
@@ -411,10 +416,33 @@ CREATE INDEX idxgintags ON api USING gin ((jdoc -> 'tags'));
 INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46061a", "name": "Angela Barton", "tags": ["enim", "aliquip", "qui"], "address": "178 Howard Place, Gulf, Washington, 702", "company": "Magnafone", "latitude": 19.793713, "is_active": true, "longitude": 86.513373, "registered": "2009-11-07T08:53:22 +08:00"}');
 
 INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46062b", "name": "lxw", "tags": ["shangbanzu", "erciyuan", "niuma"], "address": "fuzhou", "company": "nd", "latitude": 80.793713, "is_active": true, "longitude": 99.513373, "registered": "2025-11-20T04:25:00 +08:00"}');
-
-SELECT jdoc->'guid' as guid ,jdoc#>'{tags,1}' as tags,* FROM api WHERE (jdoc->'registered')::text::timestamp >= '2025-11-07T08:53:22 +08:00' and jdoc @> '{"name":"lxw"}';
 ```
 
+一个简单查询参考
+
+```sql
+-- registered大于2025-11-07T08:53:22 +08:00 且 名字等于lxw --
+SELECT jdoc->'guid' as guid ,jdoc#>'{tags,1}' as tags ,pg_column_size(jdoc) as size,* FROM api WHERE (jdoc->'registered')::text::timestamp >= '2025-11-07T08:53:22 +08:00' and jdoc @> '{"name":"lxw"}';
+```
+
+存储大小示范
+
+```sql
+-- 大小: text=json<jsonb
+SELECT pg_column_size(DATA) as text_size,
+  pg_column_size(DATA::json) as json_size,
+  pg_column_size(DATA::jsonb) as jsonb_size
+  FROM (select '{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46062b", "name": "lxw", "tags": ["shangbanzu", "erciyuan", "niuma"], "address": "fuzhou", "company": "nd", "latitude": 80.793713, "is_active": true, "longitude": 99.513373, "registered": "2025-11-20T04:25:00+08:00"}'::text AS DATA);
+```
+
+同样的查询结果但是依赖的索引不同
+
+```sql
+-- 使用gin (jdoc),更万金油,其他查询也能用
+SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc @> '{"tags": ["qui"]}';
+-- 使用gin ((jdoc -> 'tags')),索引占用空间更小,查询更快
+SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc -> 'tags' ? 'qui';
+```
 
 #### (2)时间格式转换
 
