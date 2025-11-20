@@ -630,7 +630,7 @@ tee  [option]  [file]
 
 ```
 tr "old" "new"
-字符转换
+# 字符转换
 ```
 
 #### wc

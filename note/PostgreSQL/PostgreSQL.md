@@ -401,6 +401,7 @@ LANGUAGE plpgsql;
 |`@>`|检查`jsonb`包含键值对|`SELECT jdoc FROM api WHERE jdoc @> '{"address": "fuzhou"}';`|
 
 
+
 ##### 一些简单的查询例子
 
 创建数据
