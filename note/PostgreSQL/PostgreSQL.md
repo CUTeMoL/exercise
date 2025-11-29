@@ -374,12 +374,15 @@ LANGUAGE plpgsql;
 |JSON|json|存储json格式的数据<br/>存储时比jsonb<br/>不够严格,同名的key可以存在,虽然最后一个生效,但是还是会显示<br/>约等于text,只是有简单检查|可变=text大小|
 |JSON|jsonb|解析并存储json格式的数据<br/>读取时比json更高效<br/>支持运算符更丰富<br/>支持索引<br/>解析后去除空隙并把同个key优化成最后一个同名key生效|可变,理论上会比json少占用,但实际情况相反<br/>可能的原因:<br/>1.嵌套层级<br/>2.类型,如(浮点数)存储方式json为文本,jsonb解析为对应类型|
 
+
+
 此外,还有一些仅实例内部使用的数据类型
 
 |类型|名称|说明|存储尺寸|
 |-|-|-|-|
 |字符|"char"|并不等于char(1),因为char(1)占|1字节|
 |字符|name|用于存储标识符|64字节|
+|JSON|jsonpath|用于`@?`和`@@`这两种查询中定位json路径||
 
 如果有自定义类型可以使用`CREATE TYPE`创建
 
@@ -387,7 +390,7 @@ LANGUAGE plpgsql;
 
 #### (1)jsonb基础查询操作
 
-以下是一些常用的 jsonb 查询操作符和函数，以及它们在SQL中的用法：
+以下是一些常用的 jsonb 查询操作符和函数,以及它们在SQL中的用法:
 
 |符号|查询场景|PostgreSQL SQL 示例|
 |--|--|--|
@@ -398,9 +401,26 @@ LANGUAGE plpgsql;
 |`?`|检查`jsonb`是否存在键|`SELECT jdoc FROM api WHERE jdoc ? 'address';`|
 |`?\|`|检查`jsonb`是否存在`array['b','d']`这个数组任意一个元素作为键|`SELECT jdoc FROM api WHERE jdoc ?\| array['name', 'non-existent'];`|
 |`?&`|检查`jsonb`是否存在`array['b','d']`这个数组所有元素作为键|`SELECT jdoc FROM api WHERE jdoc ?& array['name', 'non-existent'];`|
-|`@>`|检查`jsonb`包含键值对|`SELECT jdoc FROM api WHERE jdoc @> '{"address": "fuzhou"}';`|
+|`@>`|检查左边`jsonb`是否包含右边|`SELECT jdoc FROM api WHERE jdoc @> '{"address": "fuzhou"}';`|
+|`<@`|检查右边`jsonb`是否包含左边|`SELECT jdoc FROM api WHERE jdoc @> '{"address": "fuzhou"}';`|
+|`\|\|`|形成并集|`SELECT jdoc \|\| '{"a":"b"}'::jsonb FROM api ;`|
+|`-`|`jsonb`删除某个元素|`SELECT jdoc-'name'-'address'-('{"longitude","is_active","tags"}')::text[],(jdoc->'tags')-1 FROM api ;`|
+|`#-`|`jsonb`删除某个元素,可以使用层级路径|`SELECT (jdoc#-'{tags,0}') FROM api ;`|
+|`@?`|检查路径是否存在,只要路径存在都是true|`SELECT  jdoc  @? '$.is_active ? (@ == false)',jdoc->'is_active' FROM api ;`|
+|`@@`|检查路径是否存在,存在时再检查并返回查询值|`SELECT  jdoc  @@ '$.is_active == false',jdoc->'is_active' FROM api ;`|
 
+涉及jsonpath的查询:
 
+|符号|说明|
+|-|-|
+|$|表示被查询的 JSON 值的变量(可以理解为只能在路径表达式中使用的所需查询的数据本身)|
+|@|表示筛选器表达式中路径计算结果的变量(可以理解为只能在运算表达式中使用的所需查询的数据本身)|
+|.key|访问某个key|
+|.*|返回所有顶级key|
+|.**|返回所有key,无视层级|
+|[int]|访问数组中int下标对应的值|
+|*|通配符|
+|[*]|代表任意元素|
 
 ##### 一些简单的查询例子
 
@@ -415,8 +435,10 @@ CREATE INDEX idxginp ON public.api USING gin (jdoc jsonb_path_ops);
 CREATE INDEX idxgintags ON api USING gin ((jdoc -> 'tags'));
 
 INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46061a", "name": "Angela Barton", "tags": ["enim", "aliquip", "qui"], "address": "178 Howard Place, Gulf, Washington, 702", "company": "Magnafone", "latitude": 19.793713, "is_active": true, "longitude": 86.513373, "registered": "2009-11-07T08:53:22 +08:00"}');
-
 INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46062b", "name": "lxw", "tags": ["shangbanzu", "erciyuan", "niuma"], "address": "fuzhou", "company": "nd", "latitude": 80.793713, "is_active": true, "longitude": 99.513373, "registered": "2025-11-20T04:25:00 +08:00"}');
+INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46063c", "name": "lxw2", "tags": ["上班族", "二次元", "牛马"], "address": "福州", "company": "网龙", "latitude": 80.793713, "is_active": false, "longitude": 99.513373, "registered": "2025-11-20T04:25:00 +08:00"}');
+INSERT INTO api VALUES ('{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46064d", "name": "lxw3", "tags": ["上班族1", "二次元2", "牛马3"], "address": "福建福州", "company": "网龙v", "latitude": 80.793713,  "longitude": 99.513373, "registered": "2025-11-20T04:25:00 +08:00"}');
+
 ```
 
 一个简单查询参考
