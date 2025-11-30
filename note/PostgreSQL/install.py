@@ -234,7 +234,7 @@ def env_ensure():
     '''
     # 用户
     create_superuser()
-    for check_path in [INSTALL_CONFIG["datadir"],PREFIX]
+    for check_path in [INSTALL_CONFIG["datadir"],PREFIX]:
         if  os.path.exists(check_path) and len(os.listdir(check_path)) > 0:
             raise NotEmptyError(10007,check_path)
 
