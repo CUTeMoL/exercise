@@ -261,6 +261,46 @@ LANGUAGE plpgsql;
 
 类似MySQL中的redolog,用于故障恢复
 
+### 6.映射外部实例
+
+```shell
+# 安装
+cd /data/postgresql-17.5/contrib/postgres_fdw && make install
+# 检查
+su postgres  -c "cd /data/postgresql-17.5/contrib/postgres_fdw && make installcheck"
+
+
+```
+
+```sql
+-- 0. 授权给对应用户
+GRANT USAGE ON FOREIGN DATA WRAPPER postgres_fdw TO 用户名;
+
+-- 1. 创建扩展
+CREATE EXTENSION postgres_fdw;
+
+-- 2. 创建外部服务器
+CREATE SERVER foreign_server 
+FOREIGN DATA WRAPPER postgres_fdw 
+OPTIONS (host '目标主机', port '5432', dbname '目标数据库');
+
+-- 3. 创建用户映射
+CREATE USER MAPPING FOR 用户名 
+SERVER foreign_server 
+OPTIONS (user '用户名', password '密码');
+
+-- 4. 创建外部表
+CREATE FOREIGN TABLE 外部表名 (
+    字段1 数据类型,
+    字段2 数据类型
+) SERVER foreign_server 
+OPTIONS (schema_name 'public', table_name '远程表名');
+
+-- 5. 如果创建用户非实际使用用户时需要执行
+ALTER FOREIGN TABLE 外部表名 OWNER to 用户名;
+
+```
+
 ## 五、数据目录文件布局
 
 |文件名|说明|
@@ -331,6 +371,11 @@ LANGUAGE plpgsql;
 
 ### 2.数据类型
 
+```sql
+\c postgres
+select * from pg_catalog.pg_type;
+```
+
 |类型|名称|说明|存储尺寸|
 |-|-|-|-|
 |整数|smallint|范围区间[-32768,32767]|2字节|
@@ -373,6 +418,7 @@ LANGUAGE plpgsql;
 |XML|xml|有检查结构的text|可变|
 |JSON|json|存储json格式的数据<br/>存储时比jsonb<br/>不够严格,同名的key可以存在,虽然最后一个生效,但是还是会显示<br/>约等于text,只是有简单检查|可变=text大小|
 |JSON|jsonb|解析并存储json格式的数据<br/>读取时比json更高效<br/>支持运算符更丰富<br/>支持索引<br/>解析后去除空隙并把同个key优化成最后一个同名key生效|可变,理论上会比json少占用,但实际情况相反<br/>可能的原因:<br/>1.嵌套层级<br/>2.类型,如(浮点数)存储方式json为文本,jsonb解析为对应类型|
+|数组|*TYPE* ARRAY[*n*]|变长多维数组<br/>使用方式:比如`text[]`代表内容为文本的数组|可变|
 
 
 
