@@ -79,7 +79,7 @@ ident_file = 'filename' # 指定用于用户名称映射的配置文件
 external_pid_file = "filename" # 指定可被服务器创建的用于管理程序的额外进程 ID文件
 
 # 监听连接相关
-listen_addresses = 'localhost,0.0.0.0,::'
+listen_addresses = '0.0.0.0,::'
 port = 5432 
 max_connections = 100
 reserved_connections = 0 # 确定为具有 pg_use_reserved_connections 角色权限的连接保留的连接“槽”数量
@@ -353,7 +353,7 @@ ALTER FOREIGN TABLE 外部表名 OWNER to 用户名;
 |选项|说明|
 |-|-|
 |\i|从文件中读取SQL执行|
-|\d|显示数据库对象(比如表`\dt`、视图`\dv`、序列`\ds`、索引`\di`、用户`\du`，模式`\n`、表空间`\db`、数据类型`\dT`、系统表`\dS`、函数`\df`、权限`\dp`等),`\d+`可以或获取详细信息|
+|\d|显示数据库对象(比如表`\dt`、视图`\dv`、序列`\ds`、索引`\di`、用户`\du`，模式`\dn`、表空间`\db`、数据类型`\dT`、系统表`\dS`、函数`\df`、权限`\dp`等),`\d+`可以或获取详细信息|
 |\conninfo|连接信息|
 |\c *database* |连接数据库|
 |\l|显示当前数据库,`\l+`为加强模式,多显示大小和所处表空间|
@@ -371,8 +371,9 @@ ALTER FOREIGN TABLE 外部表名 OWNER to 用户名;
 
 ### 2.数据类型
 
+类型定义都在`pg_catalog.pg_type`这个表中
+
 ```sql
-\c postgres
 select * from pg_catalog.pg_type;
 ```
 
@@ -418,9 +419,18 @@ select * from pg_catalog.pg_type;
 |XML|xml|有检查结构的text|可变|
 |JSON|json|存储json格式的数据<br/>存储时比jsonb<br/>不够严格,同名的key可以存在,虽然最后一个生效,但是还是会显示<br/>约等于text,只是有简单检查|可变=text大小|
 |JSON|jsonb|解析并存储json格式的数据<br/>读取时比json更高效<br/>支持运算符更丰富<br/>支持索引<br/>解析后去除空隙并把同个key优化成最后一个同名key生效|可变,理论上会比json少占用,但实际情况相反<br/>可能的原因:<br/>1.嵌套层级<br/>2.类型,如(浮点数)存储方式json为文本,jsonb解析为对应类型|
-|数组|*TYPE* ARRAY[*n*]|变长多维数组<br/>使用方式:比如`text[]`代表内容为文本的数组|可变|
-
-
+|JSON|jsonpath|用于`@?`和`@@`这两种查询中定位json路径|可变|
+|数组|*TYPE* ARRAY[*n*]|变长多维数组<br/>使用方式:比如`text[]`代表内容为文本的数组<br/>数组的下标由1开始而不是通常认知中的0<br/>多维数组(比如`test[][]`)那么里面的维度有长度一致的要求<br/>数组获取固定值使用切片,一个数组切片可以通过在一个或多个数组维度上指定[下界:上界]来定义,多维数组里面的维度直接使用下标容易错,所以尽可能的使用[下界:上界]查询|可变|
+|组合类型||就是自定义类型,可以定义多个字段(此时字段可以理解为域名,以"."分割层级)组合成一个类型|可变|
+|范围|int4range|integer的范围(int4multirange为integer的多重范围)|可变|
+|范围|int8range|bigint的范围(int8multirange为bigint的多重范围)|可变|
+|范围|numrange|numeric的范围(nummultirange为numeric的多重范围)|可变|
+|范围|tsrange|不带时区的timestamp的范围(tsmultirange为timestamp的多重范围)|可变|
+|范围|tstzrange|带时区的timestamp的范围(tstzmultirange为timestamp的多重范围)|可变|
+|范围|daterange|date的范围(datemultirange为date的多重范围)|可变|
+|域|DOMAIN|基于另一种底层类型,可以进行值的检查|可变|
+|对象标识符类型|regclass|关系名字<br/>关系标识符有很多,详见文档|可变|
+|伪类型|被用来定义一个函数的参数或者结果类型,无法定义字段|||
 
 此外,还有一些仅实例内部使用的数据类型
 
@@ -428,11 +438,27 @@ select * from pg_catalog.pg_type;
 |-|-|-|-|
 |字符|"char"|并不等于char(1),因为char(1)占|1字节|
 |字符|name|用于存储标识符|64字节|
-|JSON|jsonpath|用于`@?`和`@@`这两种查询中定位json路径||
+|日志指针|pg_lsn|用于存储预写式日志位置指向|64字节|
+
 
 如果有自定义类型可以使用`CREATE TYPE`创建
 
-### 3.查询
+### 3.函数
+
+|辅助查询函数|说明|
+|CAST( expression AS type )|类型转换|
+|random()|随机[0,1]以内的浮点数|
+|UNNEST()|数组拆解|
+|generate_series(start_position,end_position,step)|系列生成|
+
+|数据库对象类函数|说明|
+|pg_relation_size(relid)|对象大小|
+|current_database()|当前数据库|
+|pg_database_size(database)|数据库大小|
+|pg_column_size(col)|字段大小|
+
+
+### 4.查询
 
 #### (1)jsonb基础查询操作
 
@@ -455,18 +481,54 @@ select * from pg_catalog.pg_type;
 |`@?`|检查路径是否存在,只要路径存在都是true|`SELECT  jdoc  @? '$.is_active ? (@ == false)',jdoc->'is_active' FROM api ;`|
 |`@@`|检查路径是否存在,存在时再检查并返回查询值|`SELECT  jdoc  @@ '$.is_active == false',jdoc->'is_active' FROM api ;`|
 
-涉及jsonpath的查询:
+涉及jsonpath的查询表达式:
 
 |符号|说明|
 |-|-|
 |$|表示被查询的 JSON 值的变量(可以理解为只能在路径表达式中使用的所需查询的数据本身)|
 |@|表示筛选器表达式中路径计算结果的变量(可以理解为只能在运算表达式中使用的所需查询的数据本身)|
-|.key|访问某个key|
-|.*|返回所有顶级key|
+|.key|访问object某个key|
+|.*|返回object的所有顶级key|
 |.**|返回所有key,无视层级|
 |[int]|访问数组中int下标对应的值|
 |*|通配符|
-|[*]|代表任意元素|
+|[*]|返回任意数值元素任意元素|
+
+适用于json格式的查询函数
+
+|函数|说明|
+|-|-|
+|jsonb_pretty(json_object)|美观输出|
+|to_json(text)|转json格式|
+|to_jsonb(text)|转jsonb格式|
+|array_to_json(array[,boolean])|数组转json格式,如果可选boolean参数为真,换行符将在顶级数组元素之间添加|
+|row_to_json(record[,boolean])|数组转json格式,如果可选boolean参数为真,换行符将在顶级数组元素之间添加|
+|json_array([v1,v2...])|入参转json格式的数组|
+|json_array_length(json_object)|获取元素个数|
+|json_each(json_object)|内容展开成key和value|
+|json_each_text(json_object)|内容展开成key和value,都为text格式|
+|json_array_elements(json_object)|顶级元素展开成json值|
+|json_array_elements_text(json_object)|顶级元素展开成text值|
+|json_extract_path((json_object), 'key1', 'key2')|通过路径参数提取value,和`#>`一样(但是通过多个参数决定路径层级而不是单个json_path_object)|
+|json_extract_path_text((json_object), 'key1', 'key2')|通过路径参数提取value,和`#>`一样,都为text格式|
+|json_object_keys(json_object)|顶级key集合|
+|json_populate_record(base anyelement,json_object)|将json对象转化为表记录一样的方式输出,不适用于表数据,只是json格式的数据转row|
+|json_populate_recordset(base anyelement,json_object)|将json对象(集合)转化为表记录一样的方式输出,不适用于表数据,只是json格式的数据转row|
+|json_to_record(json_object) as (key1 datatype,key1 datatype) |将json对象转化为表记录一样的方式输出,直接通过as定义字段类型,比json_populate_record更轻量级|
+|json_to_recordset(json_object_set) as (key1 datatype,key1 datatype) |将json对象(集合)转化为表记录一样的方式输出,直接通过as定义字段类型,比json_populate_record更轻量级|
+|jsonb_populate_record_valid(base anyelement,json_object)|测试json_populate_record|
+|json_build_array |json构成|
+|json_build_object |json构成|
+|json |json构成|
+|json_scalar(expression)|sql标量转json标量|
+|json_serialize(json_object returning datatype)|将SQL/JSON表达式转换为字符或二进制字符串|
+|jsonb_set(json_object,'{json_path_text}',value [,create_if_missing])|传入json,对对应的key进行替换value值[,create_if_missing如果true不存在key则创建这个key,如果false则忽略]|
+|jsonb_set_lax(json_object,'{json_path_text}',value [,create_if_missing[,null_value_treatment]])|高级版jsonb_set传入json,对json_path_text对应的key进行替换value值(可以为null)[,create_if_missing如果true不存在key则创建这个key,如果false则忽略],并用null_value_treatment对null进行定义返回<br/>返回值必须是'raise_exception'、'use_json_null'、'delete_key'或'return_target'之一|
+|jsonb_insert(json_object,'{json_path_text}',value[,insert_after])|insert数值到json对象路径对应的value中,可以=boolean定义在对应插入还是追加|
+|json_strip_nulls(json_object)|去除对象中为null的key(仅对象,列表无影响)|
+|jsonb_path_query(json_object,json_object_path[,conditional,expression_result])|查询并按返回所有符合的结果(每行一个)|
+|jsonb_path_query_array(json_object,json_object_path[,conditional,expression_result])|查询并按返回所有符合的结果(汇聚在一行数组表示)|
+|jsonb_path_query_first(json_object,json_object_path[,conditional,expression_result])|查询并按返回所有符合的第一个结果|
 
 ##### 一些简单的查询例子
 
@@ -508,9 +570,37 @@ SELECT pg_column_size(DATA) as text_size,
 
 ```sql
 -- 使用gin (jdoc),更万金油,其他查询也能用
-SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc @> '{"tags": ["qui"]}';
+SELECT jdoc->'guid' as id, jdoc->'name' as name,jsonb_path_query(jdoc,'$.address') FROM api WHERE jdoc @> '{"tags": ["qui"]}';
 -- 使用gin ((jdoc -> 'tags')),索引占用空间更小,查询更快
-SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc -> 'tags' ? 'qui';
+SELECT jdoc->'guid' as id, jdoc->'name' as name,jsonb_path_query(jdoc,'$.address') as addr FROM api WHERE jdoc -> 'tags' ? 'qui';
+
+```
+
+json格式的数据进行字段拆解重新输出(json_populate_record用于表数据时放再from前面就需要.*拆解)
+
+```sql
+create type api_type as (guid text, name text, tags text[],address text,company text, latitude decimal, is_active boolean,longitude decimal, registered timestamp with time zone);
+
+select * from json_populate_record(null::api_type, '{"guid": "9c36adc1-7fb5-4d5b-83b4-90356a46061a", "name": "Angela Barton", "tags": ["enim", "aliquip", "qui"], "address": "178 Howard Place, Gulf, Washington, 702", "company": "Magnafone", "latitude": 19.793713, "is_active": true, "longitude": 86.513373, "registered": "2009-11-07T08:53:22 +08:00"}') ;
+
+select (jsonb_populate_record(null::api_type, jdoc)).* FROM  api ;
+
+```
+
+聚集函数使用
+
+```sql
+-- array_agg 汇集某一列所有结果成一行输出
+select array_agg(tags(jsonb_populate_record(null::api_type, jdoc))) FROM  api ;
+-- string_agg 汇集某一列所有结果成一行输出
+select string_agg((jdoc->'name')::text, ',' order by (jdoc->'name') DESC) FROM api ;
+SELECT
+    count(*) AS unfiltered,
+    count(*) FILTER (WHERE i < 5) AS filtered,
+    sum(i)  AS sum,
+    string_agg(i::text , ',') AS all,
+    percentile_cont(0.5) WITHIN GROUP (ORDER BY i)
+FROM generate_series(1,11,1) AS s(i);
 ```
 
 #### (2)时间格式转换
@@ -525,6 +615,89 @@ unix时间戳转自定义时间格式
 
 ```sql
 select to_char(to_timestamp(1763222411), 'YYYY-MM-DD HH24:MI:SS') as datetime;
+```
+
+### 5.表继承
+
+可以从其他表(parent)继承字段,并额外添加字段,往子表(Child)插入数据时会同时往主表插入数据
+
+```sql
+-- 父表
+CREATE TABLE cities (
+    city_id         SERIAL, 
+    name            text,
+    population      float8,
+    elevation       int,             -- (in ft)
+    PRIMARY KEY(city_id)
+);
+-- 子表
+CREATE TABLE capitals (
+    state           char(2)
+) INHERITS (cities);
+-- 父表插入数据,不会同时插入子表
+INSERT INTO cities (name,population,elevation) VALUES ('San Francisco', 7.24E+5, 63);
+INSERT INTO cities (name,population,elevation) VALUES ('Las Vegas', 2.583E+5, 2174);
+INSERT INTO cities (name,population,elevation) VALUES ('Mariposa', 1200, 1953);
+-- 子表插入数据,会同时插入父表
+INSERT INTO capitals VALUES (DEFAULT, 'Sacramento', 3.694E+5, 30, 'CA');
+INSERT INTO capitals VALUES (DEFAULT, 'Madison', 1.913E+5, 845, 'WI');
+
+-- 结果如下
+SELECT * FROM cities;
+SELECT * FROM capitals;
+SELECT * FROM ONLY cities;
+ city_id |     name      | population | elevation 
+---------+---------------+------------+-----------
+       1 | San Francisco |     724000 |        63
+       2 | Las Vegas     |     258300 |      2174
+       3 | Mariposa      |       1200 |      1953
+       4 | Sacramento    |     369400 |        30
+       5 | Madison       |     191300 |       845
+(5 rows)
+
+ city_id |    name    | population | elevation | state 
+---------+------------+------------+-----------+-------
+       4 | Sacramento |     369400 |        30 | CA
+       5 | Madison    |     191300 |       845 | WI
+(2 rows)
+```
+
+### 5.分区
+
+分区表本身是一个“虚拟”表，没有自己的存储空间。相反，存储属于分区，这些分区是与分区表关联的普通表。
+
+```sql
+-- 1.声明建一个分区表(虚拟),且通过logdate这个字段分区
+CREATE TABLE measurement (
+    city_id         int not null,
+    logdate         date not null,
+    peaktemp        int,
+    unitsales       int,
+    PRIMARY KEY(city_id,logdate) -- 分区的键必须为主键的一部分,避免主键冲突
+) PARTITION BY RANGE (logdate);
+
+-- 2.创建分区(本质是表,真正和存储关联,需要指定边界)
+CREATE TABLE measurement_y2025m12 PARTITION OF measurement
+    FOR VALUES FROM ('2025-12-01') TO ('2026-01-01');
+
+CREATE TABLE measurement_y2025m11 PARTITION OF measurement
+    FOR VALUES FROM ('2025-11-01') TO ('2025-12-01');
+
+-- 3.insert 数据会根据日期划分到不同分区
+INSERT INTO measurement VALUES (2, '2025-11-30', 3.694E+5, 30);
+INSERT INTO measurement VALUES (2, '2025-12-30', 3.694E+5, 30);
+INSERT INTO measurement VALUES (3, '2025-12-01', 3.694E+5, 30);
+INSERT INTO measurement VALUES (3, '2025-11-01', 3.694E+5, 30);
+-- 4.没建立对应分区的将会无法insert
+INSERT INTO measurement VALUES (5, '2026-12-01', 3.694E+5, 30);
+ERROR:  no partition of relation "measurement" found for row
+DETAIL:  Partition key of the failing row contains (logdate) = (2026-12-01).
+-- 5.索引也可以分区,这样不会造成大规模锁表(分区表无法使用CONCURRENTLY关键字)
+CREATE INDEX measurement_usls_idx ON ONLY measurement (unitsales);
+CREATE INDEX CONCURRENTLY measurement_usls_200602_idx
+    ON measurement_y2006m02 (unitsales);
+ALTER INDEX measurement_usls_idx
+    ATTACH PARTITION measurement_usls_200602_idx;
 ```
 
 ## 七、备份

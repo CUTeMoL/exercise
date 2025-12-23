@@ -28,16 +28,27 @@ FROM > WHERE > GROUP BY > HAVING > SELECT创建的新字段 > ORDER BY > LIMIT >
 | ------------------- | ------------------------------------------------------------ |
 | `SELECT`            | 定义查询字段                                                 |
 | `TOP`               | 限制显示前`n`行，或前`n percent`的数据，仅SQLServer使用      |
+| `DISTINCT`          | 清楚重复行                                            |
 | `INTO`              | 查询结果插入到新表，MySQL中`OUTFILE`可以导出到文件           |
 | `FROM`              | 来自哪张表(如果来自子查询则要添加临时表名)                   |
+| `ONLY`              | 仅来自哪张表，仅postgreSQL(继承或分区表结果会不同)使用                  |
 | `INNER JOIN ... ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null` |
 | `LEFT JOIN ... ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`          |
 | `RIGHT JOIN ... ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`          |
+| `LATERAL`            | 在子查询中引用另一张表的数据                 |
 | `WHERE`             | 筛选条件                                                     |
 | `GROUP BY`          | 分组,去重                                                    |
+| `GROUPING SETS`     | 分组集(相当于多个分组同时查)                                 |
+| `CUBE`              | 分组集(并且会把所有子集都作为一个分组)                                 |
+| `ROLLUP`              | 分组集(分组条件从后往前递减)                                 |
 | `HAVING`            | 过滤                                                         |
 | `ORDER BY`          | 排序 `asc`升序 `desc`降序                                    |
 | `LIMIT x, n`        | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数,仅MySQL |
+| `OFFSET n`        | n位置偏移量(从0开始，类似数值下标，第一行就是0) |
+| `UNION`        | 结果并集 |
+| `INTERSECT`        | 结果交集 |
+| `EXCEPT`| 排除右边集合后的结果 |
+
 
 ### 示例
 
