@@ -225,7 +225,7 @@ def chown_path(p,u,g=None):
     chown_cmd = "chown -R %s %s %s"%(u,":%s"%(g) if g else "",p)
     code,msg = exec_cmd(chown_cmd)
     if code != 0:
-        raise ChownPathError(10006," ".join(create_user_command.args),msg)
+        raise ChownPathError(10006,chown_cmd,msg)
     return True
 
 def env_ensure():
@@ -234,7 +234,7 @@ def env_ensure():
     '''
     # 用户
     create_superuser()
-    for check_path in [INSTALL_CONFIG["datadir"],PREFIX]:
+    for check_path in [PREFIX,INSTALL_CONFIG["datadir"]]:
         if  os.path.exists(check_path) and len(os.listdir(check_path)) > 0:
             raise NotEmptyError(10007,check_path)
 
