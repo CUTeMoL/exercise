@@ -24,7 +24,7 @@ LIMIT begin_num count_num;
 FROM > WHERE > GROUP BY > HAVING > SELECT创建的新字段 > ORDER BY > LIMIT > SELECT
 ```
 
-| 关键词              | 作用                                                         |
+| 关键词               | 作用                                                         |
 | ------------------- | ------------------------------------------------------------ |
 | `SELECT`            | 定义查询字段                                                 |
 | `TOP`               | 限制显示前`n`行，或前`n percent`的数据，仅SQLServer使用      |
@@ -35,19 +35,20 @@ FROM > WHERE > GROUP BY > HAVING > SELECT创建的新字段 > ORDER BY > LIMIT >
 | `INNER JOIN ... ON` | 表连接(笛卡尔积`X`),一定会显示所有结果,未匹配到的会填充`null` |
 | `LEFT JOIN ... ON`  | 左连接，`INNER JOIN`的基础上丢弃右表未匹配到的`ROW`          |
 | `RIGHT JOIN ... ON` | 右连接，`INNER JOIN`的基础上丢弃左表未匹配到的`ROW`          |
-| `LATERAL`            | 在子查询中引用另一张表的数据                 |
+| `LATERAL`           | 在子查询中引用另一张表的数据                 |
 | `WHERE`             | 筛选条件                                                     |
 | `GROUP BY`          | 分组,去重                                                    |
 | `GROUPING SETS`     | 分组集(相当于多个分组同时查)                                 |
 | `CUBE`              | 分组集(并且会把所有子集都作为一个分组)                                 |
-| `ROLLUP`              | 分组集(分组条件从后往前递减)                                 |
+| `ROLLUP`            | 分组集(分组条件从后往前递减)                                 |
 | `HAVING`            | 过滤                                                         |
 | `ORDER BY`          | 排序 `asc`升序 `desc`降序                                    |
 | `LIMIT x, n`        | x位置偏移量(从0开始，类似数值下标，第一行就是0), n行数,仅MySQL |
-| `OFFSET n`        | n位置偏移量(从0开始，类似数值下标，第一行就是0) |
-| `UNION`        | 结果并集 |
-| `INTERSECT`        | 结果交集 |
-| `EXCEPT`| 排除右边集合后的结果 |
+| `OFFSET n`          | n位置偏移量(从0开始，类似数值下标，第一行就是0) |
+| `UNION`             | 结果并集(会去重),`UNION ALL`结果并集(不去重的版本) |
+| `INTERSECT`         | 结果交集 |
+| `EXCEPT`            | 排除右边集合后的结果 |
+| `RECURSIVE`         | CTE中用来递归查询|
 
 
 ### 示例
@@ -1097,6 +1098,19 @@ BEGIN
 END
 ```
 
+## 十二、CTE(公共表表达式)
+
+`WITH`关键字提供了一种编写辅助语句的方法,可以把查询结果保存在一个临时表中，通过使用RECURSIVE，一个WITH查询可以引用它自己的输出
+
+```sql
+WITH RECURSIVE t(n) AS (
+    VALUES (1)
+  UNION ALL
+    SELECT n+1 FROM t WHERE n < 100
+)
+SELECT sum(n) FROM t;
+```
+
 # 
 
 ## 附录
@@ -1160,3 +1174,4 @@ END
 | movieid | actorid | ord  |
 | ------- | ------- | ---- |
 | 电影id    | 演员id    | 主角顺位 |
+

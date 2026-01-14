@@ -61,6 +61,8 @@ ${pgsql_prefix}/bin/postgres  -c config_file='filename'
 
 有个`ALTER SYSTEM set ${option} = ${value};`命令提供了一种改变全局默认值的从SQL,实际不会立即生效,而是保存到数据目录的`postgresql.auto.conf`,下次重启会覆盖`${config_file}`的设置
 
+`select current_setting('${option}')`可以获取当前配置
+
 ### 嵌套配置
 
 ```shell
@@ -187,7 +189,7 @@ commit_siblings = 5 # 在执行commit_delay延迟时，要求的并发活动事�
 checkpoint_timeout = 5min # 自动 WAL 检查点之间的最长时间。如果指定值时没有单位，则以秒为单位
 checkpoint_completion_target = 0.9 # 指定检查点完成的目标，作为检查点之间总时间的一部分
 checkpoint_flush_after = 256kB # 当执行检查点时写入的数据量超过此数量时，就尝试强制 OS 把这些写发送到底层存储
-max_wal_size = 1GB # 在自动检查点期间允许WAL增长的最大大小
+max_wal_size = 1GB # 在自动检查点期间允许WAL增长的最大大小(指的是总大小而非单个文件)
 min_wal_size = 80MB # 只要 WAL 磁盘用量保持在这个设置之下，在检查点时旧的 WAL 文件总是 被回收以便未来使用，而不是直接被删除。这可以被用来确保有足够的 WAL 空间被保留来应付 WAL 使用的高峰，例如运行大型的批处理任务
 archive_mode = '${shell_command}' # 当启用archive_mode时，完成的WAL段会通过设置 archive_command或 archive_library发送到归档存储 [off|on|always],always从库也会执行归档(包括主库运行、recovery模式和standby模式),wal_level要大于minimal,归档才能启用
 archive_command = '${shell_command}' # 本地 shell 命令被执行来归档一个完成的 WAL 文件段。字符串中的任何%p被替换成要被归档的文件的路径名， 而%f只被文件名替换 参考 'rsync -av %p user@remote:/archive/%f'，与archive_library不能同时设置
@@ -199,6 +201,18 @@ wal_decode_buffer_size = 512kB # 服务器可以在WAL中查找预取块的最�
 restore_command = '${shell_command}'# 用于获取 WAL 文件系列的一个已归档段的本地 shell 命令
 archive_cleanup_command = '${shell_command}' # 目的是提供一种清除不再被后备服务器需要的旧的已归档 WAL 文件的机制
 recovery_end_command = '${shell_command}' # 这个参数指定了一个将只在恢复末尾被执行一次的 shell 命令
+#### 恢复目标(recovery_target、recovery_target_lsn、recovery_target_name、recovery_target_time和recovery_target_xid五选一)
+recovery_target = 'immediate' # 这个参数指定恢复应该在达到一个一致状态后尽快结束，即尽早结束。'immediate'唯一的可选值
+recovery_target_name = 'string' # 指定一个已恢复的恢复点(之前要命名过)
+recovery_target_time = 'timestamp with time zone' # 恢复到指定的时间
+recovery_target_xid = 'string' # 恢复到指定的事务ID
+recovery_target_lsn = 'pg_lsn' # 此参数指定恢复将继续进行的预写日志位置的LSN
+recovery_target_inclusive = 'on' # 适用于recovery_target_lsn、recovery_target_time或者recovery_target_xid被指定的情况,on为指定点之后,off为指定点之前
+recovery_target_timeline = 'string' # 指定恢复到一个特定的时间线中
+recovery_target_action = 'pause' # pause到指定点暂停,promote表示恢复处理将会结束并且服务器将开始接受连接,shutdown将在达到恢复目标之后停止服务器
+### 
+summarize_wal = 'off' # 启用WAL汇总进程
+wal_summary_keep_time = '10d' # 配置WAL汇总器自动删除旧WAL汇总的时间间隔
 ```
 
 ## 四、特性
