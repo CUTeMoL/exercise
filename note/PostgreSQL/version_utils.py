@@ -14,7 +14,7 @@ class VersionUtils:
             try:
                 parsed.append(int(part))
             except ValueError:
-                parsed.append(part.lower())  # 字母部分转为小写
+                parsed.append(int(re.search("(?P<version>[0-9]*)",part).group("version") if re.search("(?P<version>[0-9]*)",part).group("version") else 0))  # 字母部分舍弃
         return tuple(parsed)
 
     @staticmethod

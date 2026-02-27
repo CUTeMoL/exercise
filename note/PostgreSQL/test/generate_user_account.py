@@ -2,6 +2,7 @@ import random
 import string
 import datetime
 import os
+import time
 
 def generate_random_string(length=10):
     """生成随机字符串"""
@@ -10,7 +11,7 @@ def generate_random_string(length=10):
 def generate_random_email():
     """生成随机邮箱"""
     domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'example.com']
-    username = generate_random_string(random.randint(5, 10))
+    username = generate_random_string(random.randint(5, 10))+str(int(time.time()))
     domain = random.choice(domains)
     return f"{username}@{domain}"
 
@@ -133,8 +134,8 @@ CREATE INDEX IF NOT EXISTS idx_user_account_active_users ON user_account (id) WH
 
 def main():
     # 配置参数
-    total_rows = 10000000 # 1000万行
-    batch_size = 100       # 每批生成的数据量
+    total_rows = 10000000    # 1000万行
+    batch_size = 1000       # 每批生成的数据量
     num_batches = total_rows // batch_size # 第N批次
     
     # 输出文件
@@ -171,7 +172,7 @@ def main():
             
             # 写入文件
             f.write("-- 第%s次插入用户账户数据\n"%(batch_num))
-            f.write("BEGIN;\n")
+            # f.write("BEGIN;\n")
             f.write("INSERT INTO user_account (id, username, email, age, salary, is_active, created_at, updated_at, phone, address, tags, user_type, status) VALUES\n")
             
             # 写入数据行
@@ -183,7 +184,7 @@ def main():
                     f.write(",\n")
             
             # 每批数据后刷新缓冲区
-            f.write("COMMIT;\n\n")
+            # f.write("COMMIT;\n\n")
         
         # 重新启用触发器
         f.write("-- 重新启用触发器\n")
