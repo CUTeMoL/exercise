@@ -42,7 +42,7 @@ systemLog:
    path: <string> # 日志保存路径
    logAppend: <boolean> # 日志追加模式,即使重启实例,也会在原有的日志后面继续写日志
    logRotate: <string> # 日志轮询,rename添加当前时间戳来重命名现有日志文件,reopen则时重新打开文件,需要另一个程序对日志执行改名
-   destination: <string> # 指定 file(自定义的路径)或 syslog(系统日志)
+   destination: <string> # [file|syslog]指定 file(自定义的路径)或 syslog(系统日志)
    timeStampFormat: <string> # 日志消息中时间戳的时间格式,iso8601-utc使用UTC,iso8601-local使用本地时区
    # 各种功能的对应日志级别
    component:
@@ -571,5 +571,156 @@ db.auth('root','123456')
 /usr/local/mongotools/bin/mongotop -uroot -p123456 --authenticationDatabase=admin
 /usr/local/mongotools/bin/mongostat -uroot -p123456 --authenticationDatabase=admin
 /usr/local/mongotools/bin/db.hostInfo()
+```
+
+## 四、复制
+
+### 1.准备好至少三个节点,同时准备好以下配置
+
+```mongodb.conf
+security:
+  keyFile: /usr/local/mongodb/etc/replica.key # 密钥文件生成命令参考 openssl rand -base64 756 > /usr/local/mongodb/etc/replica.key
+replication:
+  replSetName: rs0   # 集群名称
+```
+
+### 2.重启所有节点
+
+### 3.在主节点上执行复制命令
+
+```mongosh
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "服务器IP:27021" },
+    { _id: 1, host: "服务器IP:27022" },
+    { _id: 2, host: "服务器IP:27023" }
+  ]
+})
+```
+
+### 4.检查复制状态
+
+```
+rs.status()
+```
+
+参考结果:
+
+```plaintext
+{
+  set: 'rs0',
+  date: ISODate('2026-04-20T10:28:46.624Z'),
+  myState: 1,
+  term: Long('1'),
+  syncSourceHost: '',
+  syncSourceId: -1,
+  heartbeatIntervalMillis: Long('2000'),
+  majorityVoteCount: 2,
+  writeMajorityCount: 2,
+  votingMembersCount: 3,
+  writableVotingMembersCount: 3,
+  optimes: {
+    lastCommittedOpTime: { ts: Timestamp({ t: 1776680925, i: 1 }), t: Long('1') },
+    lastCommittedWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+    readConcernMajorityOpTime: { ts: Timestamp({ t: 1776680925, i: 1 }), t: Long('1') },
+    appliedOpTime: { ts: Timestamp({ t: 1776680925, i: 1 }), t: Long('1') },
+    durableOpTime: { ts: Timestamp({ t: 1776680925, i: 1 }), t: Long('1') },
+    lastAppliedWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+    lastDurableWallTime: ISODate('2026-04-20T10:28:45.800Z')
+  },
+  lastStableRecoveryTimestamp: Timestamp({ t: 1776680895, i: 1 }),
+  electionCandidateMetrics: {
+    lastElectionReason: 'electionTimeout',
+    lastElectionDate: ISODate('2026-04-20T10:27:35.631Z'),
+    electionTerm: Long('1'),
+    lastCommittedOpTimeAtElection: { ts: Timestamp({ t: 1776680844, i: 1 }), t: Long('-1') },
+    lastSeenOpTimeAtElection: { ts: Timestamp({ t: 1776680844, i: 1 }), t: Long('-1') },
+    numVotesNeeded: 2,
+    priorityAtElection: 1,
+    electionTimeoutMillis: Long('10000'),
+    numCatchUpOps: Long('0'),
+    newTermStartDate: ISODate('2026-04-20T10:27:35.763Z'),
+    wMajorityWriteAvailabilityDate: ISODate('2026-04-20T10:27:36.364Z')
+  },
+  members: [
+    {
+      _id: 0,
+      name: '127.0.0.1:27021',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+      uptime: 995,
+      optime: { ts: Timestamp({ t: 1776680925, i: 1 }), t: Long('1') },
+      optimeDate: ISODate('2026-04-20T10:28:45.000Z'),
+      lastAppliedWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+      lastDurableWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+      syncSourceHost: '',
+      syncSourceId: -1,
+      infoMessage: 'Could not find member to sync from',
+      electionTime: Timestamp({ t: 1776680855, i: 1 }),
+      electionDate: ISODate('2026-04-20T10:27:35.000Z'),
+      configVersion: 1,
+      configTerm: 1,
+      self: true,
+      lastHeartbeatMessage: ''
+    },
+    {
+      _id: 1,
+      name: '127.0.0.1:27022',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+      uptime: 82,
+      optime: { ts: Timestamp({ t: 1776680915, i: 1 }), t: Long('1') },
+      optimeDurable: { ts: Timestamp({ t: 1776680915, i: 1 }), t: Long('1') },
+      optimeDate: ISODate('2026-04-20T10:28:35.000Z'),
+      optimeDurableDate: ISODate('2026-04-20T10:28:35.000Z'),
+      lastAppliedWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+      lastDurableWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+      lastHeartbeat: ISODate('2026-04-20T10:28:45.781Z'),
+      lastHeartbeatRecv: ISODate('2026-04-20T10:28:44.784Z'),
+      pingMs: Long('0'),
+      lastHeartbeatMessage: '',
+      syncSourceHost: '127.0.0.1:27021',
+      syncSourceId: 0,
+      infoMessage: '',
+      configVersion: 1,
+      configTerm: 1
+    },
+    {
+      _id: 2,
+      name: '127.0.0.1:27023',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+      uptime: 82,
+      optime: { ts: Timestamp({ t: 1776680915, i: 1 }), t: Long('1') },
+      optimeDurable: { ts: Timestamp({ t: 1776680915, i: 1 }), t: Long('1') },
+      optimeDate: ISODate('2026-04-20T10:28:35.000Z'),
+      optimeDurableDate: ISODate('2026-04-20T10:28:35.000Z'),
+      lastAppliedWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+      lastDurableWallTime: ISODate('2026-04-20T10:28:45.800Z'),
+      lastHeartbeat: ISODate('2026-04-20T10:28:45.783Z'),
+      lastHeartbeatRecv: ISODate('2026-04-20T10:28:46.312Z'),
+      pingMs: Long('0'),
+      lastHeartbeatMessage: '',
+      syncSourceHost: '127.0.0.1:27021',
+      syncSourceId: 0,
+      infoMessage: '',
+      configVersion: 1,
+      configTerm: 1
+    }
+  ],
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1776680925, i: 1 }),
+    signature: {
+      hash: Binary.createFromBase64('Rx99TfE49/c06F4Zwm96omErM6U=', 0),
+      keyId: Long('7630786167654318086')
+    }
+  },
+  operationTime: Timestamp({ t: 1776680925, i: 1 })
+}
 ```
 
