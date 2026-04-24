@@ -4,17 +4,12 @@
 
 ### master node manager
 
-etcd: 数据库，存储kubernetes的事件信息
-
-API Server: 集群注册管理、资源配置控制、提供安全机制、代理一些服务
-
-​	Metrics server: 集群范围的资源使用情况的数据聚合器
-
-​	kubernetes聚合器: 把第三方应用注册到API-server中
-
-Scheduler: 调度、安排容器在哪个节点部署
-
-Contaroller Manager: 控制器管理者，负责高级任务
+* etcd: 数据库，存储kubernetes的事件信息
+* API Server: 集群注册管理、资源配置控制、提供安全机制、代理一些服务
+  + Metrics server: 集群范围的资源使用情况的数据聚合器
+  + kubernetes聚合器: 把第三方应用注册到API-server中
+* Scheduler: 调度、安排容器在哪个节点部署
+* Contaroller Manager: 控制器管理者，负责高级任务
 
 
 
@@ -46,38 +41,27 @@ kuberlet:
 
 ### pod
 
-kubernetes最小单元
+* kubernetes最小单元
+  + pod是逻辑上的一种概念,实际上一个pod可以是多个container组成
+  + 在启动业务容器前会先启动pause容器,pause容器用于初始化网络、存储、命名空间、回收僵尸进程
+  + pod在调度中不可再分
+  + 多个容器之间共享多个紧密耦合的资源(网络、存储、命名空间) 
+  + 可以定义一次性容器initcontainers
 
 #### 分类
 
-有控制器管理的pod: 
+* 有控制器管理的pod: 
+  + 必须处于高可用状态，具有restartPolicy重启策略Always|OnFailure|Never，当健康检查livenessProbe(存活检查)失败时将杀死容器，根据重启策略操作。当健康检查readinessProbe(就绪检查)失败时kubernetes会把pod从service endpoints中剔除
+  + 有replication controllers 保持定量的副本
+  + 使用replication controllers 实现pod滚动更新及回滚
 
-​	必须处于高可用状态，具有restartPolicy重启策略Always|OnFailure|Never，当健康检查livenessProbe(存活检查)失败时将杀死容器，根据重启策略操作。当健康检查readinessProbe(就绪检查)失败时kubernetes会把pod从service endpoints中剔除
+* 无控制器的pod: 
+  + 自主式pod 故障不复存在，无法全局调度
 
-​	有replication controllers 保持定量的副本
+* 静态pod:
+  + /var/lib/kubelet/config.yaml定义的staticPodPath(/etc/kubernetes/manifests)下的pod由kubelet管理
+  + 不走Scheduler调度的流程固定在节点运行
 
-​	使用replication controllers 实现pod滚动更新及回滚
-
-无控制器的pod: 
-
-​	自主式pod 故障不复存在，无法全局调度
-
-静态pod:
-	/var/lib/kubelet/config.yaml定义的staticPodPath(/etc/kubernetes/manifests)下的pod由kubelet管理
-
-​	不走Scheduler调度的流程固定在节点运行
-
-#### 特点
-
-会创建一个Pause容器，其他容器共享Pause的网卡
-
-pod中可以不止一个或一种容器
-
-pod在调度中不可再分
-
-多个容器之间共享多个紧密耦合的资源(volume、network) 
-
-可以定义一次性容器initcontainers
 
 ### service
 
@@ -209,25 +193,37 @@ NODE节点监控，pod资源适配
 
 ## 三、通信方式
 
-### overlay概念
+### calico架构
 
-​	原始数据包经过vxlan再次封装
+#### vxlan
 
-​		原始数据包: 
+* ​原始数据包会经过vxlan再次封装
+* 对于外部来说看着就是走二层转发
+* 重新封装成的是udp包(如果失败且原始是tcp,应用层因为感知这层分装,没收到ack会自己重试)
 
-​			{Ethernet-IP-tcp/udp-data}
+|原始数据包|vxlan数据包|
+|-|-|
+|{Ethernet-IP-tcp/udp-data}|{out_ethernet-out_IP-out_UDP(vxlan_port:4789)-vxlan_header-{Ethernet-IP-tcp/udp-data}(原始数据包)}|
 
-​		vxlan数据包: 
+#### IPIP
 
-​			{out_ethernet-out_IP-out_UDP(vxlan_port:4789)-vxlan_header-{Ethernet-IP-tcp/udp-data}(原始数据包)}
+* ​原始数据包会经过ipip再次封装
+* 对于外部来说看着就是走三层转发
+* 重新封装成的是一个新的IP包,走ipip隧道传输
+* 可以ipv4或ipv6
 
-### 节点网络 
+#### BGP
 
-​	服务器节点之间的通信
+* ​原始数据包不封装
+* 跨网段时依赖交换机和路由器支持BGP协议
+* 多个网段配置复杂
 
-​	NodeIP是集群每个节点的物理网卡IP地址
+#### 节点网络 
 
-### 集群网络 Overlay
+* 服务器节点之间的通信
+* NodeIP是集群每个节点的物理网卡IP地址
+
+#### 集群网络 Overlay
 
 ​	Service⼀旦被创建，Kubernetes就会⾃动为它分配⼀个可⽤的、全局唯一的、不变的ClusterIP地址，可以通过这个虚拟IP地址+服务的端⼜直接访问该服务
 
@@ -829,7 +825,7 @@ systemctl restart containerd
 
 /etc/containerd/config.toml
 
-```shell
+```toml
    [plugins."io.containerd.grpc.v1.cri"]
       #sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.2"  
       sandbox_image = "docker.io/gotok8s/pause:3.7"  
