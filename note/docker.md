@@ -653,3 +653,22 @@ if __name__ == "__main__":
     )
 
 ```
+
+## 八、推荐的外部仓库
+
+/etc/docker/daemon.json里可以这样配置
+
+```json
+{
+  "default-ipc-mode": "shareable",
+  "data-root": "/data/docker",
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "100"
+  },
+  "registry-mirrors": ["https://docker.m.daocloud.io"]
+}
+```
+

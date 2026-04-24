@@ -2,19 +2,19 @@
 
 ## 一、准备
 
-### 1.配置IP地址，hostname，ssh免密，时间同步(所有主机)
+### 1. 配置IP地址
 
-| 主机 | IP            | 配置 | 服务                                                         | 角色   |
-| ---- | ------------- | ---- | ------------------------------------------------------------ | ------ |
-| k-m1 | 192.168.1.101 | 2C3G | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
-| k-m2 | 192.168.1.102 | 2C3G | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
-| k-m3 | 192.168.1.103 | 2C3G | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
-| k-n1 | 192.168.1.104 | 2C3G | kubelet、kube-proxy、docker                                  | node   |
-| k-n2 | 192.168.1.105 | 2C3G | kubelet、kube-proxy、docker                                  | node   |
-| k-n3 | 192.168.1.106 | 2C3G | kubelet、kube-proxy、docker                                  | node   |
-| VIP  | 192.168.1.107 |      |                                                              |        |
+| 主机 | 参考IP        | 最低配置 | 服务                                                         | 角色   |
+| ---- | ------------- | -------- | ------------------------------------------------------------ | ------ |
+| k-m1 | 192.168.1.101 | 2C3G     | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
+| k-m2 | 192.168.1.102 | 2C3G     | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
+| k-m3 | 192.168.1.103 | 2C3G     | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
+| k-n1 | 192.168.1.104 | 2C3G     | kubelet、kube-proxy、docker                                  | node   |
+| k-n2 | 192.168.1.105 | 2C3G     | kubelet、kube-proxy、docker                                  | node   |
+| k-n3 | 192.168.1.106 | 2C3G     | kubelet、kube-proxy、docker                                  | node   |
+| VIP  | 192.168.1.107 |          |                                                              |        |
 
-/etc/hosts配置文件
+### 2. /etc/hosts配置文件，hostname
 
 ```shell
 127.0.0.1 localhost
@@ -27,7 +27,7 @@
 # 修改完hostname之后要查看/etc/hosts是否有误，因为修改hostname也会修改/etc/hosts
 ```
 
-各主机免密登录脚本（需要准备IP.txt文件来让脚本获取到主机登录信息）
+### 3. 各主机免密登录脚本
 
 ```shell
 #!/bin/bash
@@ -82,14 +82,14 @@ done
 cat /root/ip_up.txt && cat /root/ip_down.txt
 ```
 
-启用模块
+### 4. 启用模块
 
 ```shell
 modprobe  ip_vs
 modprobe  ip_vs_rr
 modprobe  ip_vs_wrr
 modprobe  ip_vs_sh
-modprobe  nf_conntrack_ipv4 # 高版本内核替换为nf_conntrack
+modprobe  nf_conntrack_ipv4 || modprobe  nf_conntrack # 高版本内核替换为nf_conntrack
 ```
 
 模块持久化
@@ -103,6 +103,7 @@ ip_vs_rr
 ip_vs_wrr
 ip_vs_sh
 nf_conntrack_ipv4
+nf_conntrack
 EOF
 ```
 
@@ -117,6 +118,8 @@ EOF
 sysctl --system
 ```
 
+### 5. 安装工具
+
 安装ipvsadm
 
 ```shell
@@ -125,11 +128,25 @@ apt-get install ipvsadm -y
 
 安装net-tools
 
-```
+```shell
 apt-get install net-tools -y
 ```
 
-### 2.生成k8s集群证书
+### 6.时间同步(所有主机)
+
+```shell
+ntpdate ntp.aliyun.com
+```
+
+### 7.关闭swap分区
+
+```shell
+swapoff -a
+```
+
+## 二、生成集群证书
+
+### 1.生成k8s集群证书
 
 k-m1>工作目录创建
 
@@ -140,7 +157,7 @@ mkdir -p /data/work # 之后的步骤基本在工作目录中完成
 etcd集群目录创建
 
 ```shell
-mkdir -p /etc/etcd/ssl #
+mkdir -p /etc/etcd/ssl 
 mkdir -p /var/lib/etcd 
 ```
 
@@ -558,7 +575,7 @@ chmod +x /data/work/etcd.service
 
 ```shell
 #!/bin/bash
-for i in {k-m1,k-m2,k-m3}
+for i in {etcd1,etcd3,etcd3}
 do
     /usr/bin/expect <<EOF
     spawn ssh root@$i mkdir -p /etc/etcd/ssl/ /var/lib/etcd/
@@ -568,7 +585,7 @@ do
     expect eof
 EOF
     j=`ping $i -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o|awk 'NR==1{print $0}'` && \
-    sed -e "2s|etcd1|$i|g" -e "4,9s|192.168.1.101|$j|g" /data/work/etcd.conf|ssh $i "cat > /etc/etcd/"
+    sed -e "2s|etcd1|$i|g" -e "4,9s|192.168.1.101|$j|g" /data/work/etcd.conf|ssh $i "cat > /etc/etcd/etcd.conf"
     rsync -avz /data/work/ca*.pem $i:/etc/etcd/ssl/
     rsync -avz /data/work/etcd*.pem $i:/etc/etcd/ssl/
     rsync -avz /data/work/etcd.service $i:/lib/systemd/system/
@@ -591,7 +608,7 @@ ETCDCTL_API=3 /usr/local/bin/etcdctl \
 --cacert=/etc/etcd/ssl/ca.pem \
 --cert=/etc/etcd/ssl/etcd.pem \
 --key=/etc/etcd/ssl/etcd-key.pem \
---endpoints=https://192.168.1.101:2379,https://192.168.1.102:2379,https://192.168.1.103:2379 \
+--endpoints=https://etcd1:2379,https://etcd2:2379,https://etcd3:2379 \
 endpoint health
 ```
 
@@ -603,7 +620,7 @@ ETCDCTL_API=3 /usr/local/bin/etcdctl \
 --cacert=/etc/etcd/ssl/ca.pem \
 --cert=/etc/etcd/ssl/etcd.pem \
 --key=/etc/etcd/ssl/etcd-key.pem \
---endpoints=https://192.168.1.101:2379,https://192.168.1.102:2379,https://192.168.1.103:2379 \
+--endpoints=https://etcd1:2379,https://etcd2:2379,https://etcd3:2379 \
 member list
 ```
 
@@ -615,7 +632,7 @@ ETCDCTL_API=3 /usr/local/bin/etcdctl \
 --cacert=/etc/etcd/ssl/ca.pem \
 --cert=/etc/etcd/ssl/etcd.pem \
 --key=/etc/etcd/ssl/etcd-key.pem \
---endpoints=https://192.168.1.101:2379,https://192.168.1.102:2379,https://192.168.1.103:2379 \
+--endpoints=https://etcd1:2379,https://etcd2:2379,https://etcd3:2379 \
 endpoint status
 ```
 
@@ -801,6 +818,7 @@ do
 EOF
     rsync -avz /data/work/ca*.pem $i:/etc/kubernetes/ssl/
     rsync -avz /data/work/kube-apiserver*.pem $i:/etc/kubernetes/ssl/
+    rsync -avz /data/work/kube-proxy*.pem $i:/etc/kubernetes/ssl/
     rsync -avz /data/work/token.csv $i:/etc/kubernetes/
     rsync -avz /data/work/kube-apiserver.service $i:/lib/systemd/system/
     j=`ping $i -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o|awk 'NR==1{print $0}'` && \
@@ -891,15 +909,12 @@ for i in {k-m1,k-m2,k-m3}
 do
     ssh $i "apt install keepalived -y"
     rsync -avz /data/work/check_service.sh $i:/etc/keepalived/
-    if [ ! -z $if_name ];then
-        [ `ssh $i "ifconfig"| grep "$if_name"|wc -l` -ge 1 ] || echo "please check interfacename" && exit
+
+    if_count=`ssh $i "ifconfig" |grep -B1 -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}"|grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'|grep -e "^e"|wc -l `
+    if [ $if_count -eq 1 ];then
+        if_name=`ssh $i "ifconfig" |grep -B1 -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}"|grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'|grep -e "^e"`
     else
-        if_count=`ssh $i "ifconfig" |grep -B1 -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}"|grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'|grep -e "^e"|wc -l `
-        if [ $if_count -eq 1 ];then
-            if_name=`ssh $i "ifconfig" |grep -B1 -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}"|grep -iw "UP"|grep -iv "LOOPBACK"|awk -F ":" '{print$1}'|grep -e "^e"`
-        else
-            echo "please check interfacename" && exit
-        fi
+        echo "please check interfacename" && exit
     fi
     j=`ping $i -c1|grep -e "\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}" -o|awk 'NR==1{print $0}'`
     sed "/$j/d" /data/work/keepalived.conf | \
