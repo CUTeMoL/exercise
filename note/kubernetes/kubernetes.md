@@ -115,11 +115,12 @@ NODE节点监控，pod资源适配
 
 工作负载控制器
 
-#### 	replication controllers
+##### RepliCationController/ReplicaSet
 
-* 保证高可用
-* replication controller manager: 控制器管理器，控制器监控防止kubernetes不可用，运行于master节点
-* 一般不直接使用,通过Deployment调用ReplicatiSet
+* 通过创建多个副本保证高可用,少了创建,多了回收
+* RepliCationController: 控制器管理器，控制器监控防止kubernetes不可用，运行于master节点
+* ReplicaSet新版,用于替换RepliCationController,只新增了集合式的selector(matchLabels、matchExpressions)
+* 一般不直接使用,通过Deployment调用ReplicaSet
 
 ##### 	Deployment
 
@@ -1236,6 +1237,7 @@ kubectl delete  -f name.yaml
 kubectl run -it --rm --image=busybox -- sh
 #建立一个测试用的pod
 
+  --record # 部署/更新相关时最好加上,可以记录命令
 ###########基础
 kubectl
   kubectl get
@@ -1279,6 +1281,7 @@ kubectl
   kubectl apply   #部署
     -f xx.yaml 指定部署的文件
   kubectl patch   #使用补丁方式修改、更新资源的某些字段
+  kubectl diff   #对比
   kubectl replace   #从文件名或标准输入替换一个资源
   kubectl convert   #在不同API版本之间转换对象定义
   kubectl completion bash
@@ -1297,6 +1300,9 @@ kubectl
 
 ##########部署命令
   kubectl rollout   #管理Deployment,daemonset资源的发布（例如状态、发布记录、回滚等）
+    kubectl rollout pause deployment deployment_name #暂停滚动更新
+    kubectl rollout resume deployment deployment_name #恢复曾暂停过的滚动更新
+    kubectl rollout status deployment deployment_name #滚动更新状态.相当于执行日志
     kubectl rollout history deployment deployment_name   #查看历史记录
     kubectl rollout undo deployment deployment_name 
       --to-revision=2   #回滚指定的版本
