@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes YAML 生成器</title>
+    <!-- Prism.js 主题 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        :root {
+            --bg: #1a1b1e;
+            --panel-bg: #212329;
+            --surface: #282a31;
+            --border: #353840;
+            --text: #d4d4d6;
+            --text-secondary: #9a9ca3;
+            --accent: #4da6ff;
+            --accent-hover: #6bb8ff;
+            --error: #f44747;
+            --success: #4ecb71;
+            --warning: #e2a93b;
+            --tab-active: #363944;
+            --input-bg: #1e1f24;
+            --input-border: #3a3d46;
+            --input-focus: #4da6ff;
+            --scrollbar-thumb: #454850;
+            --scrollbar-track: #2a2b30;
+            --terminal-bg: #0d0e10;
+            --tag-bg: #2d3040;
+            --btn-export: #4ecb71;
+            --btn-export-hover: #5ddb80;
+            --btn-copy: #8b9dc3;
+            --btn-copy-hover: #9fb0d4;
+            --btn-template: #e2a93b;
+            --btn-template-hover: #ecb84d;
+            --radius: 8px;
+            --radius-sm: 5px;
+            --transition: 0.18s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-header {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+            z-index: 10;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+        }
+        .app-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: -0.3px;
+            color: #fff;
+        }
+        .app-header .logo svg {
+            width: 28px;
+            height: 28px;
+        }
+        .app-header .badge {
+            font-size: 11px;
+            background: var(--tag-bg);
+            color: var(--text-secondary);
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 2px;
+            background: var(--panel-bg);
+            padding: 6px 18px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) transparent;
+            flex-wrap: nowrap;
+        }
+        .tab-bar::-webkit-scrollbar {
+            height: 4px;
+        }
+        .tab-bar::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        .tab-btn {
+            padding: 8px 15px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all var(--transition);
+            flex-shrink: 0;
+        }
+        .tab-btn:hover {
+            color: #e0e0e0;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .tab-btn.active {
+            background: var(--tab-active);
+            color: #fff;
+            border-color: var(--border);
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .form-panel {
+            width: 48%;
+            min-width: 440px;
+            max-width: 56%;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+        }
+        .form-panel-header {
+            padding: 10px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            gap: 10px;
+        }
+        .form-panel-header .resource-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #e8e8ea;
+        }
+        .btn-template {
+            background: var(--btn-template);
+            color: #1a1b1e;
+            border: none;
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all var(--transition);
+        }
+        .btn-template:hover {
+            background: var(--btn-template-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(226, 169, 59, 0.25);
+        }
+
+        .form-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 18px 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+        .form-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .form-scroll::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+        .form-scroll::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 3px;
+        }
+
+        .form-section {
+            margin-bottom: 18px;
+        }
+        .form-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 600;
+            padding-bottom: 7px;
+            border-bottom: 1px solid var(--border);
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 9px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 110px;
+        }
+        .form-group label {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .form-group label .required {
+            color: var(--error);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: #e0e0e0;
+            padding: 8px 11px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-family: 'Consolas', 'Fira Code', monospace;
+            transition: border-color var(--transition);
+            outline: none;
+            width: 100%;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(77, 166, 255, 0.12);
+        }
+        .form-group input.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(244, 71, 71, 0.1);
+        }
+        .form-group .error-msg {
+            font-size: 10.5px;
+            color: var(--error);
+            min-height: 15px;
+        }
+        .btn-sm {
+            padding: 6px 11px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+            white-space: nowrap;
+        }
+        .btn-add {
+            background: rgba(77, 166, 255, 0.1);
+            color: var(--accent);
+            border-color: rgba(77, 166, 255, 0.3);
+        }
+        .btn-add:hover {
+            background: rgba(77, 166, 255, 0.2);
+            border-color: var(--accent);
+        }
+        .btn-remove {
+            background: rgba(244, 71, 71, 0.08);
+            color: var(--error);
+            border-color: rgba(244, 71, 71, 0.25);
+            align-self: flex-end;
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+        .dynamic-list {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .kv-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .kv-row input,
+        .kv-row textarea {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .resizer {
+            width: 5px;
+            cursor: col-resize;
+            background: transparent;
+            flex-shrink: 0;
+            transition: background var(--transition);
+            z-index: 5;
+        }
+        .resizer:hover,
+        .resizer.active {
+            background: var(--accent);
+            opacity: 0.6;
+        }
+
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--terminal-bg);
+            min-width: 300px;
+        }
+        .preview-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .preview-toolbar .preview-label {
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-right: auto;
+            text-transform: uppercase;
+        }
+        .btn-export {
+            background: var(--btn-export);
+            color: #0d0e10;
+            border: none;
+            padding: 7px 15px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all var(--transition);
+        }
+        .btn-export:hover {
+            background: var(--btn-export-hover);
+            box-shadow: 0 3px 12px rgba(78, 203, 113, 0.3);
+        }
+        .btn-copy {
+            background: transparent;
+            color: var(--btn-copy);
+            border: 1px solid rgba(139, 157, 195, 0.4);
+            padding: 7px 15px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all var(--transition);
+        }
+        .btn-copy.copied {
+            background: rgba(78, 203, 113, 0.15);
+            border-color: var(--success);
+            color: var(--success);
+        }
+        .preview-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px 20px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--terminal-bg);
+        }
+        .preview-content pre {
+            margin: 0;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre;
+            background: transparent;
+        }
+        .preview-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #555;
+        }
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: var(--success);
+            color: #0d0e10;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 13px;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 820px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .form-panel {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                max-height: 50%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .preview-panel {
+                min-width: 0;
+                min-height: 40%;
+            }
+            .resizer {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="#4da6ff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10l-7 7z"/></svg>
+            K8s YAML 生成器
+        </div>
+        <span class="badge">v2.2 · 完整修复版</span>
+    </header>
+
+    <div class="tab-bar" id="tabBar">
+        <button class="tab-btn active" data-resource="deployment">📦 Deployment</button>
+        <button class="tab-btn" data-resource="statefulset">🗄️ StatefulSet</button>
+        <button class="tab-btn" data-resource="daemonset">🖥️ DaemonSet</button>
+        <button class="tab-btn" data-resource="job">⚡ Job</button>
+        <button class="tab-btn" data-resource="cronjob">⏰ CronJob</button>
+        <button class="tab-btn" data-resource="pod">🔷 Pod</button>
+        <button class="tab-btn" data-resource="service">🔗 Service</button>
+        <button class="tab-btn" data-resource="configmap">📋 ConfigMap</button>
+        <button class="tab-btn" data-resource="secret">🔒 Secret</button>
+    </div>
+
+    <div class="main-container" id="mainContainer">
+        <div class="form-panel" id="formPanel">
+            <div class="form-panel-header">
+                <span class="resource-title" id="resourceTitle">📦 Deployment 配置</span>
+                <button class="btn-template" id="btnTemplate">📥 载入示例</button>
+            </div>
+            <div class="form-scroll" id="formScroll"></div>
+        </div>
+        <div class="resizer" id="resizer"></div>
+        <div class="preview-panel">
+            <div class="preview-toolbar">
+                <span class="preview-label">📄 YAML 预览</span>
+                <button class="btn-copy" id="btnCopy">📋 复制</button>
+                <button class="btn-export" id="btnExport">⬇ 下载 YAML</button>
+            </div>
+            <div class="preview-content" id="previewContent">
+                <div class="preview-empty">请填写左侧表单，YAML 将实时在此显示</div>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+    <script>
+        (function() {
+            // 当前资源类型
+            let currentResource = 'deployment';
+            let debounceTimer = null;
+            const DEBOUNCE_MS = 180;
+
+            const tabBar = document.getElementById('tabBar');
+            const formScroll = document.getElementById('formScroll');
+            const resourceTitle = document.getElementById('resourceTitle');
+            const previewContent = document.getElementById('previewContent');
+            const btnTemplate = document.getElementById('btnTemplate');
+            const btnCopy = document.getElementById('btnCopy');
+            const btnExport = document.getElementById('btnExport');
+            const toast = document.getElementById('toast');
+            const resizer = document.getElementById('resizer');
+            const formPanel = document.getElementById('formPanel');
+            const mainContainer = document.getElementById('mainContainer');
+
+            const resourceMeta = {
+                deployment: { icon: '📦', name: 'Deployment', apiVersion: 'apps/v1', kind: 'Deployment' },
+                statefulset: { icon: '🗄️', name: 'StatefulSet', apiVersion: 'apps/v1', kind: 'StatefulSet' },
+                daemonset: { icon: '🖥️', name: 'DaemonSet', apiVersion: 'apps/v1', kind: 'DaemonSet' },
+                job: { icon: '⚡', name: 'Job', apiVersion: 'batch/v1', kind: 'Job' },
+                cronjob: { icon: '⏰', name: 'CronJob', apiVersion: 'batch/v1', kind: 'CronJob' },
+                pod: { icon: '🔷', name: 'Pod', apiVersion: 'v1', kind: 'Pod' },
+                service: { icon: '🔗', name: 'Service', apiVersion: 'v1', kind: 'Service' },
+                configmap: { icon: '📋', name: 'ConfigMap', apiVersion: 'v1', kind: 'ConfigMap' },
+                secret: { icon: '🔒', name: 'Secret', apiVersion: 'v1', kind: 'Secret' },
+            };
+
+            // 示例模板（所有资源）
+            const templates = {
+                deployment: {
+                    name: 'nginx-deployment',
+                    namespace: 'default',
+                    replicas: 3,
+                    labels: { app: 'nginx' },
+                    selectorLabels: { app: 'nginx' },
+                    containers: [{
+                        name: 'nginx',
+                        image: 'nginx:1.25',
+                        ports: [{ name: 'http', containerPort: 80, protocol: 'TCP' }],
+                        env: [{ name: 'ENV_MODE', value: 'production' }],
+                        resources: { requests: { cpu: '100m', memory: '128Mi' }, limits: { cpu: '500m',
+                                memory: '256Mi' } },
+                        volumeMounts: [],
+                        command: '',
+                    }],
+                    volumes: [],
+                    restartPolicy: 'Always',
+                    serviceAccount: '',
+                    annotations: {},
+                },
+                statefulset: {
+                    name: 'mysql-statefulset',
+                    namespace: 'default',
+                    replicas: 3,
+                    labels: { app: 'mysql' },
+                    selectorLabels: { app: 'mysql' },
+                    serviceName: 'mysql-headless',
+                    containers: [{
+                        name: 'mysql',
+                        image: 'mysql:8.0',
+                        ports: [{ name: 'mysql', containerPort: 3306, protocol: 'TCP' }],
+                        env: [{ name: 'MYSQL_ROOT_PASSWORD', value: 'password123' }],
+                        resources: { requests: { cpu: '250m', memory: '512Mi' }, limits: { cpu: '1',
+                                memory: '1Gi' } },
+                        volumeMounts: [{ name: 'data', mountPath: '/var/lib/mysql' }],
+                        command: '',
+                    }],
+                    volumes: [{ name: 'data', type: 'emptyDir' }],
+                    restartPolicy: 'Always',
+                    serviceAccount: '',
+                    annotations: {},
+                },
+                daemonset: {
+                    name: 'fluentd-daemonset',
+                    namespace: 'kube-system',
+                    labels: { app: 'fluentd' },
+                    selectorLabels: { app: 'fluentd' },
+                    containers: [{
+                        name: 'fluentd',
+                        image: 'fluent/fluentd:v1.16',
+                        ports: [],
+                        env: [],
+                        resources: { requests: { cpu: '100m', memory: '200Mi' }, limits: { cpu: '300m',
+                                memory: '400Mi' } },
+                        volumeMounts: [{ name: 'varlog', mountPath: '/var/log' }],
+                        command: '',
+                    }],
+                    volumes: [{ name: 'varlog', type: 'hostPath', hostPath: { path: '/var/log' } }],
+                    restartPolicy: 'Always',
+                    serviceAccount: '',
+                    annotations: {},
+                },
+                job: {
+                    name: 'pi-calc-job',
+                    namespace: 'default',
+                    labels: { app: 'pi-calc' },
+                    selectorLabels: {},
+                    containers: [{
+                        name: 'pi',
+                        image: 'perl:5.34',
+                        ports: [],
+                        env: [],
+                        resources: {},
+                        volumeMounts: [],
+                        command: 'perl -Mbignum=bpi -wle print bpi(2000)',
+                    }],
+                    volumes: [],
+                    restartPolicy: 'Never',
+                    backoffLimit: 4,
+                    completions: 1,
+                    parallelism: 1,
+                    serviceAccount: '',
+                    annotations: {},
+                },
+                cronjob: {
+                    name: 'backup-cronjob',
+                    namespace: 'default',
+                    labels: { app: 'backup' },
+                    selectorLabels: {},
+                    schedule: '0 2 * * *',
+                    containers: [{
+                        name: 'backup',
+                        image: 'busybox:1.36',
+                        ports: [],
+                        env: [],
+                        resources: {},
+                        volumeMounts: [],
+                        command: 'sh -c "echo Backup started at $(date)"',
+                    }],
+                    volumes: [],
+                    restartPolicy: 'OnFailure',
+                    successfulJobsHistoryLimit: 3,
+                    failedJobsHistoryLimit: 1,
+                    concurrencyPolicy: 'Allow',
+                    serviceAccount: '',
+                    annotations: {},
+                },
+                pod: {
+                    name: 'debug-pod',
+                    namespace: 'default',
+                    labels: { app: 'debug' },
+                    containers: [{
+                        name: 'debug-container',
+                        image: 'busybox:1.36',
+                        ports: [],
+                        env: [],
+                        resources: {},
+                        volumeMounts: [],
+                        command: 'sleep 3600',
+                    }],
+                    volumes: [],
+                    restartPolicy: 'Never',
+                    serviceAccount: '',
+                    annotations: {},
+                },
+                service: {
+                    name: 'nginx-service',
+                    namespace: 'default',
+                    labels: { app: 'nginx' },
+                    type: 'ClusterIP',
+                    selector: { app: 'nginx' },
+                    ports: [{ name: 'http', port: 80, targetPort: 80, protocol: 'TCP', nodePort: null }],
+                    annotations: {},
+                },
+                configmap: {
+                    name: 'app-config',
+                    namespace: 'default',
+                    labels: { app: 'myapp' },
+                    data: { 'config.yaml': 'database:\n  host: localhost\n  port: 5432\n', 'log_level': 'info' },
+                    annotations: {},
+                },
+                secret: {
+                    name: 'app-secret',
+                    namespace: 'default',
+                    labels: { app: 'myapp' },
+                    type: 'Opaque',
+                    data: { 'username': 'YWRtaW4=', 'password': 'cGFzc3dvcmQxMjM=' },
+                    stringData: {},
+                    annotations: {},
+                },
+            };
+
+            // 工具函数：获取最后一个section
+            function getLastSection() {
+                const sections = formScroll.querySelectorAll('.form-section');
+                return sections[sections.length - 1] || formScroll;
+            }
+
+            function appendSection(title) {
+                const div = document.createElement('div');
+                div.className = 'form-section';
+                div.innerHTML = `<div class="form-section-title">${title}</div>`;
+                formScroll.appendChild(div);
+            }
+
+            function appendField(fieldName, labelText, type, defaultValue, required, errorMsg, extraAttrs,
+            selectOptions) {
+                const section = getLastSection();
+                const wrapper = document.createElement('div');
+                wrapper.className = 'form-row';
+                const reqSpan = required ? '<span class="required">*</span>' : '';
+                let inputHTML = '';
+                const attrs = extraAttrs || {};
+                const attrStr = Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ');
+                const reqAttr = required ? 'required' : '';
+                const escapedName = fieldName.replace(/[\[\]']/g, '');
+
+                if (type === 'select' && selectOptions) {
+                    inputHTML = `<div class="form-group" style="flex:1; min-width:140px;">
+                <label>${labelText}${reqSpan}</label>
+                <select name="${fieldName}" ${reqAttr} ${attrStr}>
+                  ${selectOptions.map(opt => `<option value="${opt}" ${opt === defaultValue ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+                <span class="error-msg">${errorMsg||''}</span>
+              </div>`;
+                } else {
+                    inputHTML = `<div class="form-group" style="flex:1; min-width:120px;">
+                <label>${labelText}${reqSpan}</label>
+                <input type="${type}" name="${fieldName}" value="${defaultValue||''}" ${reqAttr} ${attrStr}>
+                <span class="error-msg">${errorMsg||''}</span>
+              </div>`;
+                }
+                wrapper.innerHTML = inputHTML;
+                section.appendChild(wrapper);
+            }
+
+            function appendKVSection(sectionName, title, data) {
+                const section = document.createElement('div');
+                section.className = 'form-section';
+                section.dataset.kvSection = sectionName;
+                section.innerHTML = `
+            <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>${title}</span>
+              <button type="button" class="btn-sm btn-add" data-action="add-kv" data-section="${sectionName}">+ 添加</button>
+            </div>
+            <div class="kv-list" data-kv-list="${sectionName}"></div>`;
+                formScroll.appendChild(section);
+                const listEl = section.querySelector('.kv-list');
+                Object.entries(data || {}).forEach(([k, v]) => addKVRow(listEl, k, v));
+            }
+
+            function addKVRow(listEl, key, value) {
+                const row = document.createElement('div');
+                row.className = 'kv-row';
+                row.innerHTML = `
+            <input type="text" placeholder="键" value="${key||''}" data-kv-key style="flex:1;min-width:70px;">
+            <input type="text" placeholder="值" value="${value||''}" data-kv-value style="flex:1;min-width:70px;">
+            <button type="button" class="btn-sm btn-remove" data-action="remove-kv">×</button>`;
+                listEl.appendChild(row);
+            }
+
+            function addContainerBlock(listEl, containerData) {
+                const block = document.createElement('div');
+                block.className = 'dynamic-list';
+                block.dataset.containerBlock = '';
+                const c = containerData || {};
+                const cmdStr = c.command || '';
+                block.innerHTML = `
+            <div class="form-row">
+              <div class="form-group" style="flex:1;min-width:100px;"><label>容器名称 <span class="required">*</span></label><input type="text" data-container-name value="${c.name||''}" required></div>
+              <div class="form-group" style="flex:2;min-width:150px;"><label>镜像 <span class="required">*</span></label><input type="text" data-container-image value="${c.image||''}" required></div>
+              <button type="button" class="btn-sm btn-remove" data-action="remove-container">🗑 删除</button>
+            </div>
+            <div class="form-row"><div class="form-group" style="flex:1;"><label>命令 (可选)</label><input type="text" data-container-command value="${cmdStr}" placeholder="例如: sleep 3600"></div></div>
+            <div style="margin-top:6px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:5px;"><span style="font-size:11px;color:var(--text-secondary);">端口映射</span><button type="button" class="btn-sm btn-add" data-action="add-port">+ 端口</button></div>
+              <div data-container-ports>${(c.ports||[]).map(p=>`
+                <div class="kv-row" data-port-row>
+                  <input type="text" placeholder="名称" value="${p.name||''}" data-port-name style="flex:1;">
+                  <input type="number" placeholder="容器端口" value="${p.containerPort||''}" data-port-container style="flex:0.8;">
+                  <select data-port-protocol style="flex:0.6;"><option value="TCP" ${p.protocol==='TCP'?'selected':''}>TCP</option><option value="UDP" ${p.protocol==='UDP'?'selected':''}>UDP</option></select>
+                  <button type="button" class="btn-sm btn-remove" data-action="remove-port">×</button>
+                </div>`).join('')}</div>
+            </div>
+            <div style="margin-top:6px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:5px;"><span style="font-size:11px;color:var(--text-secondary);">环境变量</span><button type="button" class="btn-sm btn-add" data-action="add-env">+ 环境变量</button></div>
+              <div data-container-env>${(c.env||[]).map(e=>`
+                <div class="kv-row" data-env-row>
+                  <input type="text" placeholder="变量名" value="${e.name||''}" data-env-name style="flex:1;">
+                  <input type="text" placeholder="变量值" value="${e.value||''}" data-env-value style="flex:1;">
+                  <button type="button" class="btn-sm btn-remove" data-action="remove-env">×</button>
+                </div>`).join('')}</div>
+            </div>
+            <div style="margin-top:8px;">
+              <span style="font-size:11px;color:var(--text-secondary);">资源限制 (全部可选)</span>
+              <div class="form-row" style="margin-top:4px;">
+                <div class="form-group" style="flex:1;"><label>请求CPU</label><input type="text" data-res-req-cpu value="${c.resources?.requests?.cpu||''}" placeholder="100m"></div>
+                <div class="form-group" style="flex:1;"><label>请求内存</label><input type="text" data-res-req-mem value="${c.resources?.requests?.memory||''}" placeholder="128Mi"></div>
+                <div class="form-group" style="flex:1;"><label>限制CPU</label><input type="text" data-res-lim-cpu value="${c.resources?.limits?.cpu||''}" placeholder="500m"></div>
+                <div class="form-group" style="flex:1;"><label>限制内存</label><input type="text" data-res-lim-mem value="${c.resources?.limits?.memory||''}" placeholder="256Mi"></div>
+              </div>
+            </div>
+            <div style="margin-top:6px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:5px;"><span style="font-size:11px;color:var(--text-secondary);">卷挂载</span><button type="button" class="btn-sm btn-add" data-action="add-volmount">+ 挂载</button></div>
+              <div data-container-volmounts>${(c.volumeMounts||[]).map(vm=>`
+                <div class="kv-row" data-volmount-row>
+                  <input type="text" placeholder="卷名称" value="${vm.name||''}" data-vm-name style="flex:1;">
+                  <input type="text" placeholder="挂载路径" value="${vm.mountPath||''}" data-vm-path style="flex:1;">
+                  <button type="button" class="btn-sm btn-remove" data-action="remove-volmount">×</button>
+                </div>`).join('')}</div>
+            </div>`;
+                listEl.appendChild(block);
+            }
+
+            function addVolumeBlock(listEl, volData) {
+                const block = document.createElement('div');
+                block.className = 'dynamic-list';
+                block.dataset.volumeBlock = '';
+                const v = volData || {};
+                const types = ['emptyDir', 'hostPath', 'configMap', 'secret', 'persistentVolumeClaim'];
+                block.innerHTML = `
+            <div class="form-row">
+              <div class="form-group" style="flex:1;"><label>卷名称 <span class="required">*</span></label><input type="text" data-vol-name value="${v.name||''}" required></div>
+              <div class="form-group" style="flex:1;"><label>卷类型</label>
+                <select data-vol-type>${types.map(t=>`<option value="${t}" ${t===v.type?'selected':''}>${t}</option>`).join('')}</select>
+              </div>
+              <button type="button" class="btn-sm btn-remove" data-action="remove-volume">🗑 删除</button>
+            </div>
+            <div class="form-row"><div class="form-group" style="flex:1;"><label>详情 (hostPath路径/configMap名称等)</label><input type="text" data-vol-detail value="${v.hostPath?.path||v.configMap?.name||v.secret?.secretName||v.persistentVolumeClaim?.claimName||''}"></div></div>`;
+                listEl.appendChild(block);
+            }
+
+            function addServicePortBlock(listEl, portData) {
+                const block = document.createElement('div');
+                block.className = 'dynamic-list';
+                const p = portData || {};
+                block.innerHTML = `
+            <div class="form-row">
+              <div class="form-group" style="flex:1;"><label>名称</label><input type="text" data-svc-port-name value="${p.name||''}"></div>
+              <div class="form-group" style="flex:0.7;"><label>端口 *</label><input type="number" data-svc-port-port value="${p.port||80}" required></div>
+              <div class="form-group" style="flex:0.7;"><label>目标端口</label><input type="number" data-svc-port-target value="${p.targetPort||80}"></div>
+              <div class="form-group" style="flex:0.6;"><label>协议</label><select data-svc-port-protocol><option value="TCP" ${p.protocol==='TCP'?'selected':''}>TCP</option><option value="UDP" ${p.protocol==='UDP'?'selected':''}>UDP</option></select></div>
+              <div class="form-group" style="flex:0.6;"><label>NodePort</label><input type="number" data-svc-port-nodeport value="${p.nodePort||''}" placeholder="30000-32767"></div>
+              <button type="button" class="btn-sm btn-remove" data-action="remove-svc-port">×</button>
+            </div>`;
+                listEl.appendChild(block);
+            }
+
+            function addDataRow(listEl, key, value) {
+                const row = document.createElement('div');
+                row.className = 'kv-row';
+                row.innerHTML = `
+            <input type="text" placeholder="键" value="${key||''}" data-data-key style="flex:1;">
+            <textarea placeholder="值" data-data-value style="flex:2;min-width:100px;" rows="2">${value||''}</textarea>
+            <button type="button" class="btn-sm btn-remove" data-action="remove-data-kv">×</button>`;
+                listEl.appendChild(row);
+            }
+
+            function renderForm(resource) {
+                formScroll.innerHTML = '';
+                const meta = resourceMeta[resource];
+                const tpl = templates[resource] || {};
+
+                appendSection('基本信息');
+                appendField('name', '名称', 'text', tpl.name || '', true, '请输入资源名称');
+                appendField('namespace', '命名空间', 'text', tpl.namespace || 'default', false);
+                appendKVSection('labels', '标签 (Labels)', tpl.labels || {});
+                appendKVSection('annotations', '注解 (Annotations)', tpl.annotations || {});
+
+                if (['deployment', 'statefulset', 'daemonset', 'job', 'cronjob', 'pod'].includes(resource)) {
+                    if (['deployment', 'statefulset'].includes(resource)) {
+                        appendField('replicas', '副本数', 'number', tpl.replicas || 1, true, '至少为1', { min: 1 });
+                    }
+                    if (resource === 'statefulset') {
+                        appendField('serviceName', 'Headless Service', 'text', tpl.serviceName || '', true);
+                    }
+                    if (resource === 'cronjob') {
+                        appendField('schedule', 'Cron 表达式', 'text', tpl.schedule || '0 2 * * *', true);
+                        appendField('successfulJobsHistoryLimit', '成功作业保留', 'number', tpl.successfulJobsHistoryLimit ||
+                            3);
+                        appendField('failedJobsHistoryLimit', '失败作业保留', 'number', tpl.failedJobsHistoryLimit || 1);
+                        appendField('concurrencyPolicy', '并发策略', 'select', tpl.concurrencyPolicy || 'Allow', false, '',
+                            {}, ['Allow', 'Forbid', 'Replace']);
+                    }
+                    if (resource === 'job') {
+                        appendField('backoffLimit', '重试次数', 'number', tpl.backoffLimit || 4);
+                        appendField('completions', '完成次数', 'number', tpl.completions || 1);
+                        appendField('parallelism', '并行数', 'number', tpl.parallelism || 1);
+                    }
+                    if (['deployment', 'statefulset', 'daemonset'].includes(resource)) {
+                        appendKVSection('selectorLabels', '选择器标签', tpl.selectorLabels || { app: 'myapp' });
+                    }
+                    appendField('restartPolicy', '重启策略', 'select', tpl.restartPolicy || 'Always', false, '', {},
+                        ['Always', 'OnFailure', 'Never']);
+                    appendField('serviceAccount', 'ServiceAccount', 'text', tpl.serviceAccount || '');
+
+                    // 容器列表
+                    const containerSection = document.createElement('div');
+                    containerSection.className = 'form-section';
+                    containerSection.innerHTML = `
+                <div class="form-section-title" style="display:flex;justify-content:space-between;">
+                  <span>🐳 容器列表</span>
+                  <button type="button" class="btn-sm btn-add" data-action="add-container">+ 添加容器</button>
+                </div>
+                <div data-containers-list></div>`;
+                    formScroll.appendChild(containerSection);
+                    const containersList = containerSection.querySelector('[data-containers-list]');
+                    (tpl.containers || []).forEach(c => addContainerBlock(containersList, c));
+                    if (!tpl.containers?.length) {
+                        addContainerBlock(containersList, { name: '', image: '', ports: [], env: [], resources: {},
+                            volumeMounts: [], command: '' });
+                    }
+
+                    // 卷列表
+                    const volSection = document.createElement('div');
+                    volSection.className = 'form-section';
+                    volSection.innerHTML = `
+                <div class="form-section-title" style="display:flex;justify-content:space-between;">
+                  <span>💾 卷定义</span>
+                  <button type="button" class="btn-sm btn-add" data-action="add-volume">+ 添加卷</button>
+                </div>
+                <div data-volumes-list></div>`;
+                    formScroll.appendChild(volSection);
+                    const volumesList = volSection.querySelector('[data-volumes-list]');
+                    (tpl.volumes || []).forEach(v => addVolumeBlock(volumesList, v));
+                }
+
+                if (resource === 'service') {
+                    appendField('serviceType', 'Service 类型', 'select', tpl.type || 'ClusterIP', true, '', {},
+                        ['ClusterIP', 'NodePort', 'LoadBalancer']);
+                    appendKVSection('serviceSelector', '选择器', tpl.selector || { app: 'myapp' });
+                    const svcPortSection = document.createElement('div');
+                    svcPortSection.className = 'form-section';
+                    svcPortSection.innerHTML = `
+                <div class="form-section-title" style="display:flex;justify-content:space-between;">
+                  <span>🔌 端口映射</span>
+                  <button type="button" class="btn-sm btn-add" data-action="add-svc-port">+ 添加端口</button>
+                </div>
+                <div data-svc-ports-list></div>`;
+                    formScroll.appendChild(svcPortSection);
+                    const svcPortsList = svcPortSection.querySelector('[data-svc-ports-list]');
+                    (tpl.ports || []).forEach(p => addServicePortBlock(svcPortsList, p));
+                    if (!tpl.ports?.length) addServicePortBlock(svcPortsList, { name: 'http', port: 80,
+                        targetPort: 80, protocol: 'TCP', nodePort: null });
+                }
+
+                if (resource === 'configmap') {
+                    const dataSection = document.createElement('div');
+                    dataSection.className = 'form-section';
+                    dataSection.dataset.dataSection = 'configmapData';
+                    dataSection.innerHTML = `
+                <div class="form-section-title" style="display:flex;justify-content:space-between;">
+                  <span>📋 数据条目</span>
+                  <button type="button" class="btn-sm btn-add" data-action="add-data-kv" data-section="configmapData">+ 添加</button>
+                </div>
+                <div data-data-list="configmapData"></div>`;
+                    formScroll.appendChild(dataSection);
+                    const dataList = dataSection.querySelector('[data-data-list]');
+                    Object.entries(tpl.data || {}).forEach(([k, v]) => addDataRow(dataList, k, v));
+                }
+
+                if (resource === 'secret') {
+                    appendField('secretType', 'Secret 类型', 'select', tpl.type || 'Opaque', false, '', {},
+                        ['Opaque', 'kubernetes.io/dockerconfigjson', 'kubernetes.io/tls', 'kubernetes.io/basic-auth',
+                            'kubernetes.io/ssh-auth'
+                        ]);
+                    ['secretData', 'secretStringData'].forEach(sectionName => {
+                        const dataSection = document.createElement('div');
+                        dataSection.className = 'form-section';
+                        dataSection.dataset.dataSection = sectionName;
+                        const title = sectionName === 'secretData' ? 'Base64 编码数据' :
+                            '明文数据 (StringData)';
+                        dataSection.innerHTML = `
+                  <div class="form-section-title" style="display:flex;justify-content:space-between;">
+                    <span>${title}</span>
+                    <button type="button" class="btn-sm btn-add" data-action="add-data-kv" data-section="${sectionName}">+ 添加</button>
+                  </div>
+                  <div data-data-list="${sectionName}"></div>`;
+                        formScroll.appendChild(dataSection);
+                        const list = dataSection.querySelector('[data-data-list]');
+                        const items = sectionName === 'secretData' ? (tpl.data || {}) : (tpl.stringData ||
+                            {});
+                        Object.entries(items).forEach(([k, v]) => addDataRow(list, k, v));
+                    });
+                }
+
+                bindFormEvents();
+            }
+
+            function bindFormEvents() {
+                formScroll.removeEventListener('input', onFormInput);
+                formScroll.removeEventListener('change', onFormInput);
+                formScroll.addEventListener('input', onFormInput);
+                formScroll.addEventListener('change', onFormInput);
+                formScroll.removeEventListener('click', onFormClick);
+                formScroll.addEventListener('click', onFormClick);
+            }
+
+            function onFormInput(e) {
+                if (e.target.closest('input, select, textarea')) {
+                    triggerUpdate();
+                }
+            }
+
+            function onFormClick(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const action = btn.dataset.action;
+                if (!action) return;
+                e.preventDefault();
+
+                // 添加/删除 KV
+                if (action === 'add-kv') {
+                    const section = btn.dataset.section;
+                    const list = formScroll.querySelector(`[data-kv-list="${section}"]`);
+                    if (list) { addKVRow(list, '', '');
+                        triggerUpdate(); }
+                }
+                if (action === 'remove-kv') {
+                    const row = btn.closest('.kv-row');
+                    if (row) { row.remove();
+                        triggerUpdate(); }
+                }
+                // 容器操作
+                if (action === 'add-container') {
+                    const list = formScroll.querySelector('[data-containers-list]');
+                    if (list) { addContainerBlock(list, { name: '', image: '', ports: [], env: [], resources: {},
+                            volumeMounts: [], command: '' });
+                        triggerUpdate(); }
+                }
+                if (action === 'remove-container') {
+                    const block = btn.closest('[data-container-block]');
+                    if (block && formScroll.querySelectorAll('[data-container-block]').length > 1) { block.remove
+                    (); triggerUpdate(); }
+                }
+                if (action === 'add-port') {
+                    const block = btn.closest('[data-container-block]');
+                    if (block) {
+                        const portsList = block.querySelector('[data-container-ports]');
+                        const row = document.createElement('div');
+                        row.className = 'kv-row';
+                        row.dataset.portRow = '';
+                        row.innerHTML = `<input type="text" placeholder="名称" data-port-name><input type="number" placeholder="容器端口" data-port-container><select data-port-protocol><option>TCP</option><option>UDP</option></select><button type="button" class="btn-sm btn-remove" data-action="remove-port">×</button>`;
+                        portsList.appendChild(row);
+                        triggerUpdate();
+                    }
+                }
+                if (action === 'remove-port') { const row = btn.closest('[data-port-row]'); if (row) row.remove();
+                    triggerUpdate(); }
+                if (action === 'add-env') {
+                    const block = btn.closest('[data-container-block]');
+                    if (block) {
+                        const envList = block.querySelector('[data-container-env]');
+                        const row = document.createElement('div');
+                        row.className = 'kv-row';
+                        row.dataset.envRow = '';
+                        row.innerHTML =
+                            `<input type="text" placeholder="变量名" data-env-name><input type="text" placeholder="变量值" data-env-value><button type="button" class="btn-sm btn-remove" data-action="remove-env">×</button>`;
+                        envList.appendChild(row);
+                        triggerUpdate();
+                    }
+                }
+                if (action === 'remove-env') { const row = btn.closest('[data-env-row]'); if (row) row.remove();
+                    triggerUpdate(); }
+                if (action === 'add-volmount') {
+                    const block = btn.closest('[data-container-block]');
+                    if (block) {
+                        const vmList = block.querySelector('[data-container-volmounts]');
+                        const row = document.createElement('div');
+                        row.className = 'kv-row';
+                        row.dataset.volmountRow = '';
+                        row.innerHTML =
+                            `<input type="text" placeholder="卷名称" data-vm-name><input type="text" placeholder="挂载路径" data-vm-path><button type="button" class="btn-sm btn-remove" data-action="remove-volmount">×</button>`;
+                        vmList.appendChild(row);
+                        triggerUpdate();
+                    }
+                }
+                if (action === 'remove-volmount') { const row = btn.closest('[data-volmount-row]'); if (row) row.remove
+                (); triggerUpdate(); }
+                if (action === 'add-volume') {
+                    const list = formScroll.querySelector('[data-volumes-list]');
+                    if (list) { addVolumeBlock(list, { name: '', type: 'emptyDir' });
+                        triggerUpdate(); }
+                }
+                if (action === 'remove-volume') { const block = btn.closest('[data-volume-block]'); if (block) block
+                        .remove();
+                    triggerUpdate(); }
+                if (action === 'add-svc-port') {
+                    const list = formScroll.querySelector('[data-svc-ports-list]');
+                    if (list) { addServicePortBlock(list, { name: '', port: 80, targetPort: 80, protocol: 'TCP',
+                            nodePort: null });
+                        triggerUpdate(); }
+                }
+                if (action === 'remove-svc-port') { const block = btn.closest('[data-svc-port-block]'); if (block && formScroll
+                        .querySelectorAll('[data-svc-port-block]').length > 1) { block.remove();
+                        triggerUpdate(); } }
+                if (action === 'add-data-kv') {
+                    const section = btn.dataset.section;
+                    const list = formScroll.querySelector(`[data-data-list="${section}"]`);
+                    if (list) { addDataRow(list, '', '');
+                        triggerUpdate(); }
+                }
+                if (action === 'remove-data-kv') { const row = btn.closest('.kv-row'); if (row) row.remove();
+                    triggerUpdate(); }
+            }
+
+            function collectKV(sectionName) {
+                const list = formScroll.querySelector(`[data-kv-list="${sectionName}"]`);
+                if (!list) return {};
+                const result = {};
+                list.querySelectorAll('.kv-row').forEach(row => {
+                    const key = row.querySelector('[data-kv-key]')?.value?.trim();
+                    const val = row.querySelector('[data-kv-value]')?.value || '';
+                    if (key) result[key] = val;
+                });
+                return result;
+            }
+
+            function collectContainers() {
+                const blocks = formScroll.querySelectorAll('[data-container-block]');
+                const containers = [];
+                blocks.forEach(block => {
+                    const name = block.querySelector('[data-container-name]')?.value?.trim();
+                    const image = block.querySelector('[data-container-image]')?.value?.trim();
+                    if (!name || !image) return;
+                    const cmdStr = block.querySelector('[data-container-command]')?.value?.trim();
+                    const command = cmdStr ? cmdStr.split(/\s+/) : [];
+                    const ports = [];
+                    block.querySelectorAll('[data-port-row]').forEach(row => {
+                        const pName = row.querySelector('[data-port-name]')?.value?.trim() || '';
+                        const pPort = parseInt(row.querySelector('[data-port-container]')?.value) || 0;
+                        const pProto = row.querySelector('[data-port-protocol]')?.value || 'TCP';
+                        if (pPort) ports.push({ name: pName, containerPort: pPort, protocol: pProto });
+                    });
+                    const env = [];
+                    block.querySelectorAll('[data-env-row]').forEach(row => {
+                        const eName = row.querySelector('[data-env-name]')?.value?.trim();
+                        const eVal = row.querySelector('[data-env-value]')?.value || '';
+                        if (eName) env.push({ name: eName, value: eVal });
+                    });
+                    const reqCpu = block.querySelector('[data-res-req-cpu]')?.value?.trim() || '';
+                    const reqMem = block.querySelector('[data-res-req-mem]')?.value?.trim() || '';
+                    const limCpu = block.querySelector('[data-res-lim-cpu]')?.value?.trim() || '';
+                    const limMem = block.querySelector('[data-res-lim-mem]')?.value?.trim() || '';
+                    const resources = {};
+                    if (reqCpu || reqMem) resources.requests = {};
+                    if (reqCpu) resources.requests.cpu = reqCpu;
+                    if (reqMem) resources.requests.memory = reqMem;
+                    if (limCpu || limMem) resources.limits = {};
+                    if (limCpu) resources.limits.cpu = limCpu;
+                    if (limMem) resources.limits.memory = limMem;
+                    const volumeMounts = [];
+                    block.querySelectorAll('[data-volmount-row]').forEach(row => {
+                        const vmName = row.querySelector('[data-vm-name]')?.value?.trim() || '';
+                        const vmPath = row.querySelector('[data-vm-path]')?.value?.trim() || '';
+                        if (vmName || vmPath) volumeMounts.push({ name: vmName, mountPath: vmPath });
+                    });
+                    containers.push({ name, image, command, ports, env, resources, volumeMounts });
+                });
+                return containers;
+            }
+
+            function collectVolumes() {
+                const blocks = formScroll.querySelectorAll('[data-volume-block]');
+                const volumes = [];
+                blocks.forEach(block => {
+                    const name = block.querySelector('[data-vol-name]')?.value?.trim();
+                    const type = block.querySelector('[data-vol-type]')?.value || 'emptyDir';
+                    const detail = block.querySelector('[data-vol-detail]')?.value?.trim() || '';
+                    if (!name) return;
+                    const vol = { name };
+                    if (type === 'emptyDir') vol.emptyDir = {};
+                    else if (type === 'hostPath') vol.hostPath = { path: detail || '/' };
+                    else if (type === 'configMap') vol.configMap = { name: detail };
+                    else if (type === 'secret') vol.secret = { secretName: detail };
+                    else if (type === 'persistentVolumeClaim') vol.persistentVolumeClaim = { claimName: detail };
+                    vol.type = type;
+                    volumes.push(vol);
+                });
+                return volumes;
+            }
+
+            function collectServicePorts() {
+                const blocks = formScroll.querySelectorAll('[data-svc-port-block]');
+                return Array.from(blocks).map(block => {
+                    const name = block.querySelector('[data-svc-port-name]')?.value?.trim() || '';
+                    const port = parseInt(block.querySelector('[data-svc-port-port]')?.value) || 0;
+                    const targetPort = parseInt(block.querySelector('[data-svc-port-target]')?.value) || port;
+                    const protocol = block.querySelector('[data-svc-port-protocol]')?.value || 'TCP';
+                    const nodePort = parseInt(block.querySelector('[data-svc-port-nodeport]')?.value) || null;
+                    return { name, port, targetPort, protocol, nodePort };
+                }).filter(p => p.port);
+            }
+
+            function collectDataKV(sectionName) {
+                const list = formScroll.querySelector(`[data-data-list="${sectionName}"]`);
+                if (!list) return {};
+                const result = {};
+                list.querySelectorAll('.kv-row').forEach(row => {
+                    const key = row.querySelector('[data-data-key]')?.value?.trim();
+                    const val = row.querySelector('[data-data-value]')?.value || '';
+                    if (key) result[key] = val;
+                });
+                return result;
+            }
+
+            function collectFormData() {
+                const data = {};
+                data.name = formScroll.querySelector('input[name="name"]')?.value?.trim() || '';
+                data.namespace = formScroll.querySelector('input[name="namespace"]')?.value?.trim() || 'default';
+                data.labels = collectKV('labels');
+                data.annotations = collectKV('annotations');
+
+                const replicasInput = formScroll.querySelector('input[name="replicas"]');
+                if (replicasInput) data.replicas = parseInt(replicasInput.value) || 1;
+                const serviceNameInput = formScroll.querySelector('input[name="serviceName"]');
+                if (serviceNameInput) data.serviceName = serviceNameInput.value.trim();
+                const scheduleInput = formScroll.querySelector('input[name="schedule"]');
+                if (scheduleInput) data.schedule = scheduleInput.value.trim();
+                data.selectorLabels = collectKV('selectorLabels');
+                const restartPolicySelect = formScroll.querySelector('select[name="restartPolicy"]');
+                data.restartPolicy = restartPolicySelect ? restartPolicySelect.value : 'Always';
+                data.serviceAccount = formScroll.querySelector('input[name="serviceAccount"]')?.value?.trim() || '';
+                const backoffInput = formScroll.querySelector('input[name="backoffLimit"]');
+                if (backoffInput) data.backoffLimit = parseInt(backoffInput.value) || 4;
+                const completionsInput = formScroll.querySelector('input[name="completions"]');
+                if (completionsInput) data.completions = parseInt(completionsInput.value) || 1;
+                const parallelismInput = formScroll.querySelector('input[name="parallelism"]');
+                if (parallelismInput) data.parallelism = parseInt(parallelismInput.value) || 1;
+                const successHistInput = formScroll.querySelector('input[name="successfulJobsHistoryLimit"]');
+                if (successHistInput) data.successfulJobsHistoryLimit = parseInt(successHistInput.value) || 3;
+                const failedHistInput = formScroll.querySelector('input[name="failedJobsHistoryLimit"]');
+                if (failedHistInput) data.failedJobsHistoryLimit = parseInt(failedHistInput.value) || 1;
+                const concurrencySelect = formScroll.querySelector('select[name="concurrencyPolicy"]');
+                if (concurrencySelect) data.concurrencyPolicy = concurrencySelect.value;
+
+                data.containers = collectContainers();
+                data.volumes = collectVolumes();
+                data.serviceType = formScroll.querySelector('select[name="serviceType"]')?.value || 'ClusterIP';
+                data.serviceSelector = collectKV('serviceSelector');
+                data.servicePorts = collectServicePorts();
+                data.configmapData = collectDataKV('configmapData');
+                data.secretType = formScroll.querySelector('select[name="secretType"]')?.value || 'Opaque';
+                data.secretData = collectDataKV('secretData');
+                data.secretStringData = collectDataKV('secretStringData');
+                return data;
+            }
+
+            function buildPodSpec(data) {
+                const containers = (data.containers || []).map(c => {
+                    const container = { name: c.name, image: c.image };
+                    if (c.command?.length) container.command = c.command;
+                    if (c.ports?.length) container.ports = c.ports.map(p => ({ name: p.name || undefined,
+                        containerPort: p.containerPort, protocol: p.protocol }));
+                    if (c.env?.length) container.env = c.env.map(e => ({ name: e.name, value: e.value }));
+                    if (Object.keys(c.resources.requests || {}).length || Object.keys(c.resources.limits || {})
+                        .length) {
+                        container.resources = {};
+                        if (Object.keys(c.resources.requests || {}).length) container.resources.requests = c
+                            .resources.requests;
+                        if (Object.keys(c.resources.limits || {}).length) container.resources.limits = c.resources
+                            .limits;
+                    }
+                    if (c.volumeMounts?.length) container.volumeMounts = c.volumeMounts.filter(vm => vm.name || vm
+                        .mountPath).map(vm => ({ name: vm.name, mountPath: vm.mountPath }));
+                    return container;
+                });
+
+                const spec = { containers };
+                if (data.restartPolicy && data.restartPolicy !== 'Always') spec.restartPolicy = data.restartPolicy;
+                if (data.serviceAccount) spec.serviceAccountName = data.serviceAccount;
+                if (data.volumes?.length) {
+                    spec.volumes = data.volumes.map(v => {
+                        const vol = { name: v.name };
+                        if (v.emptyDir) vol.emptyDir = v.emptyDir;
+                        if (v.hostPath) vol.hostPath = v.hostPath;
+                        if (v.configMap) vol.configMap = v.configMap;
+                        if (v.secret) vol.secret = v.secret;
+                        if (v.persistentVolumeClaim) vol.persistentVolumeClaim = v.persistentVolumeClaim;
+                        return vol;
+                    });
+                }
+                return spec;
+            }
+
+            function buildK8sObject(data) {
+                const meta = resourceMeta[currentResource];
+                const baseMetadata = { name: data.name };
+                if (data.namespace && data.namespace !== 'default') baseMetadata.namespace = data.namespace;
+                if (Object.keys(data.labels).length) baseMetadata.labels = data.labels;
+                if (Object.keys(data.annotations).length) baseMetadata.annotations = data.annotations;
+
+                let obj = { apiVersion: meta.apiVersion, kind: meta.kind, metadata: baseMetadata };
+                const resource = currentResource;
+
+                if (['deployment', 'statefulset', 'daemonset', 'job', 'cronjob', 'pod'].includes(resource)) {
+                    const podSpec = buildPodSpec(data);
+                    if (resource === 'deployment') {
+                        obj.spec = {
+                            replicas: data.replicas || 1,
+                            selector: { matchLabels: data.selectorLabels || data.labels || { app: data.name } },
+                            template: { metadata: { labels: data.selectorLabels || data.labels || { app: data
+                                        .name } }, spec: podSpec },
+                        };
+                    } else if (resource === 'statefulset') {
+                        obj.spec = {
+                            replicas: data.replicas || 1,
+                            selector: { matchLabels: data.selectorLabels || data.labels || { app: data.name } },
+                            serviceName: data.serviceName || '',
+                            template: { metadata: { labels: data.selectorLabels || data.labels || { app: data
+                                        .name } }, spec: podSpec },
+                        };
+                    } else if (resource === 'daemonset') {
+                        obj.spec = {
+                            selector: { matchLabels: data.selectorLabels || data.labels || { app: data.name } },
+                            template: { metadata: { labels: data.selectorLabels || data.labels || { app: data
+                                        .name } }, spec: podSpec },
+                        };
+                    } else if (resource === 'job') {
+                        obj.spec = {
+                            template: { spec: podSpec },
+                            backoffLimit: data.backoffLimit ?? 4,
+                            completions: data.completions ?? 1,
+                            parallelism: data.parallelism ?? 1,
+                        };
+                        if (Object.keys(data.selectorLabels || {}).length) obj.spec.selector = { matchLabels: data
+                                .selectorLabels };
+                    } else if (resource === 'cronjob') {
+                        obj.spec = {
+                            schedule: data.schedule || '0 2 * * *',
+                            jobTemplate: {
+                                spec: {
+                                    template: { spec: podSpec },
+                                    backoffLimit: 4,
+                                },
+                            },
+                            successfulJobsHistoryLimit: data.successfulJobsHistoryLimit ?? 3,
+                            failedJobsHistoryLimit: data.failedJobsHistoryLimit ?? 1,
+                            concurrencyPolicy: data.concurrencyPolicy || 'Allow',
+                        };
+                    } else if (resource === 'pod') {
+                        obj.spec = podSpec;
+                    }
+                } else if (resource === 'service') {
+                    obj.spec = {
+                        type: data.serviceType || 'ClusterIP',
+                        selector: data.serviceSelector || {},
+                        ports: (data.servicePorts || []).map(p => {
+                            const portObj = { name: p.name, port: p.port, targetPort: p.targetPort,
+                                protocol: p.protocol };
+                            if (p.nodePort && (data.serviceType === 'NodePort' || data.serviceType ===
+                                    'LoadBalancer')) portObj.nodePort = p.nodePort;
+                            return portObj;
+                        }),
+                    };
+                } else if (resource === 'configmap') {
+                    obj.data = data.configmapData || {};
+                } else if (resource === 'secret') {
+                    obj.type = data.secretType || 'Opaque';
+                    if (Object.keys(data.secretData || {}).length) obj.data = data.secretData;
+                    if (Object.keys(data.secretStringData || {}).length) obj.stringData = data.secretStringData;
+                }
+                return obj;
+            }
+
+            function generateYAML() {
+                try {
+                    const data = collectFormData();
+                    if (!data.name) return '# 请填写资源名称';
+                    const k8sObj = buildK8sObject(data);
+                    const cleaned = JSON.parse(JSON.stringify(k8sObj));
+                    return jsyaml.dump(cleaned, { indent: 2, lineWidth: -1, noRefs: true, sortKeys: false,
+                        quotingType: '"', forceQuotes: false });
+                } catch (e) {
+                    return `# 生成错误: ${e.message}`;
+                }
+            }
+
+            function updatePreview() {
+                const yamlStr = generateYAML();
+                if (!yamlStr.trim()) {
+                    previewContent.innerHTML = '<div class="preview-empty">请填写左侧表单</div>';
+                    return;
+                }
+                const pre = document.createElement('pre');
+                pre.className = 'language-yaml';
+                const code = document.createElement('code');
+                code.className = 'language-yaml';
+                code.textContent = yamlStr;
+                pre.appendChild(code);
+                previewContent.innerHTML = '';
+                previewContent.appendChild(pre);
+                Prism.highlightElement(code);
+            }
+
+            function triggerUpdate() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(updatePreview, DEBOUNCE_MS);
+            }
+
+            // 导出/复制
+            btnExport.addEventListener('click', () => {
+                const yamlStr = generateYAML();
+                const data = collectFormData();
+                const fileName = `${currentResource}-${data.name || 'resource'}.yaml`;
+                const blob = new Blob([yamlStr], { type: 'text/yaml' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = fileName;
+                a.click();
+                showToast('✅ 已下载');
+            });
+            btnCopy.addEventListener('click', async () => {
+                const yamlStr = generateYAML();
+                await navigator.clipboard.writeText(yamlStr);
+                btnCopy.classList.add('copied');
+                btnCopy.textContent = '✅ 已复制';
+                showToast('📋 已复制到剪贴板');
+                setTimeout(() => {
+                    btnCopy.classList.remove('copied');
+                    btnCopy.textContent = '📋 复制';
+                }, 2000);
+            });
+
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                clearTimeout(toast._timeout);
+                toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+            }
+
+            // Tab切换
+            tabBar.addEventListener('click', (e) => {
+                const btn = e.target.closest('.tab-btn');
+                if (!btn) return;
+                const resource = btn.dataset.resource;
+                if (resource === currentResource) return;
+                currentResource = resource;
+                tabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                resourceTitle.textContent = `${resourceMeta[resource].icon} ${resourceMeta[resource].name} 配置`;
+                renderForm(resource);
+                triggerUpdate();
+            });
+
+            btnTemplate.addEventListener('click', () => {
+                renderForm(currentResource);
+                triggerUpdate();
+                showToast('📥 已载入示例');
+            });
+
+            // 分隔条拖拽
+            let isResizing = false;
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                resizer.classList.add('active');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const rect = mainContainer.getBoundingClientRect();
+                const pct = ((e.clientX - rect.left) / rect.width) * 100;
+                if (pct > 25 && pct < 70) {
+                    formPanel.style.width = pct + '%';
+                    formPanel.style.maxWidth = pct + '%';
+                }
+            });
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                resizer.classList.remove('active');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            });
+
+            // 快捷键
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault();
+                    btnExport.click(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !e.target.closest('input,textarea,select')) { e
+                        .preventDefault();
+                    btnCopy.click(); }
+            });
+
+            // 初始化
+            renderForm('deployment');
+            updatePreview();
+        })();
+    </script>
+</body>
+</html>

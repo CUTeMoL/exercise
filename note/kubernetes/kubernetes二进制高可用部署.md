@@ -1396,7 +1396,7 @@ do
     ssh $i "sed -i -e \"s#host_name#$i#g\" -e \"s#ipAddr#$j#g\" /etc/kubernetes/kubelet.conf"
     sed "s#ipAddr#$j#g" /data/work/kubelet.yaml| ssh $i "cat > /etc/kubernetes/kubelet.yaml"
     rsync -avz /data/work/kubelet.service $i:/lib/systemd/system/
-    ssh $i "systemctl daemon-reload && systemctl restart kubelet"
+    ssh $i "systemctl daemon-reload &&  systemctl enable kubelet && systemctl restart kubelet"
 done
 # 如果未生效则重启试试
 ```
