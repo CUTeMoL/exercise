@@ -123,7 +123,7 @@ sysctl --system
 安装ipvsadm
 
 ```shell
-apt-get install ipvsadm -y
+apt-get install ipvsadm ipset -y
 ```
 
 安装net-tools

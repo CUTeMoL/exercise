@@ -11,8 +11,6 @@
 * Scheduler: 调度、安排容器在哪个节点部署
 * Contaroller Manager: 控制器管理者，负责高级任务
 
-
-
 ### Minion node worker
 
 容器运行态
@@ -43,9 +41,9 @@
     - iptables（默认）: client访问iptables规则，有iptables负责转发数据包,iptables表很多内容时效率低
     - ipvs（建议）: client访问ipvs(virtual server)通过路由转发到后端Backend Pod(real server)
 
-## 二、基本单元及功能
+## 二、资源及功能
 
-### pod
+### 1. pod
 
 * kubernetes最小单元
   + pod是逻辑上的一种概念,实际上一个pod可以是多个container组成
@@ -63,66 +61,72 @@
   + 必须处于高可用状态，具有restartPolicy重启策略Always|OnFailure|Never，当健康检查livenessProbe(存活检查)失败时将杀死容器，根据重启策略操作。当健康检查readinessProbe(就绪检查)失败时kubernetes会把pod从service endpoints中剔除
   + 有replication controllers 保持定量的副本
   + 使用replication controllers 实现pod滚动更新及回滚
-
 * 无控制器的pod
   + 自主式pod 故障不复存在，无法全局调度
-
-* 静态pod
+* 静态pod(kubeadm部署的系统组件)
   + /var/lib/kubelet/config.yaml定义的staticPodPath(/etc/kubernetes/manifests)下的pod由kubelet管理
   + 不走Scheduler调度的流程固定在节点运行
 
+### 2. service
 
-### service
-
-iptables或ipvs规则，感知pod的IP地址变化(服务发现，相当于pod的代理)
-
-#### 特点
-
-* 防止pod失连，通过label-selector关联pod
+* userspace 模式已废弃
+* iptables或ipvs规则，感知pod的IP地址变化(服务发现，相当于pod的代理)
+* 工作模式
+  + ClusterIP: 默认模式,自动分配一个集群内部使用的IP
+  + NodePort: clusterIP基础上,在集群每个节点的的网卡上绑定一个端口,提供给外部访问
+  + LoadBalancer: NodePort基础上,创建一个外部负载均衡器,将请求转发到NodePort,一般云上使用
+  + ExternalName: 通过CoreDNS来让外部服务引入集群内部使用
+* 防止pod失连，通过label-selector关联pod(也可以不用,参考无头服务)
+* 可以使用无头服务(不通过标签关联),手动创建同名的service和endpoint转发到非Pod的端口
+* 默认会根据后端pod是否就绪决定是否转发,如果不想检查的话可以spec.publishNotReadyAddresses: true
 * 定义一组pod的访问策略（负载均衡 tcp|udp 4层）
 * 由kube-proxy调用iptables or ipvs 生成的一组规则，虽然有IP地址，但是是虚拟出来的service
 * CoreDNS: 域名解析
   + 会在每一个容器中建立/etc/resolv.conf
-  + search default.svc.cluster.local svc.cluster.local cluster.local lxw.com   #域名会自动加上这些字段匹配匹配
+  + search default.svc.cluster.local svc.cluster.local cluster.local lxw.com   # 域名会自动加上这些cluster-domain字段匹配, 大概是 <service-name>.<namespace-name>.svc.<cluster-domain>
+* .spec.internalTrafficPolicy: 正常是Cluster如果定义Local那么只会路由到发出指令节点所在的pod(几个工作模式都有这个策略)
+* .spec.sessionAffinity: 如果是ClientIP那么同一客户端会有会话保持
+* .spec.sessionAffinityConfig.clientIP.timeoutSeconds: 同一客户端会话保持时间,默认10800
 
-### Ingress:
+### 3. Ingress:
 
 * Ingress公开了从集群外部到集群内服务的Http、https路由的规则集合
 * 具体实现流量路由是由Ingress Controller负责
 * 一种抽象资源，给管理员提供暴露应用入口定义方法
 * 7层负载均衡，例如根据域名分发到对应的service，再由service转发到pod
 
-### label
+### 4. label
 
 标签key: value ，标识node，pod，service，RC等
 
-### Namespace
+
+### 5. label selector
+
+标签查询筛选，可以对资源对象进行分组
+
+### 6. Namespace
 
 * 命名空间kubernetes将资源对象逻辑上隔离，从而形成多个虚拟集群
 * 应用场景
   + 根据不同团队划分命名空间
   + 根据项目划分命名空间
 
-### label selector
-
-标签查询筛选，可以对资源对象进行分组
-
-### scheduler
+### 7. scheduler
 
 NODE节点监控，pod资源适配
 
-### Contaroller
+### 8.Contaroller
 
 工作负载控制器
 
-##### RepliCationController/ReplicaSet
+#### (1) RepliCationController/ReplicaSet
 
 * 通过创建多个副本保证高可用,少了创建,多了回收
 * RepliCationController: 控制器管理器，控制器监控防止kubernetes不可用，运行于master节点
 * ReplicaSet新版,用于替换RepliCationController,只新增了集合式的selector(matchLabels、matchExpressions)
 * 一般不直接使用,通过Deployment调用ReplicaSet
 
-##### 	Deployment
+#### (2) Deployment
 
 * 声明式更新控制器，只能管理无状态应用，使用较多
 * 管理pod和ReplicatiSet
@@ -130,7 +134,7 @@ NODE节点监控，pod资源适配
   + 上线部署、副本设定、滚动升级、回滚等功能
   + 提供声明式更新，例如之更新一个新的image
 
-##### 	StatefulSet:
+#### (3) StatefulSet:
 
 * 管理有状态副本集
 * 解决pod独立生命周期，保持pod启动顺序
@@ -139,35 +143,58 @@ NODE节点监控，pod资源适配
 * 有序，优雅部署和扩展、删除和终止，滚动更新
 
 
-##### 	DaemonSet: 
+#### (4) DaemonSet: 
 
-​		在所有Node(包括master)上运行pod副本，当node加入集群时创建pod，当node离开集群时回收pod，如果删除DaemonSet，其创建的所有pod也被删除，DaemonSet中的pod覆盖整个集群
+* 在所有Node(包括master)上运行pod副本，当node加入集群时创建pod，当node离开集群时回收pod，如果删除DaemonSet，其创建的所有pod也被删除，DaemonSet中的pod覆盖整个集群
+* 运行存储守护，集群日志收集，节点监控
 
-​		运行存储守护，集群日志收集，节点监控
+#### (5) job
 
-####   job
+* 需要时启动，不需要时关闭
+* 负责批处理任务(只执行一次)用于保证一个或多个Pod成功结束
+* 常用策略控制字段
+  + .spec.RestartPolicy: 仅支持Never和OnFailure
+  + .spec.completions: 标志需要成功运行的Pod数量
+  + .spec.parallelism: 标志并行运行的Pod数量
+  + .spec.activeDeadlineSeconds: 标志失败Pod重试时间
 
-需要时启动，不需要时关闭
+#### (6) cronjob
 
-##### 	cronjob
+* 周期性执行Job
+* 常用策略控制字段
+  + .spec.schedule: 调度计划时间,格式参考crontab(分 时 日 月 周)
+  + .spec.jobTemplate: 任务模板,格式参考Job
+  + .spec.startingDeadlineSeconds: Job启动超时时间,超过这个时间没启动被认为启动失败
+  + .spec.concurrencyPolicy: 并发策略[Allow,Forbid,Replace],对应允许、禁止、替换
+  + .spec.suspend: 默认false,如果为true,后续所有执行都会挂起(相当于这个任务禁止运行)
+  + .spec.successfulJobsHistoryLimit: 保留成功完成的Job数
+  + .spec.failedJobsHistoryLimit: 保留失败的Job数
 
-周期性执行任务
-
-### Ingress Controller
+#### (7) Ingress Controller
 
 ​	管理Ingress，根据ingress的定义生成具体的路由，具有负载均衡的功能
 
-### ConfigMap
+### 9.存储
 
-​	存储应用程序配置文件
+* 分类
+  + 元数据类
+    - configMap: 明文保存,用于保存配置
+    - Secret: 加密保存
+    - Downward API: 运行时从APIServer获取
+  + 真实数据
+    - Volume: 持久化数据
+    - PersistentVolume: 申请制持久化数据
 
-​	使用方式: 
+#### ConfigMap
 
-​		变量注入
+* 存储应用程序配置文件
+* 使用方式: 
+  + 变量注入(一次注入后不再消耗网络IO)
+  + 数据卷挂载(不是直接文件挂载进去,而是挂到..data/xxxx,软链接到目标路径,这样只要应用支持就可以热重载配置)
+* 不支持的热重载的应用可以通过`kubectl patch deploy ${deploy_name} --patch '{"spec": {"template":{"metadata":{"annotations":{"key":"value"}}}}}' ` 添加加元数据里的annotations可以触发滚动更新(相当于替换)
+* .immutable: true 这个会让configmap之后再也无法改变,适用于永不变更的配置,无法回退(apiserver不再监听变化)
 
-​		数据卷挂载
-
-### Secret
+#### Secret
 
 ​	存储敏感数据，所有数据经过base64编码
 
@@ -1259,13 +1286,16 @@ kubectl
       -l   #根据标签筛选资源
       -n   #指定namespace
       -w   #动态显示
-  kubectl create   #部署一个工程
+  kubectl create   #部署一个工程，资源对象不允许下划线
     deployment
       kubectl create deployment deploy_name --image=image_name
       -n   #指定namespace
       --dry-run=client   #测试，不实际生成资源
       -o #输出格式yaml、json
       > #将内容输出到文件配合-o使用
+    configmap ${config_name} 
+      --from-file ${file_path} # 文件要key=value 
+      --from-literal=${key}=${value} # 直接命令行定义
     secret
       kubectl create secret 
       docker-registry: #存储镜像仓库认证信息
@@ -1304,6 +1334,7 @@ kubectl
     kubectl rollout resume deployment deployment_name #恢复曾暂停过的滚动更新
     kubectl rollout status deployment deployment_name #滚动更新状态.相当于执行日志
     kubectl rollout history deployment deployment_name   #查看历史记录
+      --revision=n # 可以查看具体版本的yaml
     kubectl rollout undo deployment deployment_name 
       --to-revision=2   #回滚指定的版本
   kubectl rolling-update   #滚动更新，仅限replication
