@@ -1540,5 +1540,163 @@ sed -i \
 kubectl apply -f /data/work/ingress-nginx.yaml
 ```
 
+### 15.windows node
+
+(0) 准备
+
+修改hostname
+
+```powershell
+Rename-Computer -NewName "k-n3" 
+```
+
+下载组件
 
 
+(1) 安装containerd
+
+系统功能开启Hyper-V,containers
+
+```powershell
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V, Containers -All
+```
+
+下载containerd和
+
+```powershell
+# 设置版本号（以 1.6.24 为例，可根据需要替换）
+$Version = "1.6.24"
+# 从 GitHub 下载
+curl.exe -L https://github.com/containerd/containerd/releases/download/v$Version/containerd-$Version-windows-amd64.tar.gz -o containerd-windows-amd64.tar.gz
+```
+
+```powershell
+# 创建配置文件
+.\containerd.exe config default | Out-File config.toml -Encoding ascii
+# 手动改下sandbox_image到国内的镜像
+sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.8"
+# 注册服务
+.\containerd.exe --register-service
+# 启动服务
+Start-Service containerd
+# 验证服务状态
+Get-Service containerd
+```
+
+下载crictl.exe
+
+```powershell
+# 要用1.30.0以上版本
+$CrictlVersion = "1.36.0"
+curl.exe -L https://github.com/kubernetes-sigs/cri-tools/releases/download/v$CrictlVersion/crictl-v$CrictlVersion-windows-amd64.tar.gz -o crictl-windows-amd64.tar.gz
+```
+
+```powershell
+# 创建配置目录
+New-Item -ItemType Directory -Force -Path "$Env:USERPROFILE\.crictl"
+
+# 写入配置
+@"
+runtime-endpoint: "npipe:////./pipe/containerd-containerd"
+image-endpoint: "npipe:////./pipe/containerd-containerd"
+timeout: 10
+debug: false
+"@ | Out-File -FilePath "$Env:USERPROFILE\.crictl\crictl.yaml" -Encoding ascii
+```
+
+验证
+```powershell
+crictl.exe info
+```
+
+(2) 安装kubelet
+
+配置+证书复制到windows然后修改配置文件里的路径,IP地址
+
+```yaml
+# kubelet.yaml
+# 添加
+cgroupsPerQOS: false
+enforceNodeAllocatable: []
+# 删除
+cgroupDriver: "systemd"
+# 修改
+address: "192.168.1.118"
+authentication:
+  x509:
+    clientCAFile: "C:/Program Files/Kubernetes/config/ssl/ca.pem"
+```
+
+
+```yaml
+# kubelet.kubeconfig
+users:
+- name: default-auth
+  user:
+    client-certificate: C:\Program Files\Kubernetes\config\ssl\kubelet-client-current.pem
+    client-key: C:\Program Files\Kubernetes\config\ssl\kubelet-client-current.pem
+```
+
+创建服务
+
+```powershell
+sc.exe delete kubelet 
+sc.exe create kubelet start= auto binPath= "\"C:\Program Files\Kubernetes\bin\kubelet.exe\" --logtostderr=false --v=2 --log-dir=\"C:\Program Files\Kubernetes\logs\" --network-plugin=cni --kubeconfig=\"C:\Program Files\Kubernetes\config\kubelet.kubeconfig\" --bootstrap-kubeconfig=\"C:\Program Files\Kubernetes\config\kubelet-bootstrap.kubeconfig\" --config=\"C:\Program Files\Kubernetes\config\kubelet.yaml\" --cert-dir=\"C:\Program Files\Kubernetes\config\ssl\" --alsologtostderr=true --logtostderr=false --pod-infra-container-image=registry.aliyuncs.com/google_containers/pause:3.8 --container-runtime=remote --container-runtime-endpoint=npipe:////./pipe/containerd-containerd --cni-bin-dir=\"C:\Program Files\containerd\cni\bin\"  --cni-cache-dir=\"C:\Program Files\containerd\cni\cache\" --cni-conf-dir=\"C:\Program Files\containerd\cni\conf\" --windows-service=\"true\""
+```
+
+(3) 安装kube-proxy
+
+配置+证书复制到windows然后修改配置文件里的路径,IP地址
+
+```yaml
+# kube-proxy.yaml
+# 添加
+winkernel:                              # ← 这是重点，Windows 专用配置段
+  networkName: "calico"                 # 或 "flannel"，取决于你用的 CNI
+  enableDSR: false                      # 可选，是否开启 DSR
+  sourceVip: ""                         # 可选，源 VIP 地址
+# 修改
+mode: "kernelspace"
+bindAddress: 192.168.1.118
+clientConnection:
+  kubeconfig: "C:/Program Files/Kubernetes/config/kube-proxy.kubeconfig"
+```
+
+```powershell
+sc.exe delete kube-proxy 
+sc.exe create kube-proxy start= auto binPath= "\"C:\Program Files\Kubernetes\bin\kube-proxy.exe\" --config=\"C:\Program Files\Kubernetes\config\kube-proxy.yaml\" --alsologtostderr=true --logtostderr=false --log-dir=\"C:\Program Files\Kubernetes\logs\" --v=2  --windows-service=\"true\" "
+```
+
+(4) 安装calico
+
+下载文件解压到C:\CalicoWindows
+
+修改config.ps1
+```powershell
+# 这个一定要改host-local
+Set-EnvVarIfNotSet -var "CNI_IPAM_TYPE" -defaultValue "host-local"
+```
+
+运行安装脚本,然后启动calico服务
+```powershell
+.\install-calico.ps1 -KubeVersion "1.23.10" -KubeletRootDir "C:\Program Files\Kubernetes\bin" -APIserver "https://192.168.1.117:8443" -Datastore "kubernetes"
+```
+```
+kubectl create serviceaccount calico-windows -n kube-system
+kubectl create clusterrolebinding calico-windows --clusterrole=calico-node --serviceaccount=kube-system:calico-windows
+
+# 1. 获取 ServiceAccount 的 Token 名称
+SECRET_NAME=$(kubectl get serviceaccount calico-windows -n kube-system -o jsonpath='{.secrets[0].name}')
+
+# 2. 获取 Token 内容
+TOKEN=$(kubectl get secret $SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 -d)
+
+# 3. 获取集群 CA 证书
+kubectl get secret $SECRET_NAME -n kube-system -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
+
+# 4. 生成 kubeconfig 文件（替换 <APISERVER_IP> 为你的控制面 IP）
+kubectl config set-cluster kubernetes --server=https://192.168.1.117:8443 --certificate-authority=ca.crt --embed-certs=true --kubeconfig=calico-windows.kubeconfig
+kubectl config set-credentials calico-windows --token=$TOKEN --kubeconfig=calico-windows.kubeconfig
+kubectl config set-context default --cluster=kubernetes --user=calico-windows --kubeconfig=calico-windows.kubeconfig
+kubectl config use-context default --kubeconfig=calico-windows.kubeconfig
+```
