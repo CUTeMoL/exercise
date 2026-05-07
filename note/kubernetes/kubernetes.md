@@ -67,6 +67,88 @@
   + /var/lib/kubelet/config.yaml定义的staticPodPath(/etc/kubernetes/manifests)下的pod由kubelet管理
   + 不走Scheduler调度的流程固定在节点运行
 
+#### 创建pod的流程
+
+a. kubectl run → API Server
+b. API Server 将 Deployment 配置写入 etcd
+c. Deployment Controller（list/watch）→ 创建 ReplicaSet
+d. ReplicaSet Controller → 创建 Pod
+e. API Server 将 Pod 配置写入 etcd
+f. Scheduler（watch 未调度的 Pod）→ 选择节点 → 发送 Bind 请求到 API Server
+g. API Server 更新 Pod.spec.nodeName → 写入 etcd
+h. Kubelet（watch 到自己节点的 Pod）→ 创建容器 → 持续更新 Pod 状态（Pending/Running/Ready）
+i. Kubelet 向 API Server 更新 Pod Status
+j. API Server 将 Pod 状态写入 etcd
+
+```mermaid
+sequenceDiagram
+    participant K as kubectl
+    participant A as API Server
+    participant E as etcd
+    participant C as Controller Manager
+    participant S as Scheduler
+    participant L as Kubelet
+
+    Note over K,L: 1. 创建 Deployment（以 kubectl run 为例）
+    K->>+A: kubectl run → 创建 Deployment
+    A->>E: 写入 Deployment 配置
+    E-->>A: 写入成功确认
+
+    Note over C,A: 2. Controller Manager 调谐
+    loop Deployment Controller Watch
+        A->>C: Deployment 创建事件
+        C->>C: 创建 ReplicaSet
+        C->>A: 创建 ReplicaSet 请求
+    end
+    
+    A->>E: 写入 ReplicaSet 配置
+    E-->>A: 写入成功确认
+
+    loop ReplicaSet Controller Watch
+        A->>C: ReplicaSet 创建事件
+        C->>C: 创建 Pod
+        C->>A: 创建 Pod 请求
+    end
+
+    Note over A,E: 3. Pod 初始写入 etcd
+    A->>E: 写入 Pod 配置（未调度）
+    E-->>A: 写入成功确认
+
+    Note over S,A: 4. Scheduler 绑定节点
+    loop Scheduler Watch（未调度 Pod）
+        A->>S: Pod 创建事件（nodeName 为空）
+        S->>S: 筛选节点、打分、选择最优节点
+        S->>+A: Bind 请求（更新 Pod.spec.nodeName）
+    end
+    
+    A->>E: 更新 Pod 配置（绑定节点）
+    E-->>A: 更新成功确认
+    A-->>-S: Bind 成功响应
+
+    Note over L,A: 5. Kubelet 创建容器并上报状态
+    loop Kubelet Watch（自己节点的 Pod）
+        A->>L: Pod 调度到本节点事件
+        L->>L: 创建 Pod Sandbox（如 pause 容器）
+        L->>L: 创建 Init/业务容器
+        L->>L: 启动容器
+        L-->>A: 上报 Pod Status（Pending → Running → Ready）
+    end
+
+    loop Kubelet 周期性状态上报
+        L->>+A: 更新 Pod 状态（如 Ready 探针通过）
+        A->>E: 写入最新 Pod 状态
+        E-->>A: 写入成功确认
+        A-->>-L: 状态更新成功
+    end
+
+    Note over K,A: 6. 用户查看状态
+    K->>+A: kubectl get pod
+    A->>E: 查询 Pod 状态
+    E-->>A: 返回 Pod 状态
+    A-->>-K: 显示 Pod Running
+```
+
+
 ### 2. service
 
 * userspace 模式已废弃
@@ -157,6 +239,7 @@ NODE节点监控，pod资源适配
   + .spec.completions: 标志需要成功运行的Pod数量
   + .spec.parallelism: 标志并行运行的Pod数量
   + .spec.activeDeadlineSeconds: 标志失败Pod重试时间
+  + .spec.ttlSecondsAfterFinished: 标志Pod过期时间
 
 #### (6) cronjob
 
@@ -189,22 +272,69 @@ NODE节点监控，pod资源适配
 
 * 存储应用程序配置文件
 * 使用方式: 
-  + 变量注入(一次注入后不再消耗网络IO)
+  + 变量注入(一次注入后不再消耗网络IO),不支持热重载
   + 数据卷挂载(不是直接文件挂载进去,而是挂到..data/xxxx,软链接到目标路径,这样只要应用支持就可以热重载配置)
 * 不支持的热重载的应用可以通过`kubectl patch deploy ${deploy_name} --patch '{"spec": {"template":{"metadata":{"annotations":{"key":"value"}}}}}' ` 添加加元数据里的annotations可以触发滚动更新(相当于替换)
 * .immutable: true 这个会让configmap之后再也无法改变,适用于永不变更的配置,无法回退(apiserver不再监听变化)
 
 #### Secret
 
-​	存储敏感数据，所有数据经过base64编码
+* 存储敏感数据，所有数据需要经过base64编码,节点上仅保存在内存中
+* 三种类型:
+  + docker-registry: 存储镜像仓库认证信息
+  + generic: 从文件、目录或者字符串创建，例如存储用户名密码
+  + tls: 存储证书，例如HTTPS证书
 
-​	三种类型:
+#### Downward API
 
-​		docker-registry: 存储镜像仓库认证信息
+容器元数据信息,可以通过env/volume定义来让容器获取到到像metadata、status这样的数据
 
-​		generic: 从文件、目录或者字符串创建，例如存储用户名密码
+一个通过api-server接口获取resource信息的方法
 
-​		tls: 存储证书，例如HTTPS证书
+```shell
+APISERVER="192.168.1.117:8443"
+APIROUTE="api"
+APIVERSION="v1"
+TOKEN="b6d865917e055b731d2baa817e457be8" # token.csv 可以获取到,kubeadm部署的可能在/var/run/secrets/kubernetes.io/serviceaccount/token
+CAPATH="/etc/kubernetes/ssl/kube-apiserver.pem" # api-server证书或者根证书都行 kubeadm部署的可能在/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+NAMESPACE="kube-system"
+RESOURCE="pod"
+curl -H "Authorization: Bearer $TOKEN" --cacert $CAPATH https://${APISERVER}/${APIROUTE}/${APIVERSION}/namespaces/${NAMESPACE}/${RESOURCE}
+```
+
+#### Volume
+
+卷挂载,容器创建时会挂载进容器
+
+* 分类
+  + emptyDir: 
+    - Pod删除时会永久删除(一次性任务完成的pod会保留直到删除)
+    - 可以用来容器间数据共享(取日志)
+    - 可以挂载内存到Pod当磁盘用,实现高速缓存
+  + hostPath:
+    - 宿主(节点)上的路径挂载到Pod里,如果Pod被调度到其他节点就没法继承旧数据
+    - type设置可以在创建Pod前检查Volume是否达到对应类型的条件
+      - "" # 不执行检查
+      - "DirectoryOrCreate" # 不存在目录时直接创建个空目录(0755)
+      - "Directory" # 必须是目录
+      - "FileOrCreate" # 不存在文件时直接创建个空文件(0644)
+      - "File" # 必须是文件
+      - "Socket" # 必须是套接字文件
+      - "CharDevice" # 必须是字符设备
+      - "BlockDevice" # 必须是块设备
+    - 只能是root权限
+  + PV/PVC
+    - PersistentVolume #  实际上的存储资源
+    - PersistentVolumeClaim  # 一个声明式的请求,创建后根据requests.storage创建一个可用存储
+    - storageClass # 存储类资源对象,定义PV动态供给策略(基本上是云服务)
+    - PV/PVC读写策略和存储类要完全匹配(ReadWriteOnce/ReadOnlyMany/ReadWriteMany)
+    - 回收策略(Retain、Recycle、Delete)保留数据、回收、删除
+      - Retain: 保留数据(手动修改状态为Available才能绑定到新PVC)
+      - Recycle: 回收(清理数据,但PV保留,这样可以提供给新PVC使用,HostPath和NFS支持)
+      - Delete: 删除(清理数据,PV也不保留,通常是云硬盘才支持)
+
+
+
 
 ## 三、通信方式
 
@@ -355,40 +485,68 @@ emptyDIR
 
 ### 5.日常运维
 
-## 六、创建pod的流程
-
-kubectl run > 发给api server > 请求的配置写入etcd > scheduler通过list/watch获取到pod配置 > 选择一个合适的节点bind pod，然后返回结果给api server > api server write etcd > 节点的kubelet 通过watch获取自己对应要创建的容器，创建后update pod status 返回结果 api server >api server write etcd
-
 ## 七、调度
 
-1.容器资源限制：
+大概2个阶段:
+1) 预选:筛选出满足条件的
+2) 优选:按优先级排序后选出权重最高的
 
-• resources.limits.cpu
 
-• resources.limits.memory
+1. 容器资源限制：
+
+容器使用的最大资源限制
+
+* resources.limits.cpu
+* resources.limits.memory
 
 容器使用的最小资源需求，作为容器调度时资源分配的依据：
 
-• resources.requests.cpu
+* resources.requests.cpu
+* resources.requests.memory
 
-• resources.requests.memory
+2. 节点选择
 
-2.节点选择
+* nodeName:最高,直接指定,不经过调度器
+* taint:污点，根据策略不调度，除非pod带有污点容忍
+  + key=value:effect
+    - effect 支持三个选项
+      - NoSchedule: 不调度到此节点
+      - PreferNoSchedule: 尽量不调度到此节点
+      - NoExecute: 不仅不讲Pod调度到此节点,同时还要驱逐Pod
+* nodeSelector:标签选择器,指定具有某种标签的
+* spec.affinity.nodeAffinity:节点亲和性与反亲和性
+  + requiredDuringSchedulingIgnoredDuringExecution:硬性策略,高级版 nodeSelector,支持更详细的运算符
+  + preferredDuringSchedulingIgnoredDuringExecution:软性策略
+    - weight: 软性策略权重
+* spec.affinity.podAffinity:基于已经在节点上运行的 Pod 的标签来决定调度(亲和性)
+  + requiredDuringSchedulingIgnoredDuringExecution:硬性策略
+  + preferredDuringSchedulingIgnoredDuringExecution:软性策略
+  + podAffinityTerm:条件集
+    - topologyKey:定义怎么断言Pod亲和性的关键标签
+    - labelSelector: 标签选择器
+    - namespaces: 用来指定其他命名空间(因为默认是自己的命令空间)
+* spec.affinity.podAntiAffinity:基于已经在节点上运行的 Pod 的标签来决定调度(反亲和性)
 
-nodeName		最高，不经过调度器
-
-taint			污点，根据策略不调度，除非pod带有污点容忍
-
-nodeSelector=nodeAffinity	调度器协调
-
-3.DaemonSet		
+3. DaemonSet		
 
 固定每个节点都运行副本，如果节点有污点，则需要设置容忍
 
 ```yaml
       tolerations:
+      - key: "${key)"
+        value: "${value}"
+        operator: "Exists"
+        effect: "NoSchedule"
+      # 不指定value就是存在key就忽略
+      - key: "${key)"
+        operator: "Exists"
+        effect: "NoSchedule"
+      # 不指定key就是所有NoSchedule忽略
       - operator: "Exists"
         effect: "NoSchedule"
+      # 不指定key/effect就是所有都忽略
+      - operator: "Exists"
+
 ```
 
 ## 八、volume
@@ -1377,7 +1535,9 @@ kubectl
 
 ########设置命令
   kubectl label   #给资源设置、更新标签
+    kubectl label &{resource} hostname key=value    #给资源打标签
     kubectl label nodes hostname key=value    #给节点打标签
+    kubectl label Pod hostname key=value    #给pod打标签
   kubectl annotate   #给资源设置、更新注解
 
 ########其他
@@ -1920,7 +2080,7 @@ spec:
 
 ### configmap
 
-```shell
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1975,7 +2135,7 @@ spec:
         - key: "game.properties"
           path: "game.properties"
         - key: "user-interface.properties"
-          path: "user-interface.properties"
+          path: "user-interface/properties"
 ```
 
 ### secret
