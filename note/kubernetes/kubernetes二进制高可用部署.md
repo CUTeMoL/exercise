@@ -1681,7 +1681,8 @@ Set-EnvVarIfNotSet -var "CNI_IPAM_TYPE" -defaultValue "host-local"
 ```powershell
 .\install-calico.ps1 -KubeVersion "1.23.10" -KubeletRootDir "C:\Program Files\Kubernetes\bin" -APIserver "https://192.168.1.117:8443" -Datastore "kubernetes"
 ```
-```
+
+```shell
 kubectl create serviceaccount calico-windows -n kube-system
 kubectl create clusterrolebinding calico-windows --clusterrole=calico-node --serviceaccount=kube-system:calico-windows
 
@@ -1699,4 +1700,13 @@ kubectl config set-cluster kubernetes --server=https://192.168.1.117:8443 --cert
 kubectl config set-credentials calico-windows --token=$TOKEN --kubeconfig=calico-windows.kubeconfig
 kubectl config set-context default --cluster=kubernetes --user=calico-windows --kubeconfig=calico-windows.kubeconfig
 kubectl config use-context default --kubeconfig=calico-windows.kubeconfig
+```
+
+下载calico命令行工具或插件
+```shell
+curl -L https://github.com/projectcalico/calico/releases/download/v3.25.0/calicoctl-linux-amd64 -o calicoctl
+chmod +x ./calicoctl
+
+sudo curl -L https://github.com/projectcalico/calico/releases/download/v3.31.3/calicoctl-linux-amd64 -o /usr/local/bin/kubectl-calico
+sudo chmod +x /usr/local/bin/kubectl-calico
 ```

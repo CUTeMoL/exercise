@@ -302,6 +302,8 @@ RESOURCE="pod"
 curl -H "Authorization: Bearer $TOKEN" --cacert $CAPATH https://${APISERVER}/${APIROUTE}/${APIVERSION}/namespaces/${NAMESPACE}/${RESOURCE}
 ```
 
+如果是Pod需要访问APIserver,通常可以使用容器里/run/secrets/kubernetes.io/serviceaccount/里面的token和CA证书
+
 #### Volume
 
 卷挂载,容器创建时会挂载进容器
@@ -593,15 +595,12 @@ status（状态）:
 
 ### Authentication(鉴权)
 
-​	客户端访问API server 需要证书、Token或者用户名+密码
+* 客户端访问API server 基于证书、Token或者用户名+密码 三种模式
+  + HTTPS 证书认证: 基于CA证书签名的数字证书认证
+  + HTTP Token认证: 通过一个Token来识别用户
+  + HTTP Base认证: 用户名+密码的方式认证
 
-​		HTTPS 证书认证: 基于CA证书签名的数字证书认证
-
-​		HTTP Token认证: 通过一个Token来识别用户
-
-​		HTTP Base认证: 用户名+密码的方式认证
-
-​	pod访问 需要ServiceAccount
+​	pod访问 需要ServiceAccount,通常默认挂载在/run/secrets/kubernetes.io/serviceaccount/
 
 ↓
 
