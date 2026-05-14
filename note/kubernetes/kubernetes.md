@@ -606,48 +606,45 @@ status（状态）:
 
 ### Authorization(授权)
 
-​	RBAC（Role-Based Access Control，基于角色的访问控制）
+RBAC（Role-Based Access Control，基于角色的访问控制）
 
-​		负责完成授权（Authorization）工作。
-
-​		RBAC根据API请求属性，决定允许还是拒绝。
-
-​		1.比较常见的授权维度：
-
-​			user：用户名
-
-​			group：用户分组
-
-​		2.资源，例如pod、deployment
-
-​		3.资源操作方法：get，list，create，update，patch，watch，delete
-
-​		4.命名空间
-
-​			API组
-
-​		5.主体: 具体的用户、群组
-​			user
-​			group
-​			ServiceAccount: 服务账号，针对程序
-​		6.角色: 职业，权限的分组
-​			Role: 授权特定命名空间的访问权限
-​			ClusterRole: 授权所有命名空间的访问权限
-​		7.角色绑定: 
-​			RoleBinding: 将角色绑定到主体（即subject）
-​			ClusterRoleBinding: 将集群角色绑定到主体
-
-↓
+* 负责完成授权（Authorization）工作。
+* RBAC根据API请求属性，决定允许还是拒绝。
+  + 1.比较常见的授权维度：
+    - user：用户名
+    - group：用户分组
+  + 2.资源，例如pod、deployment
+  + 3.资源操作方法：get，list，create，update，patch，watch，delete
+  + 4.命名空间
+    - API组
+  + 5.主体: 具体的用户、群组
+    - user:CA证书签发时可以声明用户组
+    - group
+    - ServiceAccount: 服务账号，针对程序
+  + 6.角色: 职业，权限的分组
+    - Role: 授权特定命名空间的访问权限大概
+        - namespace
+        - API
+        - 动作
+        - 资源
+    - ClusterRole: 授权所有命名空间的访问权限
+  + 7.角色绑定: 
+    - RoleBinding: 将角色(role)绑定到主体（subject,可以是user、group、ServiceAccount）
+    - ClusterRoleBinding: 将集群角色绑定到主体
+    
+* 常见的绑定方式
+  + `${Role}`+`{RoleBinding}`: 角色只有单个`${namespace}`的权限
+  + `${ClusterRole}`+(`${RoleBinding}`*`${namespace}`): 角色可以有多个`${namespace}`的权限
+  + `${ClusterRole}`+`${ClusterRoleBinding}`:整个集群,不限`${namespace}`
+* 操作:搜索[CA认证及角色授权]
 
 ### Admission Cintrol(准入控制)
 
 ​	Adminssion Control实际上是一个准入控制器插件列表，发送到API Server的请求都需要经过这个列表中的每个准入控制器插件的检查，检查不通过，则拒绝请求
 
-↓
 
 ### pod svc controllers storage …
 
-↓
 
 ### ETCD CLUSTER
 
@@ -1269,16 +1266,18 @@ kubectl delete node <node_name>
 
 ### CA认证及角色授权
 
- 为指定用户授权不同命名空间权限
+为指定用户授权不同命名空间权限
 
-创建CA配置文件
+1. 创建/查找集群CA配置文件
+
+* 创建根证书ca-config.json,用来签发其他证书
 
 ```json
-cat > ca-config.json <<EOF
 {
   "signing": {
     "default": {
-      "expiry": "87600h"
+      "expiry": "87600h",
+      "usages": ""
     },
     "profiles": {
       "kubernetes": {
@@ -1293,15 +1292,36 @@ cat > ca-config.json <<EOF
     }
   }
 }
-EOF
 ```
 
-用户CA信息
+|字段|解释|
+|-|-|
+|signing|签名配置根对象,表示该证书可用于签名其它证书|
+|default|默认策略,会被profiles覆盖|
+|expiry|证书有效期|
+|usages|证书用途/扩展密钥用法|
+|profiles|定义多个命名策略，签发时通过-profile=<名称>选择使用哪个,参考上面的`kubernetes`|
+
+|usages字段可选|解释|
+|-|-|
+|signing|可用于签名其他证书|
+|digital signature|数字签名	通用用途，通常与key encipherment一起用|
+|key encipherment|密钥加密	RSA密钥交换，服务器证书必须|
+|key agreement|密钥协商	ECDH等协商算法|
+|server auth|服务端认证	作为TLS服务器证书（网站、API Server）|
+|client auth|客户端认证	作为TLS客户端证书（kubectl、kubelet）|
+|cert sign|签名证书	CA证书签发下级证书|
+|crl sign|签名CRL	证书吊销列表签名|
+|encipher only|仅加密	配合key agreement使用|
+|decipher only|仅解密	配合key agreement使用|
+
+* 用户CA信息(用前面根证书签发),
+
+创建`${user_name}-csr.json`
 
 ```json
-cat > user_name-csr.json <<EOF
 {
-  "CN": "user_name",
+  "CN": "${user_name}",
   "hosts": [],
   "key": {
     "algo": "rsa",
@@ -1317,55 +1337,67 @@ cat > user_name-csr.json <<EOF
     }
   ]
 }
-EOF
 ```
 
-生成用户CA证书
+|字段|解释|
+|-|-|
+|CN|用户名|
+|hosts|用户可访问的源地址,如果是用来生成根证书就别设置hosts|
+|names|用户组,k8s集群用不到,只是申明下持有者信息|
+|key|定义CA私钥的算法和长度|
+|key.algo|["rsa", "ecdsa", "ed25519"]，兼容性要求高用rsa，追求性能用ecdsa|
+|key.size|算法对应的密钥长度,RSA 2048是通用标准|
+
+
+2. 生成用户CA证书
 
 ```shell
-cfssl gencert -ca=/etc/kubernetes/pki/ca.crt -ca-key=/etc/kubernetes/pki/ca.key -config=ca-config.json -profile=kubernetes user_name-csr.json | cfssljson -bare user_name
+user_name="lxw"
+cfssl gencert -ca=/etc/kubernetes/pki/ca.crt -ca-key=/etc/kubernetes/pki/ca.key -config=ca-config.json -profile=kubernetes ${user_name}-csr.json | cfssljson -bare ${user_name}
 ```
 
-生成kubeconfig授权文件
+3. 生成kubeconfig授权文件
 
-cluser
+* cluster集群访问信息加入到生成kubeconfig授权文件
 
 ```shell
 kubectl config set-cluster kubernetes \
 --certificate-authority=/etc/kubernetes/pki/ca.crt \
 --embed-certs=true \
 --server=https://192.168.31.61:6443 \
---kubeconfig=user_name.kubeconfig
+--kubeconfig=${user_name}.kubeconfig
 ```
 
-client
+* client访问信息加入到
 
 ```shell
 kubectl config set-credentials user_name \
---client-key=user_name-key.pem \
---client-certificate=user_name.pem \
+--client-key=${user_name}-key.pem \
+--client-certificate=${user_name}.pem \
 --embed-certs=true \
---kubeconfig=user_name.kubeconfig
+--kubeconfig=${user_name}.kubeconfig
 ```
 
-上下文
+* 上下文设置(就是cluster和client关联起来)
 
 ```shell
 kubectl config set-context kubernetes \
 --cluster=kubernetes \
---user=user_name \
---kubeconfig=user_name.kubeconfig
+--user=${user_name} \
+--kubeconfig=${user_name}.kubeconfig
 ```
 
-设置使用配置
+* 设置使用配置
 
 ```shell
-kubectl config use-context kubernetes --kubeconfig=user_name.kubeconfig
+kubectl config use-context kubernetes --kubeconfig=${user_name}.kubeconfig
 ```
 
-创建RBAC权限策略
+*一个kubeconfig可以设置多个集群、多个client、多个context*
 
-​	创建一个角色
+4. 创建RBAC权限策略
+
+* 创建一个角色
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1378,11 +1410,11 @@ rules:
   resources: ["pods"]
   verbs: ["get", "watch", "list"]
 #apiGroups 可以指定 kubectl api-versions 中的内容 如：apps
-#resources 可以指定 kubectl api-resources 中的内容 如： deployments
+#resources 可以指定 kubectl api-resources 中的内容 如： deployments,或者还可以更细的子资源 pods/log
 #verbs 可以指定方法get、list、create、update、patch、watch、delete
 ```
 
-将角色和用户绑定
+* 将角色和用户绑定
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1392,18 +1424,18 @@ metadata:
   namespace: default
 subjects:
 - kind: User
-  name: user_name
+  name: ${user_name} # 证书里的,访问时会从证书提供过来验证
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
-  name: pod-reader
+  name: pod-reader # 前面定义的Role
   apiGroup: rbac.authorization.k8s.io
 ```
 
-使用
+* 使用
 
 ```shell
-kubectl get pod --kubeconfig=user_name.kubeconfig
+kubectl get pod --kubeconfig=${user_name}.kubeconfig
 ```
 
 ## 十四、kubectl

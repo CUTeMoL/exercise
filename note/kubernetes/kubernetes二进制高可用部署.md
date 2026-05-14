@@ -1673,7 +1673,7 @@ sc.exe create kube-proxy start= auto binPath= "\"C:\Program Files\Kubernetes\bin
 
 修改config.ps1
 ```powershell
-# 这个一定要改host-local
+#TODO: 兼容性有问题linux上用yaml部署的calico没有亲和性没法为windows分配IP,如果想先开起来这个要改host-local,但是这样虽然能分配IP但实际相当于单机运行,待确认怎么忽略这个问题
 Set-EnvVarIfNotSet -var "CNI_IPAM_TYPE" -defaultValue "host-local"
 ```
 
