@@ -41,16 +41,23 @@ helm repo add aliyun https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 helm repo list # 验证是否成功
-helm search repo aliyun # 搜索仓库
+
+CHART_NAME=nginx
+REPO_NAME=aliyun
+helm search hub ${CHART_NAME} # 搜索官方仓库Chart
+helm search repo ${REPO_NAME} # 搜索仓库
+helm search repo ${CHART_NAME} # 搜索Chart 
 ```
 
 ## 三、Helm 创建Chart
 
-1. 创建Chart模板
+1. 创建Chart
 
 ```shell
 helm create nginx # 创建Chart模板
-helm install bitnami/nginx -n default --generate-name # 从仓库安装Chart,并生成Release名称
+APP_NAME=Nginx-123456
+helm install ${APP_NAME} bitnami/nginx -n default # 从仓库安装Chart,并命名
+     --generate-name # 随机生成Release名称,不需要${APP_NAME}了
 ```
 
 2. 查看Chart列表
@@ -60,6 +67,7 @@ helm list -n default # 查看命名空间default下 Chart
 helm show values bitnami/nginx # 查看Chart的可修改参数
 helm show chart bitnami/nginx # 查看Chart的详细信息
 helm show all bitnami/nginx # 查看Chart的所有信息
+helm status nginx -n default # 查看Chart的状态
 ```
 3. 卸载Chart
 
@@ -67,4 +75,30 @@ helm show all bitnami/nginx # 查看Chart的所有信息
 helm uninstall nginx -n default --keep-history # 卸载Chart(注意名称)
   --keep-history 保留历史记录
 helm delete nginx -n default
+```
+
+4. 修改Chart参数
+
+(1) 通过文本修改
+
+1) 创建一个values.yaml文件
+
+```yaml
+services:
+  type: NodePort
+```
+
+2) 安装Chart
+```shell
+APP_NAME=Nginx-123456
+helm install -f values.yaml ${APP_NAME} bitnami/nginx -n default 
+```
+
+(2) 通过命令行修改
+
+```shell
+helm install nginx bitnami/nginx -n default \
+    --set services.type=NodePort \
+    --set image.tag=1.23.0 \
+    --set ingress.enabled=true \
 ```

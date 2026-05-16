@@ -36,7 +36,7 @@ def load_config(config_path: str = "configs/base.json") -> dict:
     sqlite_path = config["sqlite"]["path"]
     if not os.path.isabs(sqlite_path):
         config["sqlite"]["path"] = str(project_root / sqlite_path)
-    for key in ["cert_file", "key_file"]:
+    for key in ["cert_file", "key_file", "ca_cert_file"]:
         path = config["ssl"][key]
         if not os.path.isabs(path):
             config["ssl"][key] = str(project_root / path)
@@ -193,90 +193,53 @@ def verify_signature(
 
 
 # ═══════════════════════════════════════════════════════════════════
-# ASGI Middleware
+# Starlette HTTP Middleware
 # ═══════════════════════════════════════════════════════════════════
 
-class AkSkAuthMiddleware:
-    """ASGI middleware for AK/SK HMAC authentication."""
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+
+class AkSkAuthMiddleware(BaseHTTPMiddleware):
+    """Starlette HTTP middleware for AK/SK HMAC authentication."""
 
     def __init__(self, app, db_path: str, master_key: bytes, tolerance: int = 300):
-        self.app = app
+        super().__init__(app)
         self.db_path = db_path
         self.master_key = master_key
         self.tolerance = tolerance
 
-    async def __call__(self, scope, receive, send):
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-
-        path = scope.get("path", "/")
-        method = scope.get("method", "GET")
-
+    async def dispatch(self, request: Request, call_next):
         # Allow unauthenticated access to /health
-        if path.rstrip("/") == "/health":
-            await self.app(scope, receive, send)
-            return
+        if request.url.path.rstrip("/") == "/health":
+            return await call_next(request)
 
-        # Read full request body
-        body_chunks = []
-        more_body = True
-        while more_body:
-            message = await receive()
-            if message["type"] == "http.request":
-                body_chunks.append(message.get("body", b""))
-                more_body = message.get("more_body", False)
-            elif message["type"] == "http.disconnect":
-                return
-
-        body = b"".join(body_chunks)
+        # Read body once (Starlette handles this efficiently)
+        body = await request.body()
 
         # Extract auth headers
-        headers = {}
-        for k, v in scope.get("headers", []):
-            headers[k.decode().lower()] = v.decode()
-
-        ak = headers.get("x-ak", "")
-        timestamp = headers.get("x-timestamp", "")
-        signature = headers.get("x-signature", "")
+        ak = request.headers.get("X-AK", "")
+        timestamp = request.headers.get("X-Timestamp", "")
+        signature = request.headers.get("X-Signature", "")
 
         if not ak or not timestamp or not signature:
-            await self._send_401(send, "Missing authentication headers (X-AK, X-Timestamp, X-Signature)")
-            return
+            return JSONResponse(
+                {"error": "Missing authentication headers (X-AK, X-Timestamp, X-Signature)"},
+                status_code=401,
+            )
 
         # Verify signature
         conn = get_db_connection(self.db_path)
         try:
             valid, err_msg = verify_signature(
-                conn, self.master_key, ak, signature, timestamp, method, path, body, self.tolerance
+                conn, self.master_key, ak, signature, timestamp,
+                request.method, request.url.path, body, self.tolerance
             )
         finally:
             conn.close()
 
         if not valid:
-            await self._send_401(send, err_msg)
-            return
+            return JSONResponse({"error": err_msg}, status_code=401)
 
-        # Auth passed — replay body to downstream app
-        body_sent = False
-
-        async def replay_receive():
-            nonlocal body_sent
-            if not body_sent:
-                body_sent = True
-                return {"type": "http.request", "body": body, "more_body": False}
-            return {"type": "http.request", "body": b"", "more_body": False}
-
-        await self.app(scope, replay_receive, send)
-
-    async def _send_401(self, send, message: str):
-        body = json.dumps({"error": message}).encode()
-        await send({
-            "type": "http.response.start",
-            "status": 401,
-            "headers": [
-                (b"content-type", b"application/json"),
-                (b"content-length", str(len(body)).encode()),
-            ],
-        })
-        await send({"type": "http.response.body", "body": body})
+        return await call_next(request)

@@ -134,9 +134,9 @@ def main():
         uvicorn_kwargs["ssl_keyfile"] = ssl_config["key_file"]
 
     # Build the ASGI app with auth middleware wrapping FastMCP
-    raw_app = mcp.http_app()
-    app = AkSkAuthMiddleware(
-        raw_app,
+    app = mcp.http_app()
+    app.add_middleware(
+        AkSkAuthMiddleware,
         db_path=config["sqlite"]["path"],
         master_key=master_key,
         tolerance=config.get("auth", {}).get("timestamp_tolerance_seconds", 300),

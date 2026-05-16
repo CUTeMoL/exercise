@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
 """
-Example MCP client with AK/SK HMAC signing.
+Example MCP client with AK/SK HMAC signing and CA certificate verification.
 
 Demonstrates how to:
 1. Sign requests with AK/SK (HMAC-SHA256 over canonical request)
-2. Connect to the MCP server over HTTPS (with self-signed cert)
+2. Connect to the MCP server over HTTPS with CA trust chain verification
 3. Initialize an MCP session and call tools (get_top_memory_processes, get_top_cpu_processes)
 
 Usage:
-    python client_example.py --ak <access_key> --sk <secret_key> [--host localhost] [--port 8443]
+    python client_example.py --ak <access_key> --sk <secret_key> [--host <host>] [--port 8443] [--no-ssl]
 """
 import argparse
 import hashlib
 import hmac
 import json
+import os
 import ssl
 import time
 import urllib.request
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).parent
+DEFAULT_CA_CERT = str(PROJECT_ROOT / "certs" / "ca.crt")
 
 
 def sign_request(ak: str, sk: str, method: str, path: str, body: bytes) -> dict:
@@ -34,24 +40,63 @@ def sign_request(ak: str, sk: str, method: str, path: str, body: bytes) -> dict:
     }
 
 
-class McpClient:
-    """Minimal MCP Streamable HTTP client with AK/SK auth."""
+def create_ssl_context(ca_cert_file: str, check_hostname: bool = False) -> ssl.SSLContext:
+    """Create SSL context with CA certificate verification."""
+    ctx = ssl.create_default_context(cafile=ca_cert_file)
+    ctx.check_hostname = check_hostname
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    return ctx
 
-    def __init__(self, host: str, port: int, ak: str, sk: str):
-        self.base_url = f"https://{host}:{port}"
+
+def parse_sse(data: str) -> list[dict]:
+    """Parse SSE (Server-Sent Events) text into a list of event dicts."""
+    events = []
+    current = {}
+    for line in data.split("\n"):
+        if not line.strip():
+            if current:
+                events.append(current)
+                current = {}
+            continue
+        if line.startswith(":"):
+            continue
+        if ":" in line:
+            key, value = line.split(":", 1)
+            value = value.strip()
+            if key == "data":
+                current["data"] = current.get("data", "") + value
+            else:
+                current[key] = value
+    if current:
+        events.append(current)
+    return events
+
+
+class McpClient:
+    """Minimal MCP Streamable HTTP client with AK/SK auth and CA verification."""
+
+    def __init__(self, host: str, port: int, ak: str, sk: str, use_ssl: bool = True,
+                 ca_cert_file: str = DEFAULT_CA_CERT):
+        scheme = "https" if use_ssl else "http"
+        self.base_url = f"{scheme}://{host}:{port}"
         self.ak = ak
         self.sk = sk
         self.session_id = None
-        self.ctx = ssl.create_default_context()
-        self.ctx.check_hostname = False
-        self.ctx.verify_mode = ssl.CERT_NONE
+        self.use_ssl = use_ssl
+        if use_ssl:
+            if not os.path.exists(ca_cert_file):
+                raise FileNotFoundError(
+                    f"CA certificate not found: {ca_cert_file}\n"
+                    f"Generate it with: openssl req -x509 -newkey rsa:4096 ..."
+                )
+            self.ctx = create_ssl_context(ca_cert_file)
+        else:
+            self.ctx = None
 
-    def _request(self, method: str, path: str, body: dict, extra_headers: dict = None) -> dict:
-        """Send a signed request and return parsed JSON response."""
+    def _request(self, method: str, path: str, body: dict) -> dict:
+        """Send a signed MCP request and return parsed JSON-RPC result."""
         body_bytes = json.dumps(body).encode()
         headers = sign_request(self.ak, self.sk, method, path, body_bytes)
-        if extra_headers:
-            headers.update(extra_headers)
         if self.session_id:
             headers["Mcp-Session-Id"] = self.session_id
 
@@ -61,16 +106,29 @@ class McpClient:
             headers=headers,
             method=method,
         )
-        with urllib.request.urlopen(req, context=self.ctx) as resp:
-            # Capture session ID from response headers
+        with urllib.request.urlopen(req, context=self.ctx, timeout=30) as resp:
             sid = resp.headers.get("Mcp-Session-Id")
             if sid:
                 self.session_id = sid
-            return json.loads(resp.read().decode())
+
+            content_type = resp.headers.get("Content-Type", "")
+            raw = resp.read().decode()
+
+            if "text/event-stream" in content_type:
+                events = parse_sse(raw)
+                for event in events:
+                    if "data" in event:
+                        try:
+                            return json.loads(event["data"])
+                        except json.JSONDecodeError:
+                            continue
+                return {}
+            else:
+                return json.loads(raw)
 
     def initialize(self) -> dict:
         """Initialize MCP session."""
-        result = self._request("POST", "/mcp", {
+        return self._request("POST", "/mcp", {
             "jsonrpc": "2.0",
             "method": "initialize",
             "params": {
@@ -80,17 +138,15 @@ class McpClient:
             },
             "id": 1,
         })
-        return result
 
     def call_tool(self, tool_name: str, arguments: dict) -> dict:
         """Call an MCP tool."""
-        result = self._request("POST", "/mcp", {
+        return self._request("POST", "/mcp", {
             "jsonrpc": "2.0",
             "method": "tools/call",
             "params": {"name": tool_name, "arguments": arguments},
             "id": 2,
         })
-        return result
 
 
 def print_mcp_result(result: dict, tool_name: str):
@@ -135,25 +191,32 @@ def main():
     parser.add_argument("--port", type=int, default=8443)
     parser.add_argument("--ak", required=True, help="Access Key")
     parser.add_argument("--sk", required=True, help="Secret Key")
+    parser.add_argument("--no-ssl", action="store_true", help="Use HTTP instead of HTTPS")
+    parser.add_argument("--ca-cert", default=DEFAULT_CA_CERT,
+                        help=f"Path to CA certificate for verification (default: {DEFAULT_CA_CERT})")
     args = parser.parse_args()
 
-    client = McpClient(args.host, args.port, args.ak, args.sk)
+    use_ssl = not args.no_ssl
+    ca_cert = args.ca_cert
 
-    # Step 1: Health check (no auth needed)
+    # Step 1: Health check
     print("=== Health Check ===")
-    url = f"https://{args.host}:{args.port}/health"
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    scheme = "https" if use_ssl else "http"
+    url = f"{scheme}://{args.host}:{args.port}/health"
+    ctx = create_ssl_context(ca_cert) if use_ssl else None
     req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, context=ctx) as resp:
+    with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:
         print(f"  {resp.read().decode()}")
 
-    # Step 2: Initialize MCP session
+    # Step 2: Create client and initialize
+    client = McpClient(args.host, args.port, args.ak, args.sk,
+                       use_ssl=use_ssl, ca_cert_file=ca_cert)
+
     print("\n=== Initialize MCP Session ===")
     init_result = client.initialize()
+    server_info = init_result.get("result", {}).get("serverInfo", {})
     print(f"  Session ID: {client.session_id}")
-    print(f"  Server: {init_result.get('result', {}).get('serverInfo', {})}")
+    print(f"  Server: {server_info.get('name', 'unknown')} v{server_info.get('version', '?')}")
 
     # Step 3: Top memory processes
     print("\n=== Top 5 Memory Processes ===")
