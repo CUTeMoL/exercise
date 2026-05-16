@@ -1,0 +1,4 @@
+fastmcp>=3.0.0
+psutil>=6.0.0
+uvicorn[standard]>=0.30.0
+cryptography>=41.0.0

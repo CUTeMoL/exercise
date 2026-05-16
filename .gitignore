@@ -1,0 +1,5 @@
+py/mcp/.claude/
+py/mcp/__pycache__/
+py/mcp/certs/
+py/mcp/data/
+py/mcp/venv
