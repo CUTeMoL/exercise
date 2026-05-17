@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-FastMCP Server: Process monitoring with AK/SK authentication and HTTPS.
+FastMCP 服务器：进程监控 + AK/SK 认证 + HTTPS 加密。
 
-Provides MCP tools to query server process status:
-- get_top_memory_processes: Top N processes by memory (RSS in bytes)
-- get_top_cpu_processes: Top N processes by CPU percentage (per-core)
+提供 MCP 工具:
+- get_top_memory_processes: 进程内存占用排行（RSS，单位 B）
+- get_top_cpu_processes: 进程 CPU 占用排行（每核 100%，多核可超 100%）
 
-Starts with HTTPS (TLS) and AK/SK HMAC signature authentication.
+启动时启用 HTTPS (TLS) 和 AK/SK HMAC 签名认证。
 """
 import logging
 import os
@@ -26,41 +26,48 @@ from auth import (
     load_config,
 )
 
+# 配置日志格式：时间 [级别] 模块: 消息
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 logger = logging.getLogger(__name__)
 
-# ── Load Configuration ──────────────────────────────────────────────
+# ── 加载配置 ──────────────────────────────────────────────────────────
 config = load_config()
 master_key = get_master_key(config)
 
-# ── Initialize Database ─────────────────────────────────────────────
+# ── 初始化数据库 ──────────────────────────────────────────────────────
 os.makedirs(os.path.dirname(config["sqlite"]["path"]), exist_ok=True)
 conn = get_db_connection(config["sqlite"]["path"])
 init_db(conn)
 conn.close()
-logger.info(f"Database initialized at {config['sqlite']['path']}")
+logger.info(f"数据库已初始化: {config['sqlite']['path']}")
 
-# ── FastMCP Server ──────────────────────────────────────────────────
+# ── FastMCP 服务器 ────────────────────────────────────────────────────
 mcp = FastMCP(name="Process Monitor", version="1.0.0")
 
 
-# ── Custom Routes (no auth required) ────────────────────────────────
+# ── 自定义路由（无需认证）─────────────────────────────────────────────
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request: Request) -> JSONResponse:
+    """健康检查端点，无需 AK/SK 认证。"""
     return JSONResponse({"status": "ok", "service": "mcp-process-monitor"})
 
 
-# ── MCP Tools ───────────────────────────────────────────────────────
+# ── MCP 工具 ──────────────────────────────────────────────────────────
 
 @mcp.tool()
 def get_top_memory_processes(limit: int = 10) -> list[dict]:
     """
-    Get the top N processes by memory usage (RSS in bytes).
+    查询内存占用最高的 N 个进程（RSS，单位 B）。
 
-    Args:
-        limit: Number of processes to return (default: 10).
+    参数:
+        limit: 返回的进程数量（默认 10）。
 
-    Returns:
-        List of dicts with keys: pid, name, memory_bytes, sorted descending by memory.
+    返回:
+        字典列表，每项包含 pid, name, memory_bytes，按内存降序排列。
     """
     processes = []
     for proc in psutil.process_iter(attrs=["pid", "name", "memory_info"]):
@@ -82,35 +89,40 @@ def get_top_memory_processes(limit: int = 10) -> list[dict]:
 @mcp.tool()
 def get_top_cpu_processes(limit: int = 10, interval: float = 0.1) -> list[dict]:
     """
-    Get the top N processes by CPU usage percentage.
+    查询 CPU 占用最高的 N 个进程（每核 100%，多核可超 100%）。
 
-    CPU percent is per-core: each core contributes up to 100%.
-    A process using two full cores will show ~200%.
+    本函数是同步的，但 FastMCP 会自动将其放入线程池执行，
+    因此 time.sleep() 不会阻塞异步事件循环。
 
-    Args:
-        limit: Number of processes to return (default: 10).
-        interval: Sampling interval in seconds (default: 0.1).
+    采用 psutil 推荐的批量测量方式:
+      1. 对所有进程调用 cpu_percent()（返回 0.0，初始化内部计数器）
+      2. 统一等待一个采样周期
+      3. 再次对所有进程调用 cpu_percent()（返回真实值）
 
-    Returns:
-        List of dicts with keys: pid, name, cpu_percent, sorted descending by CPU.
+    参数:
+        limit: 返回的进程数量（默认 10）。
+        interval: 采样间隔，单位秒（默认 0.1）。
+
+    返回:
+        字典列表，每项包含 pid, name, cpu_percent，按 CPU 降序排列。
     """
-    # Phase 1: collect processes and initialize CPU counters
+    # 第一步：收集进程并初始化 CPU 计数器
     proc_objs = []
     for proc in psutil.process_iter(attrs=["pid", "name"]):
         try:
-            proc.cpu_percent()  # First call always returns 0.0, initializes counter
+            proc.cpu_percent()  # 首次调用初始化内部计数器，返回 0.0
             proc_objs.append(proc)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
 
-    # Phase 2: wait for the sampling interval
+    # 第二步：等待一个采样周期
     time.sleep(interval)
 
-    # Phase 3: read actual CPU percentages
+    # 第三步：读取真实的 CPU 百分比
     results = []
     for proc in proc_objs:
         try:
-            cpu = proc.cpu_percent()
+            cpu = proc.cpu_percent()  # 第二次调用返回距上次调用的差值
             results.append({
                 "pid": proc.info["pid"],
                 "name": proc.info["name"],
@@ -123,31 +135,33 @@ def get_top_cpu_processes(limit: int = 10, interval: float = 0.1) -> list[dict]:
     return results[:limit]
 
 
-# ── Entry Point ─────────────────────────────────────────────────────
+# ── 入口 ──────────────────────────────────────────────────────────────
 def main():
+    """启动 MCP 服务器（HTTPS + AK/SK 认证）。"""
     ssl_config = config.get("ssl", {})
 
-    # Build SSL kwargs for uvicorn
+    # 构建 SSL 参数
     uvicorn_kwargs = {}
     if ssl_config.get("cert_file") and ssl_config.get("key_file"):
         uvicorn_kwargs["ssl_certfile"] = ssl_config["cert_file"]
         uvicorn_kwargs["ssl_keyfile"] = ssl_config["key_file"]
 
-    # Build the ASGI app with auth middleware wrapping FastMCP
+    # 构建 ASGI 应用，挂载认证中间件
     app = mcp.http_app()
     app.add_middleware(
         AkSkAuthMiddleware,
         db_path=config["sqlite"]["path"],
         master_key=master_key,
         tolerance=config.get("auth", {}).get("timestamp_tolerance_seconds", 300),
+        max_body_size=config.get("auth", {}).get("max_body_size", 1_048_576),
     )
 
     host = config["server"]["host"]
     port = config["server"]["port"]
 
     logger.info(
-        f"Starting MCP server on https://{host}:{port} "
-        f"(SSL: {'enabled' if uvicorn_kwargs else 'disabled'})"
+        f"正在启动 MCP 服务器: https://{host}:{port} "
+        f"(SSL: {'已启用' if uvicorn_kwargs else '未启用'})"
     )
 
     uvicorn.run(app, host=host, port=port, **uvicorn_kwargs, log_level="info")
