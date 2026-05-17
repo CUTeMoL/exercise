@@ -1,0 +1,52 @@
+[project]
+name = "mcp-process-monitor"
+version = "1.0.0"
+description = "MCP 远程进程监控服务器，支持 AK/SK 签名认证和 HTTPS 加密"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "CUTeMoL" },
+]
+dependencies = [
+    "fastmcp>=3.3",
+    "psutil>=6.0",
+    "cryptography>=41.0",
+    "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+# 零依赖版 remote_proxy.py 不需要安装任何额外包
+# SDK 版 remote_proxy_requirements.py 需要:
+proxy-sdk = [
+    "mcp>=1.27",
+    "httpx>=0.28",
+]
+
+[project.scripts]
+mcp-server = "server:main"
+mcp-manage-keys = "manage_keys:main"
+mcp-client = "client_example:main"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11",
+    "pyright>=1.1.400",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.10"
+
+[tool.uv]
+# 开发环境使用 venv，生产环境可以用 uv sync --no-dev
+default-groups = ["dev"]

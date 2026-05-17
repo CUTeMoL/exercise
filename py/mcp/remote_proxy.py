@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-MCP 远程代理：将本地 stdio 协议转发到远程 HTTPS MCP 服务器。
+MCP 远程代理（零依赖版）：本地 stdio ↔ 远程 HTTPS MCP 服务器。
 
-用于 Claude Code / VS Code / Cursor 等 MCP 客户端连接远程服务器。
-运行在 Windows 客户端上，通过 AK/SK 签名认证连接远程 Linux 服务器。
+纯 Python 标准库实现，无需 pip install。
+Windows 客户端只需安装 Python 3.10+ 即可使用。
 
 用法（在 Claude Code 的 mcp.json 中配置）:
 {
@@ -21,8 +21,6 @@ MCP 远程代理：将本地 stdio 协议转发到远程 HTTPS MCP 服务器。
     }
   }
 }
-
-Windows 客户端依赖: pip install mcp httpx
 """
 
 import argparse
@@ -30,15 +28,10 @@ import hashlib
 import hmac
 import json
 import os
+import ssl
 import sys
 import time
-from itertools import count
-
-import httpx
-from mcp.server import Server
-from mcp.server.models import InitializationOptions
-from mcp.server.stdio import stdio_server
-from mcp.types import ServerCapabilities, Tool, ToolsCapability
+import urllib.request
 
 
 # ── AK/SK 签名（与服务器端 auth.py 的 compute_signature 一致）────────
@@ -58,120 +51,265 @@ def sign(method: str, path: str, body: bytes, ak: str, sk: str) -> dict:
     }
 
 
-# ── 远程 MCP 客户端（持久连接）─────────────────────────────────────
+# ── 远程 HTTP 请求（urllib，无第三方依赖）───────────────────────────
 
-class RemoteMcpClient:
-    """使用 httpx 异步客户端与远程 MCP 服务器通信，保持持久连接池。"""
+def create_ssl_context(ca_cert_path: str | None) -> ssl.SSLContext:
+    """创建 SSL 上下文。ca_cert_path 为 None 时跳过证书验证。"""
+    if ca_cert_path:
+        return ssl.create_default_context(cafile=ca_cert_path)
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
 
-    def __init__(self, base_url: str, ak: str, sk: str, verify: str | bool = False):
-        self.base_url = base_url
-        self.ak = ak
-        self.sk = sk
-        self.session_id: str | None = None
-        self._msg_id = count(1)
-        self._client = httpx.AsyncClient(
-            verify=verify,
-            timeout=httpx.Timeout(30.0),
-            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
-        )
 
-    async def close(self):
-        await self._client.aclose()
+def parse_sse(raw: str) -> dict | None:
+    """解析 SSE (Server-Sent Events) 响应的第一个 JSON 消息。"""
+    for line in raw.split("\n"):
+        if line.startswith("data:"):
+            try:
+                return json.loads(line[5:].strip())
+            except json.JSONDecodeError:
+                continue
+    return None
 
-    # ── 底层 HTTP 请求 ──────────────────────────────────────────
 
-    async def _request(self, method: str, path: str, body: dict | None,
-                       expect_response: bool = True) -> dict:
-        """发送签名后的 MCP JSON-RPC 请求，返回解析结果。"""
-        body_bytes = json.dumps(body).encode() if body else b"{}"
-        headers = sign(method, path, body_bytes, self.ak, self.sk)
-        if self.session_id:
-            headers["Mcp-Session-Id"] = self.session_id
+def remote_request(base_url: str, body: dict, ak: str, sk: str,
+                   session_id: str | None, ssl_ctx: ssl.SSLContext,
+                   expect_response: bool = True) -> tuple[dict | None, str | None]:
+    """发送签名后的 MCP JSON-RPC 请求到远程服务器。
 
-        resp = await self._client.request(
-            method, f"{self.base_url}{path}",
-            content=body_bytes, headers=headers,
-        )
+    返回 (响应体, 新的 session_id)。
+    """
+    body_bytes = json.dumps(body).encode()
+    headers = sign("POST", "/mcp", body_bytes, ak, sk)
+    if session_id:
+        headers["Mcp-Session-Id"] = session_id
 
-        # 提取 Session ID
-        sid = resp.headers.get("mcp-session-id")
-        if sid:
-            self.session_id = sid
+    req = urllib.request.Request(
+        f"{base_url}/mcp",
+        data=body_bytes,
+        headers=headers,
+        method="POST",
+    )
 
-        if not expect_response:
-            return {}
+    resp = urllib.request.urlopen(req, context=ssl_ctx)
+    new_session_id = resp.headers.get("Mcp-Session-Id")
 
-        content_type = resp.headers.get("content-type", "")
-        if "text/event-stream" in content_type:
-            messages = self._parse_sse(resp.text)
-            return messages[0] if messages else {}
-        return resp.json()
+    if not expect_response:
+        resp.read()  # 消费响应体
+        return None, new_session_id
 
-    @staticmethod
-    def _parse_sse(raw: str) -> list[dict]:
-        """解析 SSE (Server-Sent Events) 响应中的 JSON 消息。"""
-        messages = []
-        for line in raw.split("\n"):
-            if line.startswith("data:"):
+    raw = resp.read().decode()
+    content_type = resp.headers.get("Content-Type", "")
+
+    if "text/event-stream" in content_type:
+        return parse_sse(raw), new_session_id
+    return json.loads(raw), new_session_id
+
+
+def mcp_initialize(base_url: str, ak: str, sk: str,
+                   ssl_ctx: ssl.SSLContext) -> tuple[str, dict]:
+    """初始化 MCP 会话。返回 (session_id, server_info)。"""
+    msg_id = 1
+
+    # 1. 发送 initialize 请求
+    result, sid = remote_request(base_url, {
+        "jsonrpc": "2.0",
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "mcp-remote-proxy", "version": "1.0.0"},
+        },
+        "id": msg_id,
+    }, ak, sk, None, ssl_ctx)
+
+    session_id = sid or ""
+    server_info = result.get("result", {}).get("serverInfo", {}) if result else {}
+
+    # 2. 发送 initialized 通知（MCP 协议要求）
+    remote_request(base_url, {
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized",
+        "params": {},
+    }, ak, sk, session_id, ssl_ctx, expect_response=False)
+
+    return session_id, server_info
+
+
+def mcp_list_tools(base_url: str, ak: str, sk: str,
+                   session_id: str, ssl_ctx: ssl.SSLContext) -> list[dict]:
+    """获取远程工具列表。"""
+    result, _ = remote_request(base_url, {
+        "jsonrpc": "2.0",
+        "method": "tools/list",
+        "params": {},
+        "id": 2,
+    }, ak, sk, session_id, ssl_ctx)
+    return result.get("result", {}).get("tools", []) if result else []
+
+
+def mcp_call_tool(base_url: str, ak: str, sk: str, session_id: str,
+                  tool_name: str, arguments: dict,
+                  ssl_ctx: ssl.SSLContext) -> list[dict]:
+    """调用远程工具。"""
+    result, _ = remote_request(base_url, {
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {"name": tool_name, "arguments": arguments},
+        "id": 3,
+    }, ak, sk, session_id, ssl_ctx)
+    return result.get("result", {}).get("content", []) if result else []
+
+
+# ── 本地 stdio MCP 服务（纯标准库，无第三方依赖）────────────────────
+
+def stdio_loop(base_url: str, ak: str, sk: str, ca_cert: str | None):
+    """主循环：从 stdin 读取 JSON-RPC，处理后写入 stdout。"""
+    ssl_ctx = create_ssl_context(ca_cert)
+
+    # 连接远程服务器
+    session_id, server_info = mcp_initialize(base_url, ak, sk, ssl_ctx)
+    print(f"[INFO] 已连接到 {server_info.get('name', '未知')} "
+          f"v{server_info.get('version', '?')}，会话: {session_id[:16]}...",
+          file=sys.stderr)
+
+    # 拉取远端工具列表
+    remote_tools = mcp_list_tools(base_url, ak, sk, session_id, ssl_ctx)
+    if not remote_tools:
+        print("[WARN] 未获取到远端工具，尝试重连", file=sys.stderr)
+        try:
+            session_id, _ = mcp_initialize(base_url, ak, sk, ssl_ctx)
+            remote_tools = mcp_list_tools(base_url, ak, sk, session_id, ssl_ctx)
+        except Exception as e:
+            print(f"[ERROR] 重连后仍无法获取工具列表: {e}", file=sys.stderr)
+    print(f"[INFO] 发现 {len(remote_tools)} 个远端工具", file=sys.stderr)
+    for t in remote_tools:
+        print(f"[INFO]   - {t['name']}", file=sys.stderr)
+
+    # ── 处理 stdio JSON-RPC 请求 ─────────────────────────────────
+
+    def build_tools_list():
+        return [
+            {
+                "name": t["name"],
+                "description": t.get("description", ""),
+                "inputSchema": t.get("inputSchema", {"type": "object", "properties": {}}),
+            }
+            for t in remote_tools
+        ]
+
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+
+        try:
+            request = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        req_id = request.get("id")
+        method = request.get("method", "")
+        params = request.get("params", {})
+
+        if method == "initialize":
+            # 返回本地代理的能力声明
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {
+                        "name": "remote-monitor-proxy",
+                        "version": "1.0.0",
+                    },
+                },
+            }
+            write_response(resp)
+
+        elif method == "notifications/initialized":
+            pass  # 通知无需响应
+
+        elif method == "tools/list":
+            # 重新拉取远端工具列表（含会话恢复）
+            try:
+                remote_tools = mcp_list_tools(base_url, ak, sk, session_id, ssl_ctx)
+                if not remote_tools:
+                    raise RuntimeError("empty tool list")
+            except Exception as e:
+                print(f"[WARN] 获取工具列表失败，尝试重连: {e}", file=sys.stderr)
                 try:
-                    messages.append(json.loads(line[5:].strip()))
-                except json.JSONDecodeError:
-                    continue
-        return messages
+                    session_id, _ = mcp_initialize(base_url, ak, sk, ssl_ctx)
+                    remote_tools = mcp_list_tools(base_url, ak, sk, session_id, ssl_ctx)
+                except Exception as e2:
+                    print(f"[ERROR] 重连后仍无法获取工具列表: {e2}", file=sys.stderr)
+                    remote_tools = []
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {"tools": build_tools_list()},
+            }
+            write_response(resp)
 
-    # ── MCP 协议操作 ────────────────────────────────────────────
+        elif method == "tools/call":
+            tool_name = params.get("name", "")
+            arguments = params.get("arguments", {})
+            print(f"[INFO] 转发工具调用: {tool_name}({json.dumps(arguments)})",
+                  file=sys.stderr)
 
-    async def initialize(self) -> dict:
-        """初始化 MCP 会话并发送 initialized 通知。"""
-        result = await self._request("POST", "/mcp", {
-            "jsonrpc": "2.0",
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "mcp-remote-proxy", "version": "1.0.0"},
-            },
-            "id": next(self._msg_id),
-        })
+            try:
+                content = mcp_call_tool(
+                    base_url, ak, sk, session_id,
+                    tool_name, arguments, ssl_ctx,
+                )
+            except Exception as e:
+                print(f"[WARN] 远端调用失败，尝试重连: {e}", file=sys.stderr)
+                try:
+                    session_id, _ = mcp_initialize(base_url, ak, sk, ssl_ctx)
+                    content = mcp_call_tool(
+                        base_url, ak, sk, session_id,
+                        tool_name, arguments, ssl_ctx,
+                    )
+                except Exception as e2:
+                    content = [{"type": "text",
+                                "text": f"远程调用失败: {e2}"}]
 
-        # MCP 协议要求: initialize 响应后必须发送 notifications/initialized
-        await self._request("POST", "/mcp", {
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-            "params": {},
-        }, expect_response=False)
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {"content": content},
+            }
+            write_response(resp)
 
-        server_info = result.get("result", {}).get("serverInfo", {})
-        print(f"[INFO] 已连接到 {server_info.get('name', '未知')} "
-              f"v{server_info.get('version', '?')}，会话: {self.session_id}",
-              file=sys.stderr)
-        return result
+        elif method == "notifications/cancelled":
+            pass  # 忽略取消通知
 
-    async def list_tools(self) -> list[dict]:
-        """获取远程服务器的工具列表。"""
-        result = await self._request("POST", "/mcp", {
-            "jsonrpc": "2.0",
-            "method": "tools/list",
-            "params": {},
-            "id": next(self._msg_id),
-        })
-        return result.get("result", {}).get("tools", [])
-
-    async def call_tool(self, name: str, arguments: dict) -> list[dict]:
-        """调用远程工具并返回 content 列表。"""
-        result = await self._request("POST", "/mcp", {
-            "jsonrpc": "2.0",
-            "method": "tools/call",
-            "params": {"name": name, "arguments": arguments},
-            "id": next(self._msg_id),
-        })
-        return result.get("result", {}).get("content", [])
+        else:
+            # 未知方法
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method}",
+                },
+            }
+            write_response(resp)
 
 
-# ── 主逻辑 ───────────────────────────────────────────────────────
+def write_response(resp: dict):
+    """将 JSON-RPC 响应写入 stdout。"""
+    sys.stdout.write(json.dumps(resp, ensure_ascii=False) + "\n")
+    sys.stdout.flush()
 
-async def run():
-    parser = argparse.ArgumentParser(description="MCP 远程代理")
+
+# ── 入口 ───────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(description="MCP 远程代理（零依赖版）")
     parser.add_argument("--host", default="localhost", help="远程服务器地址")
     parser.add_argument("--port", type=int, default=8443, help="远程服务器端口")
     parser.add_argument("--ak", required=True, help="Access Key")
@@ -179,73 +317,13 @@ async def run():
     parser.add_argument("--ca-cert", default="", help="CA 证书路径（为空则跳过验证）")
     args = parser.parse_args()
 
-    server_url = f"https://{args.host}:{args.port}"
+    base_url = f"https://{args.host}:{args.port}"
 
-    # SSL 验证配置
-    verify: str | bool = False
-    if args.ca_cert:
-        if os.path.exists(args.ca_cert):
-            verify = args.ca_cert
-        else:
-            print(f"[WARN] CA 证书未找到: {args.ca_cert}，将跳过 SSL 验证", file=sys.stderr)
+    ca_cert = args.ca_cert if args.ca_cert and os.path.exists(args.ca_cert) else None
+    if args.ca_cert and not ca_cert:
+        print(f"[WARN] CA 证书未找到: {args.ca_cert}，将跳过 SSL 验证", file=sys.stderr)
 
-    # 建立持久远程连接
-    remote = RemoteMcpClient(server_url, args.ak, args.sk, verify)
-
-    try:
-        # 初始化 MCP 会话并拉取工具列表
-        await remote.initialize()
-        remote_tools = await remote.list_tools()
-        print(f"[INFO] 发现 {len(remote_tools)} 个远端工具", file=sys.stderr)
-        for t in remote_tools:
-            print(f"[INFO]   - {t['name']}: {t.get('description', '')}", file=sys.stderr)
-
-        # 创建本地 MCP 服务端（stdio）
-        local_server = Server("remote-monitor-proxy")
-
-        @local_server.list_tools()
-        async def handle_list_tools():
-            return [
-                Tool(
-                    name=t["name"],
-                    description=t.get("description", ""),
-                    inputSchema=t.get("inputSchema", {"type": "object", "properties": {}}),
-                )
-                for t in remote_tools
-            ]
-
-        @local_server.call_tool()
-        async def handle_call_tool(name: str, arguments: dict):
-            print(f"[INFO] 转发工具调用: {name}({json.dumps(arguments)})", file=sys.stderr)
-            try:
-                return await remote.call_tool(name, arguments)
-            except Exception as e:
-                print(f"[WARN] 远端调用失败，尝试重连: {e}", file=sys.stderr)
-                try:
-                    await remote.initialize()
-                    return await remote.call_tool(name, arguments)
-                except Exception as e2:
-                    return [{"type": "text", "text": f"远程调用失败: {e2}"}]
-
-        # 启动本地 stdio 服务
-        async with stdio_server() as (read_stream, write_stream):
-            await local_server.run(
-                read_stream,
-                write_stream,
-                InitializationOptions(
-                    server_name="remote-monitor-proxy",
-                    server_version="1.0.0",
-                    capabilities=ServerCapabilities(tools=ToolsCapability()),
-                ),
-            )
-
-    finally:
-        await remote.close()
-
-
-def main():
-    import asyncio
-    asyncio.run(run())
+    stdio_loop(base_url, args.ak, args.sk, ca_cert)
 
 
 if __name__ == "__main__":

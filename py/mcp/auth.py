@@ -18,6 +18,9 @@ import time
 from pathlib import Path
 
 from cryptography.fernet import Fernet
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -204,11 +207,6 @@ def verify_signature(
 # ═══════════════════════════════════════════════════════════════════
 # Starlette HTTP 中间件
 # ═══════════════════════════════════════════════════════════════════
-
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-
 
 # 默认请求体大小限制: 1 MB
 DEFAULT_MAX_BODY_SIZE = 1_048_576

@@ -1,34 +1,36 @@
 # MCP Process Monitor Server
 
-基于 Python FastMCP 的远程服务器进程监控工具，支持 HTTPS 加密传输和 AK/SK 签名认证。
+基于 Python FastMCP 的远程服务器进程监控工具，支持 HTTPS 加密和 AK/SK 签名认证。可通过 MCP 代理接入 Claude Code / VS Code / Cursor。
 
 ## 功能特性
 
-- **进程内存排行**: 查询 Top N 进程的内存占用（RSS，单位 B），含 PID、进程名
-- **进程 CPU 排行**: 查询 Top N 进程的 CPU 占用（每核 100%，多核可超过 100%），含 PID、进程名
-- **HTTPS 传输加密**: 基于 CA 签名的 TLS 证书链，客户端验证服务端证书
-- **AK/SK 认证**: HMAC-SHA256 签名（类 AWS SigV4），防重放攻击，SK 加密存储于 SQLite
-- **远程访问**: 支持 HTTP/HTTPS Streamable 传输，可跨网络调用
+- **进程内存排行**: Top N 进程内存占用（RSS）
+- **进程 CPU 排行**: Top N 进程 CPU 占用（多核可超 100%）
+- **HTTPS 传输加密**: 基于 CA 签名的 TLS 证书链
+- **AK/SK 认证**: HMAC-SHA256 签名，防重放攻击，SK 加密存储于 SQLite
+- **远程代理**: 零依赖代理脚本，Windows 客户端无需 `pip install` 即可接入
 
 ## 项目结构
 
 ```
 py/mcp/
-  server.py            # 主服务器入口
-  auth.py              # 认证模块（AK/SK 签名、SQLite 存储、Starlette 中间件）
-  manage_keys.py       # AK/SK 密钥管理 CLI
-  client_example.py    # 客户端调用示例
+  server.py                        # 主服务器入口
+  auth.py                          # 认证模块（签名、SQLite、Starlette 中间件）
+  manage_keys.py                   # AK/SK 密钥管理 CLI
+  client_example.py                # 客户端调用示例（MCP JSON-RPC）
+  remote_proxy.py                  # 远程代理（零依赖版，推荐 Windows 使用）
+  remote_proxy_requirements.py     # 远程代理（SDK 版，httpx 连接池）
   configs/
-    base.json          # 配置文件
+    base.json                      # 配置文件
   certs/
-    ca.crt             # CA 根证书（客户端信任）
-    ca.key             # CA 私钥（仅用于签发证书，勿分发）
-    server.crt         # 服务器证书（CA 签发）
-    server.key         # 服务器私钥
+    ca.crt                         # CA 根证书（客户端需持有）
+    ca.key                         # CA 私钥（仅签发用，勿分发）
+    server.crt                     # 服务器证书
+    server.key                     # 服务器私钥
   data/
-    aksk.db            # SQLite 数据库（自动创建）
-  requirements.txt     # Python 依赖
-  venv/                # 虚拟环境
+    aksk.db                        # SQLite 数据库（自动创建）
+  pyproject.toml                   # uv 项目配置
+  requirements.txt                 # pip 兼容的依赖列表
 ```
 
 ## 快速开始
@@ -37,12 +39,19 @@ py/mcp/
 
 ```bash
 cd /code/CUTeMoL/exercise/py/mcp
+
+# 方式一：uv（推荐）
+uv sync
+
+# 方式二：pip + venv
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. 生成证书（如已存在可跳过）
+### 2. 生成证书
+
+如已有证书可跳过。将 `<你的服务器IP>` 替换为实际 IP。
 
 ```bash
 # 生成 CA 根证书
@@ -51,7 +60,7 @@ openssl req -x509 -new -nodes -key certs/ca.key -sha256 -days 3650 \
   -out certs/ca.crt \
   -subj "/C=CN/ST=Beijing/L=Beijing/O=MCP-CA/CN=MCP-Root-CA"
 
-# 创建服务器证书配置（替换 IP 为你的实际 IP）
+# 服务器证书配置
 cat > /tmp/server.cnf << EOF
 [req]
 default_bits = 2048
@@ -107,7 +116,7 @@ python manage_keys.py verify --ak <ak> --sk <sk> # 验证签名（自测用）
 ### 4. 启动服务端
 
 ```bash
-python server.py
+uv run python server.py
 # 监听 https://0.0.0.0:8443
 ```
 
@@ -129,15 +138,82 @@ python server.py
 }
 ```
 
-### 5. 调用 MCP 工具
+## 远程代理（Claude Code 接入）
 
-```bash
-# 本地调用
-python client_example.py --ak <ak> --sk <sk>
+这是本项目的核心功能——在 Windows/Mac 客户端的 Claude Code 中直接调用远程 Linux 服务器的 MCP 工具。
 
-# 远程调用（将 CA 证书 ca.crt 拷贝到客户端机器）
-python client_example.py --host <服务器IP> --ak <ak> --sk <sk> --ca-cert /path/to/ca.crt
+### 架构
+
 ```
+Windows Claude Code
+    │ stdio JSON-RPC
+    ▼
+remote_proxy.py           ← 零依赖，装 Python 即可
+    │ HTTPS + AK/SK 签名
+    ▼
+server.py (Linux)         ← 远程 MCP 服务器
+```
+
+### 零依赖版（推荐）
+
+Windows 上只需安装 Python 3.10+，无需 `pip install` 任何包。
+
+1. 复制文件到 Windows：
+   - `remote_proxy.py`
+   - `certs/ca.crt`（如需 SSL 验证）
+
+2. 在 Claude Code 的 `mcp.json` 中配置：
+
+```json
+{
+  "mcpServers": {
+    "remote-monitor": {
+      "command": "python",
+      "args": [
+        "C:/Users/xxx/remote_proxy.py",
+        "--host", "172.26.72.248",
+        "--port", "8443",
+        "--ak", "ak-xxxxxxxx",
+        "--sk", "sk-xxxxxxxx",
+        "--ca-cert", "C:/Users/xxx/ca.crt"
+      ]
+    }
+  }
+}
+```
+
+3. 重启 Claude Code，即可在对话中调用 `get_top_memory_processes` 和 `get_top_cpu_processes`。
+
+### SDK 版（有依赖）
+
+需要 `pip install mcp httpx`，但使用官方 MCP SDK 和 httpx 连接池，连接效率更高。
+
+```json
+{
+  "mcpServers": {
+    "remote-monitor": {
+      "command": "python",
+      "args": [
+        "C:/Users/xxx/remote_proxy_requirements.py",
+        "--host", "172.26.72.248",
+        "--port", "8443",
+        "--ak", "ak-xxxxxxxx",
+        "--sk", "sk-xxxxxxxx"
+      ]
+    }
+  }
+}
+```
+
+### 两个代理版本对比
+
+| | `remote_proxy.py` | `remote_proxy_requirements.py` |
+|---|---|---|
+| 依赖 | 无（Python 标准库） | `mcp` + `httpx` |
+| Windows 准备 | 复制文件即用 | `pip install mcp httpx` |
+| HTTP 连接 | `urllib`，每请求新建连接 | `httpx.AsyncClient` 连接池 |
+| MCP 协议 | 手动解析 stdin JSON-RPC | `mcp.server.Server` SDK |
+| 适用场景 | 快速部署、临时使用 | 长期使用、高频调用 |
 
 ## MCP 工具接口
 
@@ -163,6 +239,41 @@ python client_example.py --host <服务器IP> --ak <ak> --sk <sk> --ca-cert /pat
 返回字段：`pid` (int), `name` (str), `cpu_percent` (float)
 
 > **CPU 百分比说明**: 每个 CPU 核心独立计算 100%。例如在 4 核机器上，一个进程占满所有核心会显示 ~400%。
+
+### 新增工具
+
+在 `tools/` 目录下新建 `.py` 文件，按模块模式实现工具函数并加入 `_tools` 列表即可，`__init__.py` 会自动发现并注册：
+
+```python
+# tools/disk.py
+import shutil
+
+
+def get_disk_usage(path: str = "/") -> dict:
+    """查询磁盘使用情况。"""
+    usage = shutil.disk_usage(path)
+    return {
+        "path": path,
+        "total_gb": round(usage.total / (1024**3), 1),
+        "free_gb": round(usage.free / (1024**3), 1),
+        "percent": round(usage.used / usage.total * 100, 1),
+    }
+
+
+_tools = [get_disk_usage]
+
+
+def register_tools(mcp):
+    for tool in _tools:
+        mcp.tool()(tool)
+```
+
+重启后代理端自动同步新工具。
+
+- 函数签名自动生成 `inputSchema`（参数类型 + 默认值）
+- docstring 自动生成工具描述
+- 同步函数用 `def`，FastMCP 自动放入线程池
+- I/O 密集型（异步 DB、网络请求）用 `async def`
 
 ## 安全架构
 
@@ -240,9 +351,3 @@ useradd -r mcp && chown -R mcp:mcp /code/CUTeMoL/exercise/py/mcp
 sudo -u mcp python server.py
 # 4. 配置防火墙（仅允许信任的 IP 访问 8443）
 ```
-
-### 客户端连接时需要
-
-1. 持有有效的 AK（Access Key）和 SK（Secret Key）
-2. 持有 CA 证书文件（`ca.crt`）用于 TLS 验证
-3. 使用 HMAC-SHA256 签名每个请求
