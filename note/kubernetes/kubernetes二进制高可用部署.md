@@ -1669,18 +1669,37 @@ sc.exe create kube-proxy start= auto binPath= "\"C:\Program Files\Kubernetes\bin
 
 (4) 安装calico
 
-下载文件解压到C:\CalicoWindows
+1) 下载calico命令行工具或插件
+```shell
+curl -L https://github.com/projectcalico/calico/releases/download/v3.25.0/calicoctl-linux-amd64 -o calicoctl
+chmod +x ./calicoctl
+mv ./calicoctl /bin/calicoctl
+calicoctl ipam configure --strictaffinity=true --allow-version-mismatch 
 
-修改config.ps1
+# sudo curl -L https://github.com/projectcalico/calico/releases/download/v3.31.3/calicoctl-linux-amd64 -o /usr/local/bin/kubectl-calico
+# sudo chmod +x /usr/local/bin/kubectl-calico
+```
+
+2) 下载calico-windows-v3.25.0.zip文件并解压到C:\CalicoWindows
+
+3) 修改config.ps1
 ```powershell
-#TODO: 兼容性有问题linux上用yaml部署的calico没有亲和性没法为windows分配IP,如果想先开起来这个要改host-local,但是这样虽然能分配IP但实际相当于单机运行,待确认怎么忽略这个问题
+#TODO: 兼容性有问题linux上用yaml部署的calico没有亲和性没法为windows分配IP,如果想先开起来这个要改host-local,但是这样虽然能分配IP但实际相当于单机运行,需要安装calico命令行工具开启亲和性
 Set-EnvVarIfNotSet -var "CNI_IPAM_TYPE" -defaultValue "host-local"
 ```
 
-运行安装脚本,然后启动calico服务
+4) 运行安装脚本,然后启动calico服务
 ```powershell
-.\install-calico.ps1 -KubeVersion "1.23.10" -KubeletRootDir "C:\Program Files\Kubernetes\bin" -APIserver "https://192.168.1.117:8443" -Datastore "kubernetes"
+# 如果自动获取异常就设置一下这2个变量
+$env:CNI_BIN_DIR = "C:\Program Files\containerd\bin\cni\bin"
+$env:CNI_CONF_DIR = "C:\Program Files\containerd\bin\cni\conf"
+
+.\install-calico.ps1 -KubeVersion "1.23.10" -KubeletRootDir "C:\Program Files\Kubernetes\bin" -APIserver "https://192.168.1.117:8443" -Datastore "kubernetes" --cni-bin-dir="C:\Program Files\containerd\bin\cni\bin" --cni-conf-dir="C:\Program Files\containerd\bin\cni\conf"
+# 验证
+Get-HNSNetwork # 里面要有calico
 ```
+
+5) 创建一个访问权限
 
 ```shell
 kubectl create serviceaccount calico-windows -n kube-system
@@ -1702,11 +1721,3 @@ kubectl config set-context default --cluster=kubernetes --user=calico-windows --
 kubectl config use-context default --kubeconfig=calico-windows.kubeconfig
 ```
 
-下载calico命令行工具或插件
-```shell
-curl -L https://github.com/projectcalico/calico/releases/download/v3.25.0/calicoctl-linux-amd64 -o calicoctl
-chmod +x ./calicoctl
-
-sudo curl -L https://github.com/projectcalico/calico/releases/download/v3.31.3/calicoctl-linux-amd64 -o /usr/local/bin/kubectl-calico
-sudo chmod +x /usr/local/bin/kubectl-calico
-```

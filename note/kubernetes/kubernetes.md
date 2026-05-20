@@ -587,11 +587,7 @@ status（状态）:
 
 ### kubectl,API,UI 
 
-↓
-
 ### /api/v1 /apis /healthz /logs /swagger-ui /metrics
-
-↓
 
 ### Authentication(鉴权)
 
@@ -601,8 +597,6 @@ status（状态）:
   + HTTP Base认证: 用户名+密码的方式认证
 
 ​	pod访问 需要ServiceAccount,通常默认挂载在/run/secrets/kubernetes.io/serviceaccount/
-
-↓
 
 ### Authorization(授权)
 
@@ -642,9 +636,12 @@ RBAC（Role-Based Access Control，基于角色的访问控制）
 
 ​	Adminssion Control实际上是一个准入控制器插件列表，发送到API Server的请求都需要经过这个列表中的每个准入控制器插件的检查，检查不通过，则拒绝请求
 
+* NamespaceLifecycle: 防止在不存在的NS上创建对象,防止删除系统级NS,删除NS时删除NS里所有对象
+* LimitRanger:确保资源请求不超过NS的LimitRanger限制
+* ServiceAccount:实现自动化添加ServiceAccount
+* ResourceQuota:确保资源请求不超过ResourceQuota的限制
 
 ### pod svc controllers storage …
-
 
 ### ETCD CLUSTER
 
@@ -1125,7 +1122,7 @@ snapshot save snap.db \
 --cert=/etc/kubernetes/pki/etcd/server.crt \
 --key=/etc/kubernetes/pki/etcd/server.key 
 
---endpoints   #指定宿主机IP
+--endpoints   #指定集群访问入口
 ```
 
 恢复:
@@ -1432,7 +1429,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-* 使用
+* 测试
 
 ```shell
 kubectl get pod --kubeconfig=${user_name}.kubeconfig
