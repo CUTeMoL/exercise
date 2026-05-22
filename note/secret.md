@@ -46,13 +46,15 @@ chmod +x /bin/cfssl-certinfo
 /bin/cfssl print-defaults csr > csr.json # 默认csr请求模板
 ```
 
-config.json
+* 创建ca-config.json
+
+`ca-config.json`给下级证书签发使用的
 
 ```json
 {
     "signing": {
         "default": {
-            "expiry": "168h"
+            "expiry": "8760h"
         },
         "profiles": {
             "www": {
@@ -70,15 +72,17 @@ config.json
                     "key encipherment",
                     "client auth"
                 ]
-            }
+            },
         }
     }
 }
 ```
 
-csr.json
+* 创建ca-csr.json
 
-```shell
+`ca-csr.json`定义根证书信息
+
+```json
 {
     "CN": "example.net",
     "hosts": [
@@ -97,7 +101,7 @@ csr.json
         }
     ]
 }
-
+```
 # CN: Common Name，浏览器使用该字段验证网站是否合法，一般写的是域名。非常重要。k8s中用来定义用户名
 # key：生成证书的算法
 # hosts：表示哪些主机名(域名)或者IP可以使用此csr申请的证书，可以多个域名使用一个CA证书，为空或者""表示所有的都可以使用
@@ -107,24 +111,26 @@ csr.json
 # L: Locality Name，地区，城市
 # O: Organization Name，组织名称，公司名称(在k8s中常用于指定Group，进行RBAC绑定)
 # OU: Organization Unit Name，组织单位名称，公司部门
-```
 
-ca根证书创建
+
+* ca根证书创建
 
 ```shell
 cfssl gencert -initca csr.json | cfssljson -bare ca # 创建以ca为开头的根证书
+# ca.pem 根证书公钥
+# ca-key.pem 根证书私钥
 ```
 
-查看生成的证书信息
+* 查看生成的证书信息
 
 ```shell
 cfssl certinfo -cert ca.pem   # 查看证书信息
 cfssl certinfo -csr ca.csr   # 查看CSR证书签名请求信息
 ```
 
-生成子证书(以ETCD为例)
+* 生成子证书(以ETCD为例)
 
-etcd-csr.json
++ 配置etcd-csr.json
 
 ```json
 {
@@ -145,7 +151,7 @@ etcd-csr.json
 }
 ```
 
-签发子证书
++ 签发子证书
 
 ```shell
 cfssl gencert \
@@ -154,4 +160,35 @@ cfssl gencert \
   -config=ca-config.json \
   -profile=kubernetes etcd-csr.json | cfssljson -bare 
 # -profile指定采用ca-config.json中定义的profiles字段
+
+```
+
+
+* 生成子证书(以WEB应用为例)
+
++ 配置lxw.com-csr.json中的域名及算法
+
+```json
+{
+  "CN": "*.lxw.com",
+  "hosts": [
+    "*.lxw.com",
+    "lxw.com"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  }
+}
+```
+
++ 签发子证书
+
+```shell
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=www \
+lxw.com-csr.json | cfssljson -bare "lxw.com"
 ```

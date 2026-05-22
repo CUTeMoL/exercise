@@ -285,6 +285,106 @@ NODE节点监控，pod资源适配
   + generic: 从文件、目录或者字符串创建，例如存储用户名密码
   + tls: 存储证书，例如HTTPS证书
 
+
+##### tls用法
+
+(1) 创建一个Secret.tls证书
+
+```shell
+# 创建Secret
+kubectl create secret tls tls-secret \
+  --cert=lxw.com.pem \
+  --key=lxw.com-key.pem
+
+```
+
+**另一种创建方式**
+
+1) base64转化公私钥
+
+```shell
+tls_crt=`cat lxw.com.pem | base64 | tr -d '\n'`
+tls_key=`cat lxw.com-key.pem | base64 | tr -d '\n'`
+```
+2) 写入到yaml
+
+```shell
+cat > lxw-com-tls-secret.yaml <<EOF
+apiVersion: v1
+data:
+  tls.crt: ${tls_crt}
+  tls.key: ${tls_key}
+kind: Secret
+metadata:
+  name: lxw-com-tls-secret
+type: kubernetes.io/tls
+EOF
+```
+
+(2) 挂载Secret给ingress-nginx
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-lxw-com
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      hostname: www1
+  template:
+    metadata:
+      labels:
+        hostname: www1
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-local-lxw-com
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    hostname: www1
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-local-lxw-com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: local.lxw.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service-local-lxw-com
+                port:
+                  number: 80
+  tls:
+    - hosts:
+      - local.lxw.com
+      secretName: lxw-com-tls-secret
+
+```
+
+
 #### Downward API
 
 容器元数据信息,可以通过env/volume定义来让容器获取到到像metadata、status这样的数据

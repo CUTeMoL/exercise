@@ -184,7 +184,9 @@ chmod +x /bin/cfssl-certinfo
 # cfssl-certinfo -cert <证书名称>
 ```
 
-ca证书策略创建
+ca根证书策略创建
+
+`ca-config.json`是给根证书签发下级使用的配置
 
 ```shell
 cat > /data/work/ca-config.json <<EOF
