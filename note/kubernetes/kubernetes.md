@@ -335,7 +335,37 @@ curl -H "Authorization: Bearer $TOKEN" --cacert $CAPATH https://${APISERVER}/${A
       - Recycle: 回收(清理数据,但PV保留,这样可以提供给新PVC使用,HostPath和NFS支持)
       - Delete: 删除(清理数据,PV也不保留,通常是云硬盘才支持)
 
+### 10.CoreDNS
 
+(1) 增加内部ingress的解析
+
+```shell
+
+clusterIP=`kubectl get svc -n ingress-nginx -o json ingress-nginx-controller | jq -r .spec.clusterIP`
+
+kubectl edit configmap coredns -n kube-system
+```
+
+```coredns.yaml
+  Corefile: |
+    # 新增：处理 lxw.com 域名的配置块
+    lxw.com:53 {
+        errors
+        health
+        hosts {
+            # 把下面这个 IP 换成你 Ingress Controller 的 Cluster IP
+            ${clusterIP} local.lxw.com
+            # 如果以后还有其他 lxw.com 的子域名，可以继续加
+            # 10.96.100.100 api.lxw.com
+            fallthrough
+        }
+    }
+```
+
+```shell
+kubectl rollout restart deployment/coredns -n kube-system
+
+```
 
 
 ## 三、通信方式
@@ -1065,6 +1095,8 @@ kubectl delete pod kube-proxy-btz4p -n kube-system
 
 13.Ingress Controller
 
+* 常规部署
+
 ```shell
 wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.3/deploy/static/provider/cloud/deploy.yaml -O ingress-nginx.yaml
 ```
@@ -1106,6 +1138,75 @@ image: docker.io/dyrnq/kube-webhook-certgen:v1.1.1
 
 ```shell
 kubectl apply -f ingress-nginx.yaml
+```
+
+* helm部署
+
++ 下载/修改Chart
+
+```shell
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm pull ingress-nginx/ingress-nginx
+```
+
++ 修改Chart/values.yaml
+
+```shell
+diff ingress-nginx-4.15.1/values.yaml ingress-nginx/values.yaml
+80c80
+<   dnsPolicy: ClusterFirst
+---
+>   dnsPolicy: ClusterFirstWithHostNet # 用于pod使用主机网络时的DNS策略
+107c107
+<   hostNetwork: false
+---
+>   hostNetwork: true
+135c135
+<     default: false # 要求每个ingress都需要声明自己要使用的 ingressClassName
+---
+>     default: true # 如果有多个 Ingress Controller(比如云上的接入进来) 就别改
+226c226
+<   kind: Deployment
+---
+>   kind: DaemonSet # 其实也可以不用改,设置pod亲和性让它分布在不同节点
+
+```
+
+如果需要换源每个都加上`registry: m.daocloud.io/registry.k8s.io`
+
+
++ 下载镜像(如果是换源就不用这样了)
+
+```shell
+
+docker image pull m.daocloud.io/registry.k8s.io/ingress-nginx/controller:v1.15.1@sha256:594ceea76b01c592858f803f9ff4d2cb40542cae2060410b2c95f75907d659e1
+
+docker image pull m.daocloud.io/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9@sha256:01038e7de14b78d702d2849c3aad72fd25903c4765af63cf16aa3398f5d5f2dd
+
+docker image pull m.daocloud.io/registry.k8s.io/defaultbackend-amd64:1.5
+
+docker tag 895ddb49053a registry.k8s.io/ingress-nginx/controller:v1.15.1
+
+docker tag 1442d220fcdd registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9
+
+docker tag b5af743e5984 defaultbackend-amd64:1.5
+
+docker tag 895ddb49053a ingress-nginx/controller:v1.15.1
+
+docker tag 1442d220fcdd ingress-nginx/kube-webhook-certgen:v1.6.9
+
+docker tag b5af743e5984 defaultbackend-amd64:1.5
+```
+
++ 创建
+
+```shell
+cd ingress-nginx
+helm upgrade --install ingress-nginx . \
+  --namespace ingress-nginx \
+  --create-namespace \
+  -f values.yaml
 ```
 
 ## 十三、运维(kubeadm)

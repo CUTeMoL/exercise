@@ -83,3 +83,15 @@ git config
 --local # 本地设置，远程路径、分支相关
 ```
 
+12.如果推送了敏感数据到远程仓库的处理方式
+
+```shell
+pip install git-filter-repo
+file_path=/code/CUTeMoL/exercise/py/mcp/configs/base.json
+git filter-repo --path ${file_path} --invert-paths
+git log --oneline          # 查看提交历史，确认 SHA 已变化
+git log --stat             # 确认目标文件已消失
+git remote add origin <你的远程仓库URL>   # 重新添加远程仓库（filter-repo 默认会移除所有远程以避免误操作）
+git push origin --force --all            # 强制推送所有分支
+git push origin --force --tags            # 强制推送所有标签
+```
