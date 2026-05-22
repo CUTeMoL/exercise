@@ -321,69 +321,7 @@ type: kubernetes.io/tls
 EOF
 ```
 
-(2) 挂载Secret给ingress-nginx
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: local-lxw-com
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      hostname: www1
-  template:
-    metadata:
-      labels:
-        hostname: www1
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.25
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: service-local-lxw-com
-spec:
-  ports:
-    - port: 80
-      targetPort: 80
-      protocol: TCP
-  selector:
-    hostname: www1
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-local-lxw-com
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: local.lxw.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: service-local-lxw-com
-                port:
-                  number: 80
-  tls:
-    - hosts:
-      - local.lxw.com
-      secretName: lxw-com-tls-secret
-
-```
-
+(2) 挂载Secret给ingress-nginx(详见后面的【挂载Secret给ingress-nginx,并重写image路由为static,然后/image/*转发到deployment(local-lxw-com-image)产生的pod,其它转发到deployment(local-lxw-com)产生的pod】)
 
 #### Downward API
 
@@ -1240,7 +1178,7 @@ image: docker.io/dyrnq/kube-webhook-certgen:v1.1.1
 kubectl apply -f ingress-nginx.yaml
 ```
 
-* helm部署
+* helm部署(推荐)
 
 + 下载/修改Chart
 
@@ -1817,6 +1755,129 @@ spec:
             port:
               number: 80
 ```
+
+挂载Secret给ingress-nginx,并重写image路由为static,然后/image/*转发到deployment(local-lxw-com-image)产生的pod,其它转发到deployment(local-lxw-com)产生的pod
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-lxw-com
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      hostname: www1
+  template:
+    metadata:
+      labels:
+        hostname: www1
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-lxw-com-image
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      hostname: www-image
+  template:
+    metadata:
+      labels:
+        hostname: www-image
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-local-lxw-com
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    hostname: www1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-local-lxw-com-image
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    hostname: www-image
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-local-lxw-com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: local.lxw.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service-local-lxw-com
+                port:
+                  number: 80
+  tls:
+    - hosts:
+      - local.lxw.com
+      secretName: lxw-com-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-local-lxw-com-image
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /static/$1
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: local.lxw.com
+      http:
+        paths:
+          - path: /image/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: service-local-lxw-com-image
+                port:
+                  number: 80
+  tls:
+    - hosts:
+      - local.lxw.com
+      secretName: lxw-com-tls-secret
+```
+
+
+
 
 ### 定义ServiceAccount
 
