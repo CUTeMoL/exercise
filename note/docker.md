@@ -672,3 +672,23 @@ if __name__ == "__main__":
 }
 ```
 
+## 九、通过容器编译应用
+
+1. java
+
+```shell
+# 1. 准备源码
+cat > /tmp/Hello.java << 'EOF'
+public class Hello {
+    public static void main(String[] args) {
+        System.out.println("Hello from Docker Java!");
+    }
+}
+EOF
+
+# 2. 编译用jdk
+docker run --rm -v /tmp:/app -w /app openjdk:11-jdk javac Hello.java
+
+# 3. 运行用jre
+docker run --rm -v /tmp:/app -w /app openjdk:11-jre java Hello
+```
