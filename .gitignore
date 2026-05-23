@@ -4,3 +4,4 @@ py/mcp/certs/
 py/mcp/data/
 py/mcp/venv/
 py/mcp/configs/
+py/mcp/tools/__pycache__

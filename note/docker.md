@@ -150,7 +150,7 @@ cp ${tomcat_path}/apache-tomcat-${version}.tar.gz ./
 
 2.Dockerfile
 
-```shell
+```Dockerfile
 FROM centos/systemd
 MAINTAINER www.lxw.com
 ENV VERSION=10.0.20

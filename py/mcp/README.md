@@ -162,7 +162,7 @@ Windows 上只需安装 Python 3.10+，无需 `pip install` 任何包。
    - `remote_proxy.py`
    - `certs/ca.crt`（如需 SSL 验证）
 
-2. 在 Claude Code 的 `mcp.json` 中配置：
+2. 在 Claude Code 的 `.mcp.json` 中配置：
 
 ```json
 {
@@ -170,12 +170,12 @@ Windows 上只需安装 Python 3.10+，无需 `pip install` 任何包。
     "remote-monitor": {
       "command": "python",
       "args": [
-        "C:/Users/xxx/remote_proxy.py",
-        "--host", "172.26.72.248",
+        "'/code/CUTeMoL/exercise/py/mcp/remote_proxy.py'",
+        "--host", "172.17.0.2",
         "--port", "8443",
-        "--ak", "ak-xxxxxxxx",
-        "--sk", "sk-xxxxxxxx",
-        "--ca-cert", "C:/Users/xxx/ca.crt"
+        "--ak", "ak-7743fa95b5a248556ecb8443ad1f19cc",
+        "--sk", "sk-5da407943e4589d47a947958024b60eb34b05201a9d748952dddfa02881269a2",
+        "--ca-cert", "/code/CUTeMoL/exercise/py/mcp/certs/ca.crt"
       ]
     }
   }
@@ -203,6 +203,31 @@ Windows 上只需安装 Python 3.10+，无需 `pip install` 任何包。
     }
   }
 }
+```
+
+4. 结果输出展示
+
+```claude
+proc_open_files 用下看看
+
+  Called remote-monitor (ctrl+o to expand)
+                 
+● 运行结果如下：
+
+  PID 1 — uv run --no-sync python server.py (root)
+
+  ┌─────┬───────────────────────┬──────┐
+  │ fd  │         path          │ mode │
+  ├─────┼───────────────────────┼──────┤
+  │ 9   │ /root/.cache/uv/.lock │ r+   │
+  └─────┴───────────────────────┴──────┘
+
+  PID 10 — /app/.venv/bin/python3 server.py (root)
+
+  无打开的文件句柄。
+
+  ---
+  目前只有 2 个进程在运行，都是 MCP server 自身的进程。PID 1 打开了一个 uv 的 lock 文件，PID 10 没有打开任何文件句柄。看起来这是一个比较干净的环境。
 ```
 
 ### 两个代理版本对比
