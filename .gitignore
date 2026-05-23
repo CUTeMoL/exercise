@@ -5,3 +5,4 @@ py/mcp/data/
 py/mcp/venv/
 py/mcp/configs/
 py/mcp/tools/__pycache__
+py/mcp/.mcp.json
