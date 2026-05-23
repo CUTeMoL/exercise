@@ -87,11 +87,14 @@ git config
 
 ```shell
 pip install git-filter-repo
-file_path=/code/CUTeMoL/exercise/py/mcp/configs/base.json
+file_path=py/mcp/.mcp.json # 新加的忘了.gitignore,妈的claude也是有病,居然要放项目根目录,放.claude/下面还不行
+git rm ${file_path}
+git commit -a -m "rm ${file_path}"
 git filter-repo --path ${file_path} --invert-paths
 git log --oneline          # 查看提交历史，确认 SHA 已变化
 git log --stat             # 确认目标文件已消失
-git remote add origin <你的远程仓库URL>   # 重新添加远程仓库（filter-repo 默认会移除所有远程以避免误操作）
+git remote add origin https://github.com/CUTeMoL/exercise   # 重新添加远程仓库（filter-repo 默认会移除所有远程以避免误操作）
+git push --set-upstream origin main # 我是main分支
 git push origin --force --all            # 强制推送所有分支
 git push origin --force --tags            # 强制推送所有标签
 ```
