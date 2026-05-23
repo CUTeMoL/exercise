@@ -10,6 +10,8 @@
 
 是ai写得,不会有什么很复杂的mcp-tools操作,只是作为mcp-server端框架,待用到时再填充mcp-tool进去
 
+'/code/CUTeMoL/exercise/py/mcp/README.md'是详细说明
+
 安全:
 
 * 证书加密通讯信息
@@ -19,6 +21,7 @@ mcp-tools:
 
 * 取CPU RANK
 * 取内存 RANK
+* 取进程占用文件
 
 ## note 是日常笔记
 
