@@ -692,3 +692,36 @@ docker run --rm -v /tmp:/app -w /app openjdk:11-jdk javac Hello.java
 # 3. 运行用jre
 docker run --rm -v /tmp:/app -w /app openjdk:11-jre java Hello
 ```
+
+dockerfile多阶段构建
+
+```dockerfile
+# 第一阶段：构建阶段
+# 使用Maven镜像进行项目构建
+FROM maven:3.8-openjdk-11 AS builder
+WORKDIR /app
+
+# 复制Maven项目文件
+COPY pom.xml .
+# 如果项目存在多个模块，可能需要复制模块目录，此处简化处理
+# 为了利用Docker缓存，可以先复制pom.xml文件，再复制源代码
+COPY src ./src
+
+# 执行Maven打包命令，跳过测试
+RUN mvn clean package -DskipTests
+
+# 第二阶段：运行阶段
+# 使用轻量级的JRE镜像运行应用
+FROM openjdk:11-jre-slim
+WORKDIR /app
+
+# 从构建阶段复制打包好的JAR文件
+# 注意：此处需要根据实际生成的JAR文件名进行调整，通常是 target/项目名-版本.jar
+COPY --from=builder /app/target/*.jar ./app.jar
+
+# 暴露应用端口（如果应用需要，此示例应用可能不需要）
+# EXPOSE 8080
+
+# 设置容器启动时执行的命令
+CMD ["java", "-jar", "app.jar"]
+```

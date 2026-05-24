@@ -156,7 +156,7 @@ sequenceDiagram
 * 工作模式
   + ClusterIP: 默认模式,自动分配一个集群内部使用的IP
   + NodePort: clusterIP基础上,在集群每个节点的的网卡上绑定一个端口,提供给外部访问
-  + LoadBalancer: NodePort基础上,创建一个外部负载均衡器,将请求转发到NodePort,一般云上使用
+  + LoadBalancer: NodePort基础上,创建一个外部负载均衡器,将请求转发到NodePort,一般云上使用(自建负载均衡应用详见MetalLB)
   + ExternalName: 通过CoreDNS来让外部服务引入集群内部使用
 * 防止pod失连，通过label-selector关联pod(也可以不用,参考无头服务)
 * 可以使用无头服务(不通过标签关联),手动创建同名的service和endpoint转发到非Pod的端口
@@ -170,12 +170,63 @@ sequenceDiagram
 * .spec.sessionAffinity: 如果是ClientIP那么同一客户端会有会话保持
 * .spec.sessionAffinityConfig.clientIP.timeoutSeconds: 同一客户端会话保持时间,默认10800
 
+#### MetalLB
+
+* 安装
+
+```shell
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
+kubectl wait --namespace metallb-system \
+  --for=condition=ready pod \
+  --selector=app=metallb \
+  --timeout=90s
+
+```
+
+* 创建一个 IPAddressPool(可以使用节点同段为使用IP)
+
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: LAN-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.1.200-192.168.1.210   # 换成你环境里可用的 IP 段
+  # 可以被哪些资源使用
+  serviceAllocation:
+    priority: 10
+    namespace: ingress-nginx          # 只允许 ingress-nginx 命名空间下的 Service 使用
+    # 可进一步用 serviceSelector 筛选
+    serviceSelector:
+      matchLabels:
+        app: ingress-nginx           # 假设你的 Service 有这个标签
+---
+# L2Advertisement
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: LAN-pool-l2-adv
+  namespace: metallb-system
+```
+
 ### 3. Ingress:
 
-* Ingress公开了从集群外部到集群内服务的Http、https路由的规则集合
+* Ingress 公开了从集群外部到集群内服务的Http、https路由的规则集合
 * 具体实现流量路由是由Ingress Controller负责
 * 一种抽象资源，给管理员提供暴露应用入口定义方法
-* 7层负载均衡，例如根据域名分发到对应的service，再由service转发到pod
+* 7层负载均衡，例如根据域名分发到对应的service,再由service转发到pod
+* 可以接入自定义nginx配置
+  + kubectl edit cm ingress-nginx-controller -n ingress-nginx  # 编辑configmap
+    - allow-snippet-annotations："true" # 开启自定义编辑nginx配置
+    - annotations-risk-level: "Critical" # 风险策略过滤开到Critical级
+  + 黑白名单设置
+    - Ingress.metadata.annotations.nginx.org/policies: "allow-policy, deny-policy" # 通过policy控制
+    - Ingress.metadata.annotations.kubernetes.io/whitelist-source-range: "10.0.0.0/8, 172.16.0.0/12" # 通过白名单
+    - ConfigMap.data.http-snippet # configmap 修改,作用域全局,http段,复杂
+    - ConfigMap.data.server-snippet # configmap 修改,作用域特定域名,Server,复杂
+    - ConfigMap.data.location-snippet # configmap 修改,作用域特定路径,Location,复杂
 
 ### 4. label
 
@@ -1857,6 +1908,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /static/$1
+
 spec:
   ingressClassName: nginx
   rules:
