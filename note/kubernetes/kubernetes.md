@@ -189,27 +189,27 @@ kubectl wait --namespace metallb-system \
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
-  name: LAN-pool
+  name: lan-pool
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.1.200-192.168.1.210   # 换成你环境里可用的 IP 段
-  # 可以被哪些资源使用
+  - 192.168.1.120-192.168.1.130
   serviceAllocation:
     priority: 10
-    namespace: ingress-nginx          # 只允许 ingress-nginx 命名空间下的 Service 使用
-    # 可进一步用 serviceSelector 筛选
-    serviceSelector:
-      matchLabels:
-        app: ingress-nginx           # 假设你的 Service 有这个标签
+    namespace: kube-system 
+    serviceSelectors:
+    - matchLabels:
+        app.kubernetes.io/name: coredns   # 注意这里的缩进
 ---
 # L2Advertisement
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
-  name: LAN-pool-l2-adv
+  name: lan-pool-l2-adv
   namespace: metallb-system
+  
 ```
+
 
 ### 3. Ingress:
 
@@ -456,6 +456,13 @@ kubectl rollout restart deployment/coredns -n kube-system
 
 ```
 
+(2) 给CoreDNS添加MetalLB
+
+安装MetalLB搜索【MetalLB】
+
+```shell
+kubectl patch svc kube-dns -n kube-system -p '{"spec": {"type": "LoadBalancer"}}'
+```
 
 ## 三、通信方式
 

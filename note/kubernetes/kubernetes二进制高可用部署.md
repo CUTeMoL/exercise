@@ -1295,7 +1295,7 @@ KUBELET_OPTS="--logtostderr=false \\
 --cert-dir=/etc/kubernetes/ssl \\
 --alsologtostderr=true \
 --logtostderr=false \
---pod-infra-container-image=docker.io/gotok8s/pause:3.7"
+--pod-infra-container-image=registry.aliyuncs.com/google_containers/pause:3.8"
 EOF
 # 可选
 --hostname-override=host_name \\
@@ -1340,7 +1340,7 @@ authorization:
     cacheAuthorizedTTL: "5m"
     cacheUnauthorizedTTL: "30s"
 readOnlyPort: 10255
-cgroupDriver: "cgroupfs"
+cgroupDriver: "cgroupfs" # docker 用 systemd
 hairpinMode: "promiscuous-bridge"
 serializeImagePulls: false
 featureGates: 
