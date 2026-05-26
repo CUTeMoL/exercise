@@ -36,7 +36,6 @@ kind: L2Advertisement
 metadata:
   name: lan-pool-l2-adv
   namespace: metallb-system
-  
 ```
 
 ## 三、使用
