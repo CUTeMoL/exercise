@@ -227,6 +227,7 @@ metadata:
     - ConfigMap.data.http-snippet # configmap 修改,作用域全局,http段,复杂
     - ConfigMap.data.server-snippet # configmap 修改,作用域特定域名,Server,复杂
     - ConfigMap.data.location-snippet # configmap 修改,作用域特定路径,Location,复杂
+  + https转发
 
 ### 4. label
 
@@ -865,8 +866,8 @@ Elasticsearch+Flunend（日志采集器）+Kibana
 
 ```shell
 kubectl describe TYPE/NAME
-kubectl logs TYPE/NAME [-c CONTAINER]
-kubectl exec POD [-c CONTAINER] -it  
+kubectl logs TYPE/NAME [ -c CONTAINER ]
+kubectl exec POD [ -c CONTAINER ] -it  
 ```
 
 ### 2.machine-log

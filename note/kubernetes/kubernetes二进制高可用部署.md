@@ -11,7 +11,7 @@
 | k-m3 | 192.168.1.103 | 2C3G     | kube-apiserver、kube-controller-manager、 kube-scheduler、etcd、haproxy、keepalived | master |
 | k-n1 | 192.168.1.104 | 2C3G     | kubelet、kube-proxy、docker                                  | node   |
 | k-n2 | 192.168.1.105 | 2C3G     | kubelet、kube-proxy、docker                                  | node   |
-| k-n3 | 192.168.1.106 | 2C3G     | kubelet、kube-proxy、docker                                  | node   |
+| k-n3 | 192.168.1.106 | 2C4G     | kubelet、kube-proxy、containerd、calico-windows               | node(改windows)   |
 | VIP  | 192.168.1.107 |          |                                                              |        |
 
 ### 2. /etc/hosts配置文件，hostname
@@ -1685,9 +1685,10 @@ calicoctl ipam configure --strictaffinity=true --allow-version-mismatch
 2) 下载calico-windows-v3.25.0.zip文件并解压到C:\CalicoWindows
 
 3) 修改config.ps1
+
 ```powershell
-#TODO: 兼容性有问题linux上用yaml部署的calico没有亲和性没法为windows分配IP,如果想先开起来这个要改host-local,但是这样虽然能分配IP但实际相当于单机运行,需要安装calico命令行工具开启亲和性
-Set-EnvVarIfNotSet -var "CNI_IPAM_TYPE" -defaultValue "host-local"
+# 如果兼容性有问题linux上用yaml部署的calico没有亲和性没法为windows分配IP,如果想先开起来这个要改host-local,但是这样虽然能分配IP但实际相当于单机运行,需要安装calico命令行工具开启亲和性
+# Set-EnvVarIfNotSet -var "CNI_IPAM_TYPE" -defaultValue "host-local" # 尽量不改这个
 ```
 
 4) 运行安装脚本,然后启动calico服务
@@ -1698,7 +1699,7 @@ $env:CNI_CONF_DIR = "C:\Program Files\containerd\bin\cni\conf"
 
 .\install-calico.ps1 -KubeVersion "1.23.10" -KubeletRootDir "C:\Program Files\Kubernetes\bin" -APIserver "https://192.168.1.117:8443" -Datastore "kubernetes" --cni-bin-dir="C:\Program Files\containerd\bin\cni\bin" --cni-conf-dir="C:\Program Files\containerd\bin\cni\conf"
 # 验证
-Get-HNSNetwork # 里面要有calico
+Get-HNSNetwork # 里面要有calico,没有的话就卸载后改配置改环境变量,重新装
 ```
 
 5) 创建一个访问权限

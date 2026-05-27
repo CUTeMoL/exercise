@@ -25,7 +25,7 @@ spec:
   - 192.168.1.120-192.168.1.130
   serviceAllocation:
     priority: 10
-    namespace: kube-system 
+    namespace: kube-system
     serviceSelectors:
     - matchLabels:
         app.kubernetes.io/name: coredns   # 匹配标签自动用这个IP池
