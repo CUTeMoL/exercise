@@ -24,6 +24,7 @@
 192.168.1.104 k-n1
 192.168.1.105 k-n2
 192.168.1.106 k-n3
+# k-n3 已改windows,ssh部分要去除
 # 修改完hostname之后要查看/etc/hosts是否有误，因为修改hostname也会修改/etc/hosts
 ```
 

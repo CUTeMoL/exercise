@@ -22,7 +22,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.1.120-192.168.1.130
+  - 192.168.1.120-192.168.1.130 # 空闲IP写进来
   serviceAllocation:
     priority: 10
     namespace: kube-system
