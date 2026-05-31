@@ -52,7 +52,7 @@ rmvirtualenv python_auto
 workon python_auto
 ```
 
-#### 第二种方法(更好)
+#### 第二种方法(更好,但是推荐第三种)
 
 安装虚拟环境
 
@@ -73,6 +73,16 @@ source ./Scripts/activate
 ```shell
 .\Scripts\deactivate.bat
 ```
+
+#### 第三种方法
+
+```shell
+uv venv 
+source .venv/bin/activate
+# 创建依赖文件并添加依赖(自动管理)
+uv init && uv add sentence_transformers chromadb google-genai python-dotenv
+```
+
 
 ### 3.pip
 

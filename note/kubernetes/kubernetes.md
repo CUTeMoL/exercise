@@ -465,6 +465,19 @@ kubectl rollout restart deployment/coredns -n kube-system
 kubectl patch svc kube-dns -n kube-system -p '{"spec": {"type": "LoadBalancer"}}'
 ```
 
+(3) 设置
+
+```shell
+LoadBalancerIP=192.168.1.120
+echo "nameserver ${LoadBalancerIP}" >> /etc/resolv.conf
+```
+
+(4) 清除DNS缓存
+
+```shell
+resolvectl flush-caches
+```
+
 ## 三、通信方式
 
 ### calico架构

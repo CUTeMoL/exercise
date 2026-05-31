@@ -47,6 +47,8 @@ REPO_NAME=aliyun
 helm search hub ${CHART_NAME} # 搜索官方仓库Chart
 helm search repo ${REPO_NAME} # 搜索仓库
 helm search repo ${CHART_NAME} # 搜索Chart 
+helm pull repo ${CHART_NAME} # 下载一个chart
+
 ```
 
 ## 三、Helm 创建Chart
