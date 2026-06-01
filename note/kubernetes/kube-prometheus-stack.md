@@ -1,6 +1,12 @@
+# kube-prometheus-stack
 
+一整套K8S集群监控,除了grafana需要手动加下数据源,其他默认安装都能直接采集到prometheus
 
+## 零、组件
 
+* node-export: 节点采集器
+* prometheus: 时序数据库
+* grafana: 前端展示页面
 
 ## 一、部署
 
@@ -13,6 +19,14 @@ helm pull prometheus-community/kube-prometheus-stack
 ```
 
 ### 2. 修改values.yaml
+
+* 具体修改看需求,我是改了
+  + 镜像registry仓库
+    - kube-state-metrics 这个是添加image信息
+  + 部分禁止部分组件监控
+  + grafana/prometheus改NodePort放出来调试
+  + 保留数据时间缩短到1天
+  + namespace锁定到monitoring(可以不加)
 
 * diff版本
 
