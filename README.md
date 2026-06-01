@@ -30,9 +30,9 @@ mcp-tools:
 
 ## 其他
 
-发现一个很牛的网站点阵图来自( https://cuteinternet.com/image-to-dot-art )
+发现一个很牛的网站,点阵图来自( https://cuteinternet.com/image-to-dot-art )
 
-这样可以在终端显示点阵图，酷！
+这样可以在终端显示点阵图,酷!
 
 <table>
   <tr>
