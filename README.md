@@ -30,9 +30,7 @@ mcp-tools:
 
 ## 其他
 
-发现一个很牛的网站,点阵图来自( https://cuteinternet.com/image-to-dot-art )
-
-这样可以在终端显示点阵图,酷!
+点阵图生成来自( https://cuteinternet.com/image-to-dot-art )可以做终端的画面展示,估计不能商用
 
 <table>
   <tr>
