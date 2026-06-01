@@ -62,3 +62,62 @@ ACK包中包含seq=(例如为2307338028)和ack=840465766(这是回应被动方SY
 由于TIME_WAIT的存在，短连接时关闭的socket会长时间占据大量的tuple空间
 
 ## 四、应用层
+
+
+## 五、神奇操作
+
+### 1. 创建命名空间隔离网络并赋予命名空间真实网卡mac(伪造mac地址)
+
+```shell
+#!/bin/bash
+
+# ===== 可配置变量 =====
+HOST_IF="eth0"                   # 宿主机物理出口网卡（根据实际修改）
+NS_NAME="ns_10-200-0-0_24"                # 网络命名空间名称
+VETH_HOST="veth_${HOST_IF}"            # 宿主机端虚拟网卡名
+VETH_NS="veth_${NS_NAME}"                # 命名空间端虚拟网卡名
+MAC_ADDR="00:16:3e:2c:e3:25"    # 要设置的 MAC 地址
+NS_IP="10.200.0.2/24"           # 命名空间内 IP/掩码
+HOST_IP="10.200.0.1/24"         # 宿主机端 IP/掩码
+NET_PREFIX="10.200.0.0/24"      # NAT 源地址段
+# ======================
+
+# 清理旧环境
+sudo ip netns delete "${NS_NAME}" 2>/dev/null
+sudo ip link delete "${VETH_HOST}" 2>/dev/null
+
+# 1. 重新创建空间
+sudo ip netns add "${NS_NAME}"
+
+# 2. 创建网卡对
+sudo ip link add "${VETH_HOST}" type veth peer name "${VETH_NS}"
+
+# 3. 将网卡塞入空间
+sudo ip link set "${VETH_NS}" netns "${NS_NAME}"
+
+# 4. 【核心关键】直接将物理机 MAC 赋予隔离空间内的网卡
+sudo ip netns exec "${NS_NAME}" ip link set dev "${VETH_NS}" address "${MAC_ADDR}"
+
+# 5. 配置空间内网卡 IP 为 ${NS_IP}
+sudo ip netns exec "${NS_NAME}" ip address add "${NS_IP}" dev "${VETH_NS}"
+sudo ip netns exec "${NS_NAME}" ip link set dev "${VETH_NS}" up
+sudo ip netns exec "${NS_NAME}" ip link set lo up
+
+# 6. 配置宿主机端网卡 IP
+sudo ip address add "${HOST_IP}" dev "${VETH_HOST}"
+sudo ip link set dev "${VETH_HOST}" up
+
+# 7. 配置空间内默认网关（宿主机端 IP 作为网关）
+sudo ip netns exec "${NS_NAME}" ip route add default via "${HOST_IP%/*}"  # 去掉掩码部分
+
+# 8. 开启 IP 转发
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# 9. 配置 NAT 转发（注意出口网卡为 ${HOST_IF}）
+sudo iptables -t nat -A POSTROUTING -s "${NET_PREFIX}" -o "${HOST_IF}" -j MASQUERADE
+sudo iptables -A FORWARD -i "${VETH_HOST}" -o "${HOST_IF}" -j ACCEPT
+sudo iptables -A FORWARD -i "${HOST_IF}" -o "${VETH_HOST}" -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# 10. 测试命名空间内访问 https://www.lxw.com
+sudo ip netns exec "${NS_NAME}" curl -I -m 5 https://www.lxw.com
+```
