@@ -73,7 +73,7 @@ ACK包中包含seq=(例如为2307338028)和ack=840465766(这是回应被动方SY
 
 # ===== 可配置变量 =====
 HOST_IF="eth0"                   # 宿主机物理出口网卡（根据实际修改）
-NS_NAME="ns_10-200-0-0_24"                # 网络命名空间名称
+NS_NAME="ns_1"                # 网络命名空间名称
 VETH_HOST="veth_${HOST_IF}"            # 宿主机端虚拟网卡名
 VETH_NS="veth_${NS_NAME}"                # 命名空间端虚拟网卡名
 MAC_ADDR="00:16:3e:2c:e3:25"    # 要设置的 MAC 地址
@@ -81,6 +81,8 @@ NS_IP="10.200.0.2/24"           # 命名空间内 IP/掩码
 HOST_IP="10.200.0.1/24"         # 宿主机端 IP/掩码
 NET_PREFIX="10.200.0.0/24"      # NAT 源地址段
 # ======================
+
+
 
 # 清理旧环境
 sudo ip netns delete "${NS_NAME}" 2>/dev/null
@@ -118,6 +120,11 @@ sudo iptables -t nat -A POSTROUTING -s "${NET_PREFIX}" -o "${HOST_IF}" -j MASQUE
 sudo iptables -A FORWARD -i "${VETH_HOST}" -o "${HOST_IF}" -j ACCEPT
 sudo iptables -A FORWARD -i "${HOST_IF}" -o "${VETH_HOST}" -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-# 10. 测试命名空间内访问 https://www.lxw.com
+# 10. DNS 配置
+sudo mkdir -p /etc/netns/"${NS_NAME}"
+echo "nameserver 8.8.8.8" | sudo tee /etc/netns/"${NS_NAME}"/resolv.conf
+echo "nameserver 114.114.114.114" | sudo tee -a /etc/netns/"${NS_NAME}"/resolv.conf
+
+# 11. 测试命名空间内访问 https://www.lxw.com
 sudo ip netns exec "${NS_NAME}" curl -I -m 5 https://www.lxw.com
 ```
