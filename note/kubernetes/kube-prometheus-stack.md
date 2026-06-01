@@ -3904,14 +3904,70 @@ helm pull prometheus-community/kube-prometheus-stack
 
  
 
-### 4.  grafana添加数据源
+### 4. grafana添加数据源
 
+(1)
 `/datasources` 进去后添加`url=http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090`(注意服务名和命名空间要按照实际的prometheus来添加)
 
-### 5. 验证
-
+(2)
 `/explore`里选择`Metric=instance:node_cpu:ratio`有数据就正常了
+
+### 5. grafana添加仪表盘
+
+Dashboards → New → Import 然后选模板
+
+|仪表盘名称|仪表盘ID|推荐版本|核心用途|
+|-|-|-|-|
+|NodeExporter Full|1860|24|节点 CPU / 内存 / 磁盘 / 网络 / 负载全方位监控（最常用）|
+|Kubernetes Cluster Overview|315|1|集群总览：节点数、Pod 数、资源使用率汇总|
+|Kubernetes Pods|6417|1|Pod 级监控：单个 Pod 的 CPU / 内存 / 网络 / 重启次数|
+
 
 ### 6. 通信安全
 
-需要https和密码,待补充...
+todo: 需要https和密码,待补充...
+
+* grafana https 通信
+
+(1) 创建证书
+
+```shell
+kubectl create secret tls grafana-tls-secret --namespace monitoring --cert=./your-cert.crt --key=./your-key.key
+```
+
+(2) 修改
+
+```yaml
+grafana:
+  # 1. 开启 Ingress
+  ingress:
+    enabled: true
+    # K8s 1.23+ 推荐使用 ingressClassName，不要用旧的 annotation
+    ingressClassName: "nginx"
+    
+    # 2. 域名配置
+    hosts:
+      - grafana.lxw.com  # 替换成你的实际域名
+    
+    # 3. TLS 证书配置
+    tls:
+      - hosts:
+          - grafana.lxw.com
+        secretName: grafana-tls-secret  # 证书会存在这个 Secret 里
+    
+    # 4. ingress-nginx 关键注解
+    annotations:
+      # 强制 HTTP 跳转到 HTTPS
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      # 后端协议是 HTTP（Grafana 内部用 HTTP）
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      # 开启 WebSocket 支持（Grafana 实时面板需要）
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+      # 传递真实客户端 IP
+      nginx.ingress.kubernetes.io/forwarded-for-header: "X-Forwarded-For"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+```
+
+(3) 参考MetalLB-loadBanlancer.md,把ingress放出集群外部访问

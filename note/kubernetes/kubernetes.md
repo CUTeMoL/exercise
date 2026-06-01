@@ -1285,6 +1285,8 @@ diff ingress-nginx-4.15.1/values.yaml ingress-nginx/values.yaml
 
 如果需要换源每个都加上`registry: m.daocloud.io/registry.k8s.io`
 
+如果端口冲突了要注意下
+
 
 + 下载镜像(如果是换源就不用这样了)
 
