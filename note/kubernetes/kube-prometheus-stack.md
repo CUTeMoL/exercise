@@ -3925,7 +3925,7 @@ Dashboards → New → Import 然后选模板
 
 ### 6. 通信安全
 
-todo: 需要https和密码,待补充...
+todo: prometheus这个时序库似乎只支持http-basic-auth密码...
 
 * grafana https 通信
 

@@ -30,7 +30,7 @@ mcp-tools:
 
 ## 其他
 
-点阵图生成来自( https://cuteinternet.com/image-to-dot-art )可以做终端的画面展示,估计不能商用
+点阵图生成来自( https://cuteinternet.com/image-to-dot-art )可以做终端的画面展示,但是不能商用
 
 <table>
   <tr>
