@@ -3902,7 +3902,7 @@ helm pull prometheus-community/kube-prometheus-stack
   helm upgrade --install kube-prometheus-stack .   --namespace monitoring   --create-namespace  -f values.yaml
   ```
 
- 
+
 
 ### 4. grafana添加数据源
 
@@ -3935,7 +3935,7 @@ todo: prometheus这个时序库似乎只支持http-basic-auth密码...
 kubectl create secret tls grafana-tls-secret --namespace monitoring --cert=./your-cert.crt --key=./your-key.key
 ```
 
-(2) 修改
+(2) 修改values.yaml
 
 ```yaml
 grafana:
