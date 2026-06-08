@@ -128,3 +128,100 @@ echo "nameserver 114.114.114.114" | sudo tee -a /etc/netns/"${NS_NAME}"/resolv.c
 # 11. 测试命名空间内访问 https://www.lxw.com
 sudo ip netns exec "${NS_NAME}" curl -I -m 5 https://www.lxw.com
 ```
+
+### 2. 查询跃点
+
+* windows上可以用tracert.exe获取路由
+* linux上这个命令有个替代的叫`traceroute`用法一样
+* 如果经历了SNAT变换就没法正常获取,AI给出的原因
+  - traceroute 通过逐步增加 TTL 来探测路径上的路由器。正常情况下，每个路由器收到 TTL=1 的包时，会丢弃它并返回一个“ICMP Time Exceeded”消息给源地址
+  - 但在 NAT 环境中，虚拟机发出的包经过 NAT 网关时，源 IP 会被替换为宿主机的 IP。当外部路由器返回 ICMP 超时消息时，它自然会把消息发回给宿主机的 IP，而不是虚拟机。
+  - 宿主机收到这些 ICMP 消息后，如果没有专门的路由或转发规则，无法将它们正确送回给内部的虚拟机。结果就是虚拟机里的 `traceroute` 永远收不到来自第 3 跳及之后路由器的任何响应
+* 还有个`mtr`听说更强,实际用起来感觉就是`traceroute`
+
+```powershell
+tracert.exe 8.153.173.125
+```
+
+返回结果
+
+```
+
+通过最多 30 个跃点跟踪
+到 www.lxw.com [8.153.173.125] 的路由:
+  1    62 ms     9 ms     1 ms  192.168.31.252
+  2    10 ms     3 ms     3 ms  172.16.128.45
+  3    <1 毫秒   <1 毫秒   <1 毫秒 172.16.128.2
+  4     3 ms     1 ms    <1 毫秒 temp.fj133165.com [220.249.170.1]
+  5     *        1 ms     *     218.104.229.157
+  6     *        *        *     请求超时。
+  7     *        *        *     请求超时。
+  8     *        *        *     请求超时。
+  9     *        *        *     请求超时。
+ 10     *        *        *     请求超时。
+ 11     *        *        *     请求超时。
+ 12     *        *        *     请求超时。
+ 13     *        *        *     请求超时。
+ 14     *        *        *     请求超时。
+ 15    34 ms    34 ms    34 ms  www.lxw.com [8.153.173.125]
+```
+
+6-14大概是运营商或云服务商隐藏了
+
+### 3. 获取下同子网的mac地址
+
+windows和linux都有`arp`,linux还可以用 `ip neigh`
+
+```shell
+arp
+```
+
+### 4. DNS解析
+
+* linux
+  + `/etc/hosts` 自定义解析
+  + `/etc/resolv.conf` nameserver是指定解析服务器,search是添加查询域,domain申明自己的域,options自定义设置
+  + `dig ${domain}` 比nslookup更多内容一点的解析
+* windows
+  + `C:\Windows\System32\drivers\etc\hosts` 自定义解析
+
+### 5. 端口
+
+* `telnet ${dest_host} ${dest_port}` 测试端口
+* `netstat -ntlp` 本地监听查询
+* `lsof -i :443` 本地监听查询(文件占用)
+
+### 6. 流量
+
+一段时间的流量记录可以用`tcpdump`
+
+```shell
+tcpdump -nn -i any -w /tmp/tmp3.pcap # 全采集并使用IP记录,取回来用 Wireshark 看, -i 指定网卡接口any=all
+tcpdump -r /tmp/tmp3.pcap # 查看采集记录,取回来用 Wireshark 看更好
+```
+
+当前流量可以用`iftop`
+
+```shell
+iftop -n -N # 有用到筛选的时候iftop --help查,其实直接iftop就够用了
+```
+
+### 7. http
+
+curl 就够用了
+
+```shell
+curl 
+ -I # 只看返回的head
+ -i # 返回内容加上返回的head
+ -v # 详细模式(windows不支持)
+ -X # 请求方式action,看后端路由怎么定义了基本上都是get/post,其他压根没见过使用
+ -d # data数据,json的话通过head设置"Content-Type: application/json"
+ -H # 添加自定义请求头,比如 "Authorization: Bearer token"
+ -o # 打日志
+ -O # 内容输出到
+ -x # 发到代理
+ -k # 忽略不安全的证书
+ -u # basicauth "user:pass"
+ -s # 静默
+```

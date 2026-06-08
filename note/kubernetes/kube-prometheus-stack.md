@@ -7,6 +7,9 @@
 * node-export: 节点采集器
 * prometheus: 时序数据库
 * grafana: 前端展示页面
+* kube-state-metrics: APIserver采集器
+* alertmanager: 告警管理器
+* Operator: 监控控制器
 
 ## 一、部署
 
@@ -3922,6 +3925,7 @@ Dashboards → New → Import 然后选模板
 |Kubernetes Cluster Overview|315|1|集群总览：节点数、Pod 数、资源使用率汇总|
 |Kubernetes Pods|6417|1|Pod 级监控：单个 Pod 的 CPU / 内存 / 网络 / 重启次数|
 
+模板挺全的了有些不适应的,可以自行微调
 
 ### 6. 通信安全
 
@@ -3971,3 +3975,7 @@ grafana:
 ```
 
 (3) 参考MetalLB-loadBanlancer.md,把ingress放出集群外部访问
+
+7. 持久化
+
+todo: 要搞个nfs提供给prometheus和grafana(不然每次启动如果pod变更都要重新配置数据源)

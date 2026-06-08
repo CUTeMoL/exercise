@@ -375,7 +375,7 @@ EOF
 
 (2) 挂载Secret给ingress-nginx(详见后面的【挂载Secret给ingress-nginx,并重写image路由为static,然后/image/*转发到deployment(local-lxw-com-image)产生的pod,其它转发到deployment(local-lxw-com)产生的pod】)
 
-#### Downward API
+#### Downward API(DownwardAPI)
 
 容器元数据信息,可以通过env/volume定义来让容器获取到到像metadata、status这样的数据
 
