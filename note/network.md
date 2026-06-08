@@ -225,3 +225,9 @@ curl
  -u # basicauth "user:pass"
  -s # 静默
 ```
+
+### 8.路由
+
+```shell
+ip route # 路由定义及查看
+```
