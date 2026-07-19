@@ -104,3 +104,9 @@ helm install nginx bitnami/nginx -n default \
     --set image.tag=1.23.0 \
     --set ingress.enabled=true \
 ```
+
+5. 更新部署Chart
+
+```shell
+helm upgrade --install csi-driver-nfs ./  --namespace csi-driver   --create-namespace   -f values.yaml --set feature.enableVolumeSnapshot=false
+```
