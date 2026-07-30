@@ -75,11 +75,8 @@ parameters:
   server: 192.168.1.55
   share: /data/nfs_data_volume
   mountPermissions: "0"
-  #   ${pvc.metadata.namespace}   - PVC 所在命名空间
-  #   ${pvc.metadata.name}        - PVC 名称
-  #   ${pv.metadata.name}         - PV 的 名称
   subDir: ${pvc.metadata.namespace}/${pvc.metadata.name}/${pv.metadata.name} 
-reclaimPolicy: Retain # 保留,避免误伤
+reclaimPolicy: Retain
 volumeBindingMode: Immediate
 ```
 

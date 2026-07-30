@@ -1,5 +1,5 @@
 
-# MEtalLB
+# MetalLB
 
 ## 一、安装
 
